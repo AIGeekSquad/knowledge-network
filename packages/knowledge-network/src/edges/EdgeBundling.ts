@@ -76,8 +76,14 @@ interface EdgeBundlingData {
  * Edge bundling renderer using force-directed edge bundling algorithm
  * Based on: Holten, D., & Van Wijk, J. J. (2009). Force-directed edge bundling for graph visualization.
  */
+78a: /**
+78b:  * Internal config type for EdgeBundling
+78c:  * All properties required except compatibilityFunction, which remains optional
+78d:  */
+78e: type EdgeBundlingInternalConfig = Required<Omit<EdgeBundlingConfig, 'compatibilityFunction'>> & { compatibilityFunction?: EdgeCompatibilityFunction };
+
 export class EdgeBundling implements EdgeRenderer {
-  private config: Required<Omit<EdgeBundlingConfig, 'compatibilityFunction'>> & { compatibilityFunction?: EdgeCompatibilityFunction };
+  private config: EdgeBundlingInternalConfig;
 
   constructor(config: EdgeBundlingConfig = {}) {
     this.config = {
