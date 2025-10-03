@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import type { GraphData, GraphConfig, Node, Accessor } from './types';
+import { EdgeRenderer, EdgeRenderResult, SimpleEdge, EdgeBundling } from './edges';
 
 /**
  * Main class for creating and managing knowledge graph visualizations
@@ -10,6 +11,9 @@ export class KnowledgeGraph {
   private config: GraphConfig;
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null = null;
   private simulation: d3.Simulation<d3.SimulationNodeDatum, undefined> | null = null;
+  private edgeRenderer: EdgeRenderer;
+  private edgeRenderResult: EdgeRenderResult | null = null;
+  private linkGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
 
   constructor(container: HTMLElement, data: GraphData, config: GraphConfig = {}) {
     this.container = container;
@@ -28,10 +32,27 @@ export class KnowledgeGraph {
       chargeStrength: config.chargeStrength ?? -300,
       collisionRadius: config.collisionRadius,
       similarityFunction: config.similarityFunction,
+      edgeRenderer: config.edgeRenderer ?? 'simple',
+      edgeBundling: config.edgeBundling,
+      waitForStable: config.waitForStable ?? false,
+      stabilityThreshold: config.stabilityThreshold ?? 0.01,
       enableZoom: config.enableZoom ?? true,
       enableDrag: config.enableDrag ?? true,
       dimensions: config.dimensions ?? 2,
     };
+
+    // Initialize edge renderer
+    this.edgeRenderer = this.createEdgeRenderer();
+  }
+
+  /**
+   * Create the appropriate edge renderer based on configuration
+   */
+  private createEdgeRenderer(): EdgeRenderer {
+    if (this.config.edgeRenderer === 'bundled') {
+      return new EdgeBundling(this.config.edgeBundling);
+    }
+    return new SimpleEdge();
   }
 
   /**
@@ -107,15 +128,8 @@ export class KnowledgeGraph {
       this.simulation.force('similarity', this.createSimilarityForce(this.config.similarityFunction));
     }
 
-    // Draw edges
-    const link = g.append('g')
-      .attr('class', 'links')
-      .selectAll('line')
-      .data(this.data.edges)
-      .join('line')
-      .attr('stroke', (d, i) => linkStrokeAccessor(d, i, this.data.edges))
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', (d, i) => linkStrokeWidthAccessor(d, i, this.data.edges));
+    // Create link group (edges will be rendered later)
+    this.linkGroup = g.append('g').attr('class', 'links');
 
     // Draw nodes
     const node = g.append('g')
@@ -160,13 +174,24 @@ export class KnowledgeGraph {
       .attr('dx', 15)
       .attr('dy', 4);
 
+    // Track if edges have been rendered
+    let edgesRendered = false;
+
     // Update positions on simulation tick
     this.simulation.on('tick', () => {
-      link
-        .attr('x1', (d: any) => d.source.x)
-        .attr('y1', (d: any) => d.source.y)
-        .attr('x2', (d: any) => d.target.x)
-        .attr('y2', (d: any) => d.target.y);
+      // Check if simulation has stabilized and render edges
+      if (!edgesRendered && this.config.waitForStable) {
+        const alpha = this.simulation?.alpha() ?? 1;
+        if (alpha < (this.config.stabilityThreshold ?? 0.01)) {
+          edgesRendered = true;
+          this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
+        }
+      }
+
+      // Update edge positions if already rendered
+      if (edgesRendered && this.edgeRenderResult) {
+        this.edgeRenderer.update(this.edgeRenderResult);
+      }
 
       node
         .attr('cx', (d: any) => d.x)
@@ -176,6 +201,32 @@ export class KnowledgeGraph {
         .attr('x', (d: any) => d.x)
         .attr('y', (d: any) => d.y);
     });
+
+    // If not waiting for stable, render edges immediately
+    if (!this.config.waitForStable) {
+      this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
+    }
+  }
+
+  /**
+   * Render edges using the configured edge renderer
+   */
+  private renderEdges(
+    linkStrokeAccessor: (d: any, i: number, nodes: any[]) => string,
+    linkStrokeWidthAccessor: (d: any, i: number, nodes: any[]) => number
+  ): void {
+    if (!this.linkGroup) return;
+
+    this.edgeRenderResult = this.edgeRenderer.render(
+      this.linkGroup,
+      this.data.edges,
+      this.data.nodes,
+      {
+        stroke: (d, i) => linkStrokeAccessor(d, i, this.data.edges),
+        strokeWidth: (d, i) => linkStrokeWidthAccessor(d, i, this.data.edges),
+        strokeOpacity: 0.6,
+      }
+    );
   }
 
   /**
@@ -259,6 +310,10 @@ export class KnowledgeGraph {
    * Destroy the graph and clean up
    */
   destroy(): void {
+    if (this.edgeRenderResult) {
+      this.edgeRenderer.destroy(this.edgeRenderResult);
+      this.edgeRenderResult = null;
+    }
     if (this.simulation) {
       this.simulation.stop();
       this.simulation = null;
@@ -267,5 +322,6 @@ export class KnowledgeGraph {
       this.svg.remove();
       this.svg = null;
     }
+    this.linkGroup = null;
   }
 }

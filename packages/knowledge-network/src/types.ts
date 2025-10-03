@@ -68,10 +68,24 @@ export interface GraphConfig {
   linkStroke?: Accessor<Edge, string>;
   linkStrokeWidth?: Accessor<Edge, number>;
   
+  // Edge rendering
+  edgeRenderer?: 'simple' | 'bundled'; // Type of edge renderer to use
+  edgeBundling?: {
+    subdivisions?: number;
+    compatibilityThreshold?: number;
+    iterations?: number;
+    stepSize?: number;
+    stiffness?: number;
+  };
+  
   // Force simulation
   chargeStrength?: Accessor<Node, number>;
   similarityFunction?: SimilarityFunction; // For clustering based on similarity
   collisionRadius?: Accessor<Node, number>; // For collision detection
+  
+  // Simulation stability
+  waitForStable?: boolean; // Wait for simulation to stabilize before rendering edges
+  stabilityThreshold?: number; // Alpha threshold for considering simulation stable
   
   // Interaction
   enableZoom?: boolean;

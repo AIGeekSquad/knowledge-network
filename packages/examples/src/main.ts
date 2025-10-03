@@ -173,6 +173,56 @@ document.getElementById('example3')?.addEventListener('click', () => {
   });
 });
 
+document.getElementById('example4')?.addEventListener('click', () => {
+  // Example 4: Edge bundling demonstration
+  renderGraph(complexGraphData, {
+    nodeRadius: (d: Node) => {
+      if (d.type === 'topic') return 15;
+      if (d.type === 'application') return 12;
+      if (d.type === 'tool') return 10;
+      return 8;
+    },
+    nodeFill: (d: Node) => {
+      const colors: Record<string, string> = {
+        'topic': '#ff6b6b',
+        'application': '#4ecdc4',
+        'tool': '#45b7d1',
+        'architecture': '#f9ca24',
+      };
+      return colors[d.type || ''] || '#95afc0';
+    },
+    linkDistance: 120,
+    linkStroke: (d) => {
+      const colors: Record<string, string> = {
+        'is-a': '#e74c3c',
+        'part-of': '#3498db',
+        'related-to': '#95a5a6',
+        'similar-to': '#2ecc71',
+      };
+      return colors[d.type || ''] || '#999';
+    },
+    linkStrokeWidth: (d) => d.type === 'is-a' ? 2.5 : 1.5,
+    chargeStrength: -500,
+    collisionRadius: (d: Node) => {
+      if (d.type === 'topic') return 20;
+      if (d.type === 'application') return 17;
+      if (d.type === 'tool') return 15;
+      return 13;
+    },
+    // Enable edge bundling
+    edgeRenderer: 'bundled',
+    waitForStable: true,
+    stabilityThreshold: 0.005,
+    edgeBundling: {
+      subdivisions: 20,
+      compatibilityThreshold: 0.6,
+      iterations: 90,
+      stepSize: 0.04,
+      stiffness: 0.1,
+    },
+  });
+});
+
 // Render the first example by default
 renderGraph(simpleGraphData, {
   nodeRadius: (d: Node) => d.type === 'primary' ? 15 : 10,

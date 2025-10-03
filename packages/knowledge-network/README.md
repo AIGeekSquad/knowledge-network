@@ -8,6 +8,7 @@ A modern TypeScript library extending d3.js for creating interactive knowledge g
 - 🔄 **Collision detection** - Automatic node overlap prevention
 - 🧲 **Similarity-based clustering** - Vector similarity for intelligent node grouping
 - 🔗 **Ontology-aware links** - Relationship types influence force layout
+- 🌊 **Edge bundling** - Force-directed edge bundling for cleaner visualizations with curved, organic-looking edges
 - 📐 **2D and 3D support** - Layout calculations in multiple dimensions
 - 📦 Modern ESM/CJS module support
 - 🔧 TypeScript support with full type definitions
@@ -145,6 +146,45 @@ const graph = new KnowledgeGraph(container, data, {
 
 graph.render();
 ```
+
+### Edge Bundling
+
+Enable force-directed edge bundling for cleaner, more organic-looking visualizations. Edge bundling groups related edges together, creating smooth curved paths that reduce visual clutter.
+
+```typescript
+const graph = new KnowledgeGraph(container, data, {
+  // Enable edge bundling
+  edgeRenderer: 'bundled',
+  
+  // Wait for node layout to stabilize before rendering edges
+  waitForStable: true,
+  stabilityThreshold: 0.005,
+  
+  // Configure edge bundling parameters
+  edgeBundling: {
+    subdivisions: 20,              // Number of control points per edge
+    compatibilityThreshold: 0.6,   // How similar edges must be to bundle (0-1)
+    iterations: 90,                 // Number of bundling iterations
+    stepSize: 0.04,                // Movement step size per iteration
+    stiffness: 0.1,                // Spring force toward straight line
+  },
+});
+
+graph.render();
+```
+
+**Edge Renderer Options:**
+- `'simple'` (default): Straight lines between nodes
+- `'bundled'`: Force-directed edge bundling with curved paths
+
+**Parameters:**
+- `waitForStable`: Wait for simulation to stabilize before rendering edges (recommended for bundling)
+- `stabilityThreshold`: Alpha value threshold for stability detection
+- `subdivisions`: More subdivisions = smoother curves but slower computation
+- `compatibilityThreshold`: Higher values = less bundling, more selective
+- `iterations`: More iterations = tighter bundles
+- `stepSize`: Controls bundling strength per iteration
+- `stiffness`: Higher values keep edges closer to straight lines
 
 ### Using CDN
 
