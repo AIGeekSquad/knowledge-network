@@ -3,6 +3,12 @@ import type { Edge, Node } from '../types';
 import type { EdgeRenderer, EdgeRenderConfig, EdgeRenderResult } from './EdgeRenderer';
 
 /**
+ * Custom edge compatibility function
+ * Can use edge metadata and properties to determine compatibility
+ */
+export type EdgeCompatibilityFunction = (edge1: Edge, edge2: Edge) => number;
+
+/**
  * Edge bundling configuration
  */
 export interface EdgeBundlingConfig extends EdgeRenderConfig {
@@ -40,6 +46,14 @@ export interface EdgeBundlingConfig extends EdgeRenderConfig {
    * @default 0.1
    */
   stiffness?: number;
+
+  /**
+   * Custom compatibility function
+   * Allows custom logic based on edge properties and metadata
+   * If provided, this function's result is multiplied with the default geometric compatibility
+   * @default undefined
+   */
+  compatibilityFunction?: EdgeCompatibilityFunction;
 }
 
 /**
@@ -63,7 +77,7 @@ interface EdgeBundlingData {
  * Based on: Holten, D., & Van Wijk, J. J. (2009). Force-directed edge bundling for graph visualization.
  */
 export class EdgeBundling implements EdgeRenderer {
-  private config: Required<EdgeBundlingConfig>;
+  private config: Required<Omit<EdgeBundlingConfig, 'compatibilityFunction'>> & { compatibilityFunction?: EdgeCompatibilityFunction };
 
   constructor(config: EdgeBundlingConfig = {}) {
     this.config = {
@@ -75,6 +89,7 @@ export class EdgeBundling implements EdgeRenderer {
       iterations: config.iterations ?? 90,
       stepSize: config.stepSize ?? 0.04,
       stiffness: config.stiffness ?? 0.1,
+      compatibilityFunction: config.compatibilityFunction,
     };
   }
 
@@ -291,8 +306,15 @@ export class EdgeBundling implements EdgeRenderer {
           ? Math.min(1, ((i1x - i0x) * (i1y - i0y)) / ((len1 * len2) / 4))
           : 0;
 
-        // Combined compatibility
-        const comp = angleComp * scaleComp * posComp * visComp;
+        // Combined geometric compatibility
+        let comp = angleComp * scaleComp * posComp * visComp;
+
+        // Apply custom compatibility function if provided
+        if (this.config.compatibilityFunction) {
+          const customComp = this.config.compatibilityFunction(e1, e2);
+          // Multiply with geometric compatibility to combine both
+          comp *= customComp;
+        }
 
         compatibility[i][j] = comp;
         compatibility[j][i] = comp;

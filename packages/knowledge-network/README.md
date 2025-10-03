@@ -186,6 +186,40 @@ graph.render();
 - `stepSize`: Controls bundling strength per iteration
 - `stiffness`: Higher values keep edges closer to straight lines
 
+#### Custom Edge Compatibility
+
+You can provide a custom compatibility function to control which edges bundle together based on edge properties and metadata:
+
+```typescript
+const graph = new KnowledgeGraph(container, data, {
+  edgeRenderer: 'bundled',
+  waitForStable: true,
+  edgeBundling: {
+    // Custom compatibility based on edge type
+    compatibilityFunction: (edge1, edge2) => {
+      // Only bundle edges of the same type
+      if (edge1.type === edge2.type) return 1.0;
+      
+      // Don't bundle edges of different types
+      return 0.0;
+    },
+  },
+});
+```
+
+The custom compatibility function:
+- Receives two edges as parameters
+- Returns a number between 0 and 1 (0 = no bundling, 1 = maximum bundling)
+- Result is multiplied with geometric compatibility (angle, scale, position, visibility)
+- Can use any edge properties including `type`, `weight`, `metadata`, etc.
+- Allows semantic bundling based on relationship ontology
+
+**Example Use Cases:**
+- Bundle only edges representing the same relationship type
+- Use edge metadata to group related connections
+- Apply different bundling strengths based on edge importance
+- Prevent bundling between conflicting relationship types
+
 ### Using CDN
 
 ```html

@@ -76,6 +76,7 @@ export interface GraphConfig {
     iterations?: number;
     stepSize?: number;
     stiffness?: number;
+    compatibilityFunction?: (edge1: Edge, edge2: Edge) => number; // Custom compatibility based on edge properties
   };
   
   // Force simulation

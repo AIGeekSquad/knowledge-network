@@ -20,5 +20,6 @@ export {
   EdgeRenderResult,
   SimpleEdge, 
   EdgeBundling,
-  EdgeBundlingConfig
+  EdgeBundlingConfig,
+  EdgeCompatibilityFunction
 } from './edges';
