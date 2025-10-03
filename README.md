@@ -97,6 +97,14 @@ Tests are written using Vitest:
 pnpm test
 ```
 
+### Wallaby.js Support
+
+For real-time test feedback in your IDE, Wallaby.js configuration files are included:
+- Root configuration: `wallaby.js`
+- Package configuration: `packages/knowledge-network/wallaby.js`
+
+Simply install the Wallaby.js extension for your IDE and start it to see inline test results as you code.
+
 ## 📝 License
 
 MIT © AIGeekSquad

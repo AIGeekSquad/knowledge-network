@@ -69,6 +69,20 @@ pnpm test
 cd packages/knowledge-network && pnpm test:watch
 ```
 
+### Wallaby.js Integration
+
+For real-time test feedback in your IDE, we support [Wallaby.js](https://wallabyjs.com/):
+
+- **Root configuration**: `wallaby.js` in the project root
+- **Package configuration**: `packages/knowledge-network/wallaby.js`
+
+To use Wallaby.js:
+1. Install the Wallaby.js extension for your IDE (VS Code, WebStorm, etc.)
+2. Open the project and start Wallaby.js
+3. Wallaby will automatically run tests and show inline results as you code
+
+The configuration uses `@swc/core` for fast TypeScript transpilation and integrates with our Vitest test setup.
+
 ## Building
 
 The library is built using [tsup](https://tsup.egoist.dev/), which generates:
