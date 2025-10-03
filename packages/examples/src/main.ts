@@ -300,16 +300,16 @@ document.getElementById('example5')?.addEventListener('click', () => {
       if (d.type === 'core') return 25;
       return 20;
     },
-    // Enable edge bundling with more aggressive parameters
+    // Enable edge bundling with highly aggressive parameters for dramatic effect
     edgeRenderer: 'bundled',
     waitForStable: true,
     stabilityThreshold: 0.005,
     edgeBundling: {
       subdivisions: 60,              // More control points for smoother curves
-      compatibilityThreshold: 0.4,   // Lower threshold to bundle more edges
-      iterations: 120,                // More iterations for tighter bundles
-      stepSize: 0.1,                 // Larger steps for more visible bundling
-      stiffness: 0.05,               // Lower stiffness allows more curvature
+      compatibilityThreshold: 0.2,   // Very low threshold for maximum bundling
+      iterations: 150,                // Many iterations for tight bundles
+      stepSize: 0.25,                // Very large steps for dramatic bundling
+      stiffness: 0.01,               // Very low stiffness for extreme curvature
     },
   });
 });

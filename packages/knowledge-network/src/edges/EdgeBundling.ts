@@ -243,8 +243,10 @@ export class EdgeBundling implements EdgeRenderer {
             const distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance > 0) {
-              fx += (dx / distance) * comp;
-              fy += (dy / distance) * comp;
+              // Amplify the attractive force for more dramatic bundling
+              const forceMagnitude = comp * 3.0;
+              fx += (dx / distance) * forceMagnitude;
+              fy += (dy / distance) * forceMagnitude;
             }
           }
 
