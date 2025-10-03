@@ -28,10 +28,10 @@ export class SimpleEdge implements EdgeRenderer {
 
   update(result: EdgeRenderResult): void {
     result.selection
-      .attr('x1', (d: Edge) => d.source.x)
-      .attr('y1', (d: Edge) => d.source.y)
-      .attr('x2', (d: Edge) => d.target.x)
-      .attr('y2', (d: Edge) => d.target.y);
+      .attr('x1', (d: Edge) => (d.source as Node).x ?? 0)
+      .attr('y1', (d: Edge) => (d.source as Node).y ?? 0)
+      .attr('x2', (d: Edge) => (d.target as Node).x ?? 0)
+      .attr('y2', (d: Edge) => (d.target as Node).y ?? 0);
   }
 
   destroy(result: EdgeRenderResult): void {
