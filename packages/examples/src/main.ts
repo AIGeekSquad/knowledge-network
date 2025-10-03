@@ -80,6 +80,60 @@ const customGraphData: GraphData = {
   ],
 };
 
+// Example 4: Edge Bundling - Designed to showcase bundling effects
+const edgeBundlingGraphData: GraphData = {
+  nodes: [
+    // Core nodes
+    { id: 'core1', label: 'Data Science', type: 'core' },
+    { id: 'core2', label: 'Machine Learning', type: 'core' },
+    
+    // Left cluster
+    { id: 'left1', label: 'Statistics', type: 'foundation' },
+    { id: 'left2', label: 'Mathematics', type: 'foundation' },
+    { id: 'left3', label: 'Programming', type: 'foundation' },
+    { id: 'left4', label: 'Databases', type: 'foundation' },
+    
+    // Right cluster
+    { id: 'right1', label: 'Computer Vision', type: 'application' },
+    { id: 'right2', label: 'NLP', type: 'application' },
+    { id: 'right3', label: 'Robotics', type: 'application' },
+    { id: 'right4', label: 'Speech', type: 'application' },
+    
+    // Middle connectors
+    { id: 'mid1', label: 'Neural Nets', type: 'method' },
+    { id: 'mid2', label: 'Deep Learning', type: 'method' },
+  ],
+  edges: [
+    // Multiple edges flowing from left to core1 - these should bundle together
+    { source: 'left1', target: 'core1', type: 'foundation' },
+    { source: 'left2', target: 'core1', type: 'foundation' },
+    { source: 'left3', target: 'core1', type: 'foundation' },
+    { source: 'left4', target: 'core1', type: 'foundation' },
+    
+    // Multiple edges flowing from core1 to core2 - different type
+    { source: 'core1', target: 'mid1', type: 'method' },
+    { source: 'core1', target: 'mid2', type: 'method' },
+    { source: 'mid1', target: 'core2', type: 'method' },
+    { source: 'mid2', target: 'core2', type: 'method' },
+    
+    // Multiple edges flowing from core2 to right cluster - these should bundle together
+    { source: 'core2', target: 'right1', type: 'application' },
+    { source: 'core2', target: 'right2', type: 'application' },
+    { source: 'core2', target: 'right3', type: 'application' },
+    { source: 'core2', target: 'right4', type: 'application' },
+    
+    // Some cross connections to create more bundling opportunities
+    { source: 'left1', target: 'mid1', type: 'foundation' },
+    { source: 'left2', target: 'mid1', type: 'foundation' },
+    { source: 'mid1', target: 'right1', type: 'application' },
+    { source: 'mid1', target: 'right2', type: 'application' },
+    { source: 'mid2', target: 'right3', type: 'application' },
+    { source: 'mid2', target: 'right4', type: 'application' },
+    { source: 'left3', target: 'mid2', type: 'foundation' },
+    { source: 'left4', target: 'mid2', type: 'foundation' },
+  ],
+};
+
 function renderGraph(data: GraphData, config = {}) {
   if (currentGraph) {
     currentGraph.destroy();
@@ -174,51 +228,88 @@ document.getElementById('example3')?.addEventListener('click', () => {
 });
 
 document.getElementById('example4')?.addEventListener('click', () => {
-  // Example 4: Edge bundling demonstration
-  renderGraph(complexGraphData, {
+  // Example 4: Simple edges (no bundling) - for comparison
+  renderGraph(edgeBundlingGraphData, {
     nodeRadius: (d: Node) => {
-      if (d.type === 'topic') return 15;
-      if (d.type === 'application') return 12;
-      if (d.type === 'tool') return 10;
-      return 8;
+      if (d.type === 'core') return 20;
+      if (d.type === 'foundation') return 15;
+      if (d.type === 'method') return 15;
+      if (d.type === 'application') return 15;
+      return 12;
     },
     nodeFill: (d: Node) => {
       const colors: Record<string, string> = {
-        'topic': '#ff6b6b',
-        'application': '#4ecdc4',
-        'tool': '#45b7d1',
-        'architecture': '#f9ca24',
+        'core': '#ff6b6b',
+        'foundation': '#4ecdc4',
+        'method': '#f9ca24',
+        'application': '#45b7d1',
       };
       return colors[d.type || ''] || '#95afc0';
     },
-    linkDistance: 120,
+    linkDistance: 150,
     linkStroke: (d) => {
       const colors: Record<string, string> = {
-        'is-a': '#e74c3c',
-        'part-of': '#3498db',
-        'related-to': '#95a5a6',
-        'similar-to': '#2ecc71',
+        'foundation': '#4ecdc4',
+        'method': '#f9ca24',
+        'application': '#45b7d1',
       };
       return colors[d.type || ''] || '#999';
     },
-    linkStrokeWidth: (d) => d.type === 'is-a' ? 2.5 : 1.5,
-    chargeStrength: -500,
+    linkStrokeWidth: 2,
+    chargeStrength: -300,
     collisionRadius: (d: Node) => {
-      if (d.type === 'topic') return 20;
-      if (d.type === 'application') return 17;
-      if (d.type === 'tool') return 15;
-      return 13;
+      if (d.type === 'core') return 25;
+      return 20;
     },
-    // Enable edge bundling
+    // Use simple edge renderer (straight lines)
+    edgeRenderer: 'simple',
+  });
+});
+
+document.getElementById('example5')?.addEventListener('click', () => {
+  // Example 5: Edge bundling demonstration
+  renderGraph(edgeBundlingGraphData, {
+    nodeRadius: (d: Node) => {
+      if (d.type === 'core') return 20;
+      if (d.type === 'foundation') return 15;
+      if (d.type === 'method') return 15;
+      if (d.type === 'application') return 15;
+      return 12;
+    },
+    nodeFill: (d: Node) => {
+      const colors: Record<string, string> = {
+        'core': '#ff6b6b',
+        'foundation': '#4ecdc4',
+        'method': '#f9ca24',
+        'application': '#45b7d1',
+      };
+      return colors[d.type || ''] || '#95afc0';
+    },
+    linkDistance: 150,
+    linkStroke: (d) => {
+      const colors: Record<string, string> = {
+        'foundation': '#4ecdc4',
+        'method': '#f9ca24',
+        'application': '#45b7d1',
+      };
+      return colors[d.type || ''] || '#999';
+    },
+    linkStrokeWidth: 2,
+    chargeStrength: -300,
+    collisionRadius: (d: Node) => {
+      if (d.type === 'core') return 25;
+      return 20;
+    },
+    // Enable edge bundling with more aggressive parameters
     edgeRenderer: 'bundled',
     waitForStable: true,
     stabilityThreshold: 0.005,
     edgeBundling: {
-      subdivisions: 20,
-      compatibilityThreshold: 0.6,
-      iterations: 90,
-      stepSize: 0.04,
-      stiffness: 0.1,
+      subdivisions: 60,              // More control points for smoother curves
+      compatibilityThreshold: 0.4,   // Lower threshold to bundle more edges
+      iterations: 120,                // More iterations for tighter bundles
+      stepSize: 0.1,                 // Larger steps for more visible bundling
+      stiffness: 0.05,               // Lower stiffness allows more curvature
     },
   });
 });

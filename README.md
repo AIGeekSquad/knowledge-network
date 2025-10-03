@@ -66,6 +66,24 @@ graph.render();
 
 For more detailed documentation, see the [library README](./packages/knowledge-network/README.md).
 
+## 🎨 Visual Examples
+
+### Edge Bundling
+
+The library features advanced force-directed edge bundling that creates cleaner, more organic visualizations by grouping related edges together.
+
+| Simple Edges | Edge Bundling |
+|--------------|---------------|
+| ![Simple Edges](./screenshots/simple-edges.png) | ![Edge Bundling](./screenshots/edge-bundling.png) |
+| Straight lines between nodes | Smooth curved paths that reduce visual clutter |
+
+Edge bundling is particularly effective for:
+- Complex graphs with many parallel edges
+- Visualizations where edge flow patterns are important
+- Reducing visual clutter in dense networks
+
+See the [Edge Bundling documentation](./packages/knowledge-network/README.md#edge-bundling) for configuration options and best practices.
+
 ## 🏗️ Project Structure
 
 ```

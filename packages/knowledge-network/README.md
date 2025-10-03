@@ -28,6 +28,20 @@ or with pnpm:
 pnpm add @aigeeksquad/knowledge-network d3
 ```
 
+## Visual Examples
+
+### Edge Bundling Comparison
+
+The library supports both simple straight edges and advanced force-directed edge bundling for cleaner, more organic visualizations.
+
+#### Simple Edges (Straight Lines)
+![Simple Edges Example](../../../screenshots/simple-edges.png)
+
+#### Edge Bundling (Curved, Bundled Paths)
+![Edge Bundling Example](../../../screenshots/edge-bundling.png)
+
+Edge bundling groups related edges together, creating smooth curved paths that significantly reduce visual clutter in complex graphs.
+
 ## Usage
 
 ### Basic Example
@@ -149,24 +163,30 @@ graph.render();
 
 ### Edge Bundling
 
-Enable force-directed edge bundling for cleaner, more organic-looking visualizations. Edge bundling groups related edges together, creating smooth curved paths that reduce visual clutter.
+Enable force-directed edge bundling for cleaner, more organic-looking visualizations. Edge bundling groups related edges together, creating smooth curved paths that reduce visual clutter in complex graphs with many edges.
+
+**Visual Comparison:**
+
+See the [Visual Examples](#visual-examples) section above for a side-by-side comparison of simple edges vs. bundled edges.
+
+**Basic Usage:**
 
 ```typescript
 const graph = new KnowledgeGraph(container, data, {
   // Enable edge bundling
   edgeRenderer: 'bundled',
   
-  // Wait for node layout to stabilize before rendering edges
+  // Wait for node layout to stabilize before rendering edges (recommended)
   waitForStable: true,
   stabilityThreshold: 0.005,
   
   // Configure edge bundling parameters
   edgeBundling: {
-    subdivisions: 20,              // Number of control points per edge
-    compatibilityThreshold: 0.6,   // How similar edges must be to bundle (0-1)
-    iterations: 90,                 // Number of bundling iterations
-    stepSize: 0.04,                // Movement step size per iteration
-    stiffness: 0.1,                // Spring force toward straight line
+    subdivisions: 60,              // More control points = smoother curves
+    compatibilityThreshold: 0.4,   // Lower = more aggressive bundling
+    iterations: 120,                // More iterations = tighter bundles
+    stepSize: 0.1,                 // Larger steps = more visible bundling
+    stiffness: 0.05,               // Lower = more curvature allowed
   },
 });
 
@@ -177,14 +197,23 @@ graph.render();
 - `'simple'` (default): Straight lines between nodes
 - `'bundled'`: Force-directed edge bundling with curved paths
 
-**Parameters:**
-- `waitForStable`: Wait for simulation to stabilize before rendering edges (recommended for bundling)
-- `stabilityThreshold`: Alpha value threshold for stability detection
-- `subdivisions`: More subdivisions = smoother curves but slower computation
-- `compatibilityThreshold`: Higher values = less bundling, more selective
-- `iterations`: More iterations = tighter bundles
-- `stepSize`: Controls bundling strength per iteration
-- `stiffness`: Higher values keep edges closer to straight lines
+**Configuration Parameters:**
+
+| Parameter | Default | Description | Tips |
+|-----------|---------|-------------|------|
+| `waitForStable` | `false` | Wait for simulation to stabilize before rendering edges | Set to `true` for bundling to ensure stable node positions |
+| `stabilityThreshold` | `0.005` | Alpha value threshold for stability detection | Lower values = wait longer for more stable layout |
+| `subdivisions` | `20` | Number of control points per edge | Higher values (40-60) create smoother curves but slower computation |
+| `compatibilityThreshold` | `0.6` | How similar edges must be to bundle (0-1) | Lower values (0.3-0.5) = more aggressive bundling |
+| `iterations` | `90` | Number of bundling iterations | More iterations (100-150) = tighter, more visible bundles |
+| `stepSize` | `0.04` | Movement step size per iteration | Larger values (0.08-0.15) = more dramatic bundling effect |
+| `stiffness` | `0.1` | Spring force toward straight line | Lower values (0.05-0.08) allow more curvature |
+
+**Tips for Best Results:**
+- Use graphs with multiple parallel edges or edges flowing in similar directions
+- Lower `compatibilityThreshold` and `stiffness` for more dramatic bundling
+- Increase `iterations` and `subdivisions` for smoother, tighter bundles
+- Always set `waitForStable: true` to ensure bundling works on stable layouts
 
 #### Custom Edge Compatibility
 
