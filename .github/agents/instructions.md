@@ -1,0 +1,185 @@
+# Copilot Agent Instructions for Knowledge Network
+
+## Project Overview
+
+This is a TypeScript monorepo for `@aigeeksquad/knowledge-network`, a library extending d3.js for creating interactive knowledge graph visualizations. The project uses pnpm workspaces for monorepo management.
+
+## Project Structure
+
+```
+knowledge-network/
+├── packages/
+│   ├── knowledge-network/    # Core library (TypeScript)
+│   │   ├── src/              # Source code
+│   │   │   ├── KnowledgeGraph.ts
+│   │   │   ├── types.ts
+│   │   │   ├── layout/       # Layout algorithms
+│   │   │   ├── edges/        # Edge rendering and bundling
+│   │   │   └── __tests__/    # Unit tests
+│   │   ├── dist/             # Build output (gitignored)
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── vitest.config.ts  # Test configuration
+│   │   └── tsup.config.ts    # Build configuration
+│   └── examples/             # Example applications
+│       ├── src/
+│       └── package.json
+├── .github/
+│   └── agents/               # Agent configuration
+├── pnpm-workspace.yaml       # Workspace configuration
+└── package.json              # Root package.json
+```
+
+## Package Manager
+
+This project uses **pnpm 8+** as the package manager. Always use `pnpm` commands, never `npm` or `yarn`.
+
+## Common Commands
+
+### Installation
+```bash
+pnpm install
+```
+
+### Building
+```bash
+# Build all packages (except examples)
+pnpm build
+
+# Build in watch mode
+cd packages/knowledge-network && pnpm dev
+```
+
+The library is built using [tsup](https://tsup.egoist.dev/), which generates:
+- ESM output (`dist/index.js`)
+- CJS output (`dist/index.cjs`)
+- TypeScript declarations (`dist/index.d.ts`, `dist/index.d.cts`)
+
+### Testing
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+cd packages/knowledge-network && pnpm test:watch
+```
+
+Tests use [Vitest](https://vitest.dev/) with jsdom environment for DOM testing.
+
+### Linting and Formatting
+```bash
+# Lint code
+pnpm lint
+
+# Format code with Prettier
+pnpm format
+```
+
+Linting uses ESLint with TypeScript support. Current warnings about `any` types are known and non-blocking.
+
+### Development Workflow
+```bash
+# Start examples in development mode
+pnpm dev
+```
+
+## Development Guidelines
+
+### When Making Changes
+
+1. **Install dependencies first**: Always run `pnpm install` after cloning or when dependencies change
+2. **Build before testing**: Run `pnpm build` to ensure the library is compiled
+3. **Test your changes**: Run `pnpm test` to verify tests pass
+4. **Lint your code**: Run `pnpm lint` to check for code style issues
+5. **Run examples**: Use `pnpm dev` to visually verify changes in the examples
+
+### Code Style
+
+- TypeScript strict mode is enabled
+- Use d3-idiomatic patterns (accessor functions that can be values or functions)
+- Prefer functional programming patterns
+- Keep tests colocated in `__tests__/` directories
+- Follow existing naming conventions (PascalCase for classes, camelCase for functions/variables)
+
+### Testing
+
+- Tests are located in `packages/knowledge-network/src/__tests__/`
+- Use Vitest for unit tests
+- Mock DOM elements when testing visualization components
+- Test both static values and accessor functions for d3-idiomatic APIs
+
+## MCP Server Usage
+
+### DeepWiki MCP Server
+
+Use the DeepWiki MCP server to:
+- **Understand dependencies**: Query documentation for d3.js, TypeScript, Vitest, and other dependencies
+- **Learn library APIs**: Get information about d3 force simulation, selection APIs, and other d3 modules
+- **Reference examples**: Find usage patterns for dependencies
+
+Example queries:
+- "How does d3.forceSimulation work?"
+- "What are the d3 selection methods for DOM manipulation?"
+- "How to use Vitest for testing TypeScript code?"
+
+### SonarQube MCP Server
+
+Use the SonarQube MCP server to:
+- **Check code quality**: Analyze code for bugs, vulnerabilities, and code smells
+- **Review code coverage**: Ensure tests cover critical code paths
+- **Maintain quality gates**: Verify code meets project quality standards
+- **Fix issues**: Address SonarQube findings before committing
+
+Always run SonarQube analysis after making significant changes to ensure code quality.
+
+## Key Dependencies
+
+- **d3** (^7.0.0): Peer dependency for visualization (not bundled)
+- **TypeScript** (^5.7.2): Language and type checking
+- **tsup** (^8.3.5): Build tool for library bundling
+- **Vitest** (^2.1.9): Testing framework
+- **ESLint** (^9.18.0): Linting with TypeScript support
+- **@swc/core** (^1.10.1): Fast TypeScript transpilation for Wallaby.js
+
+## Important Notes
+
+### Monorepo Workspace
+
+This is a pnpm workspace with multiple packages:
+- Use `pnpm --recursive` or `pnpm -r` for workspace-wide commands
+- The root `package.json` defines workspace scripts
+- Each package has its own `package.json` and can be built independently
+
+### Build Output
+
+- The `dist/` directory is gitignored and generated by the build process
+- Never commit build artifacts
+- Always build before publishing or testing
+
+### Known Linting Warnings
+
+The codebase has known ESLint warnings about `@typescript-eslint/no-explicit-any` (29 warnings). These are accepted technical debt related to d3 typings and don't block development.
+
+### Wallaby.js Support
+
+The project includes Wallaby.js configuration for real-time test feedback in IDEs:
+- Root configuration: `wallaby.js`
+- Package configuration: `packages/knowledge-network/wallaby.js`
+
+These files use @swc/core for fast TypeScript transpilation.
+
+## Contributing
+
+When making changes:
+1. Fork and create a feature branch
+2. Make minimal, focused changes
+3. Add tests for new features
+4. Ensure all tests pass: `pnpm test`
+5. Ensure code is linted: `pnpm lint`
+6. Update documentation if needed
+
+## Resources
+
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) - Detailed contribution guidelines
+- [README.md](../../README.md) - Project documentation
+- [packages/knowledge-network/README.md](../../packages/knowledge-network/README.md) - Library API documentation
