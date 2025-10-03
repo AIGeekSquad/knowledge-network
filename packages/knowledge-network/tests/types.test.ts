@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Node, Edge, GraphData } from '../types';
+import type { Node, Edge, GraphData } from '../src/types';
 
 describe('Types', () => {
   it('should allow valid Node structure', () => {

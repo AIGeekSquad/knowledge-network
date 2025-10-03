@@ -3,7 +3,77 @@ import type { GraphData, GraphConfig, Node, Accessor } from './types';
 import { EdgeRenderer, EdgeRenderResult, SimpleEdge, EdgeBundling } from './edges';
 
 /**
- * Main class for creating and managing knowledge graph visualizations
+ * Main class for creating and managing interactive knowledge graph visualizations.
+ *
+ * @remarks
+ * The KnowledgeGraph class provides a powerful D3.js-based visualization for displaying
+ * nodes and edges with force-directed layout. It supports various rendering styles,
+ * interaction modes (zoom, drag), and customization options through the GraphConfig.
+ *
+ * The graph uses a physics simulation to position nodes, which can be customized
+ * through force parameters like charge strength and link distance. Edges can be
+ * rendered as simple lines or with advanced bundling techniques for better clarity
+ * in dense graphs.
+ *
+ * @example
+ * ```typescript
+ * // Basic usage with minimal configuration
+ * const container = document.getElementById('graph-container');
+ * const data = {
+ *   nodes: [
+ *     { id: 'node1', label: 'Concept A' },
+ *     { id: 'node2', label: 'Concept B' },
+ *     { id: 'node3', label: 'Concept C' }
+ *   ],
+ *   edges: [
+ *     { source: 'node1', target: 'node2' },
+ *     { source: 'node2', target: 'node3' }
+ *   ]
+ * };
+ *
+ * const graph = new KnowledgeGraph(container, data);
+ * graph.render();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Advanced usage with custom configuration and styling
+ * const config: GraphConfig = {
+ *   width: 1200,
+ *   height: 800,
+ *   nodeRadius: (node) => node.importance * 10,
+ *   nodeFill: (node) => node.category === 'primary' ? '#ff6b6b' : '#4ecdc4',
+ *   linkDistance: 150,
+ *   chargeStrength: -500,
+ *   edgeRenderer: 'bundled',
+ *   edgeBundling: {
+ *     strength: 0.85,
+ *     compatibility: 0.75
+ *   },
+ *   enableZoom: true,
+ *   enableDrag: true,
+ *   waitForStable: true,
+ *   stabilityThreshold: 0.01
+ * };
+ *
+ * const graph = new KnowledgeGraph(container, data, config);
+ * graph.render();
+ *
+ * // Access the D3 simulation for custom behavior
+ * const simulation = graph.getSimulation();
+ * simulation?.alpha(0.5).restart();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Dynamic data updates
+ * const graph = new KnowledgeGraph(container, initialData);
+ * graph.render();
+ *
+ * // Later, update with new data
+ * const newData = await fetchUpdatedGraphData();
+ * graph.updateData(newData);
+ * ```
  */
 export class KnowledgeGraph {
   private container: HTMLElement;
@@ -15,6 +85,46 @@ export class KnowledgeGraph {
   private edgeRenderResult: EdgeRenderResult | null = null;
   private linkGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
 
+  /**
+   * Creates a new KnowledgeGraph instance.
+   *
+   * @param container - The HTML element that will contain the SVG visualization.
+   *                    The graph will create an SVG element as a child of this container.
+   * @param data - The graph data containing nodes and edges to visualize.
+   *               Nodes must have unique `id` properties, and edges must reference
+   *               valid node IDs in their `source` and `target` properties.
+   * @param config - Optional configuration object to customize the graph appearance and behavior.
+   *                 All config properties have sensible defaults if not specified.
+   *
+   * @remarks
+   * The constructor initializes the graph but does not render it. Call `render()` after
+   * construction to create the visualization. Configuration options include:
+   *
+   * - **Dimensions**: `width`, `height` - Set the SVG dimensions
+   * - **Node styling**: `nodeRadius`, `nodeFill`, `nodeStroke`, `nodeStrokeWidth` - Can be constants or functions
+   * - **Edge styling**: `linkStroke`, `linkStrokeWidth` - Can be constants or functions
+   * - **Force parameters**: `linkDistance`, `linkStrength`, `chargeStrength`, `collisionRadius`
+   * - **Rendering options**: `edgeRenderer` ('simple' or 'bundled'), `edgeBundling` config
+   * - **Interaction**: `enableZoom`, `enableDrag` - Enable/disable user interactions
+   * - **Performance**: `waitForStable`, `stabilityThreshold` - Control when edges are rendered
+   * - **Advanced**: `similarityFunction` - Custom function for similarity-based node attraction
+   *
+   * @example
+   * ```typescript
+   * // Simple construction with defaults
+   * const graph = new KnowledgeGraph(container, data);
+   *
+   * // With custom configuration
+   * const graph = new KnowledgeGraph(container, data, {
+   *   width: 1000,
+   *   height: 600,
+   *   nodeRadius: 15,
+   *   nodeFill: (node) => node.type === 'primary' ? '#ff0000' : '#0000ff',
+   *   enableZoom: true,
+   *   edgeRenderer: 'bundled'
+   * });
+   * ```
+   */
   constructor(container: HTMLElement, data: GraphData, config: GraphConfig = {}) {
     this.container = container;
     this.data = data;
@@ -69,7 +179,57 @@ export class KnowledgeGraph {
   }
 
   /**
-   * Render the knowledge graph
+   * Renders the knowledge graph visualization in the container element.
+   *
+   * @remarks
+   * This method creates the SVG element, sets up the D3 force simulation, and renders
+   * all visual elements (nodes, edges, labels). It must be called after construction
+   * to display the graph.
+   *
+   * The rendering process includes:
+   * 1. Creating the SVG canvas with specified dimensions
+   * 2. Setting up zoom and pan controls (if enabled)
+   * 3. Initializing the force simulation with configured forces
+   * 4. Creating node circles with specified styling
+   * 5. Setting up drag interactions for nodes (if enabled)
+   * 6. Adding text labels for nodes
+   * 7. Rendering edges (immediately or after stabilization based on config)
+   *
+   * The force simulation runs continuously to position nodes. If `waitForStable` is true,
+   * edges are only rendered once the simulation reaches the stability threshold, which
+   * can improve performance for large graphs.
+   *
+   * @example
+   * ```typescript
+   * // Basic rendering
+   * const graph = new KnowledgeGraph(container, data);
+   * graph.render();
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Render with post-render customization
+   * const graph = new KnowledgeGraph(container, data, config);
+   * graph.render();
+   *
+   * // Customize simulation after rendering
+   * const simulation = graph.getSimulation();
+   * simulation?.force('charge', d3.forceManyBody().strength(-1000));
+   * simulation?.alpha(0.5).restart();
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Wait for stabilization before edges (better for large graphs)
+   * const graph = new KnowledgeGraph(container, data, {
+   *   waitForStable: true,
+   *   stabilityThreshold: 0.005
+   * });
+   * graph.render();
+   * // Edges will appear once simulation stabilizes
+   * ```
+   *
+   * @throws {Error} May throw if the container element is invalid or if D3 operations fail
    */
   render(): void {
     const width = this.config.width ?? 800;
@@ -291,7 +451,69 @@ export class KnowledgeGraph {
   }
 
   /**
-   * Update the graph data
+   * Updates the graph with new data and re-renders the visualization.
+   *
+   * @param data - The new graph data containing nodes and edges to visualize.
+   *               Must follow the same structure as the initial data.
+   *
+   * @remarks
+   * This method completely replaces the current graph with new data. It destroys
+   * the existing visualization (including the SVG and simulation) and creates a
+   * new one with the updated data. The configuration remains unchanged.
+   *
+   * This is useful for:
+   * - Loading completely different datasets
+   * - Refreshing data from an API
+   * - Switching between different graph views
+   *
+   * Note that this performs a full re-render, which resets the simulation.
+   * For incremental updates or animations, you may want to directly manipulate
+   * the D3 simulation instead.
+   *
+   * @example
+   * ```typescript
+   * // Initial render
+   * const graph = new KnowledgeGraph(container, initialData, config);
+   * graph.render();
+   *
+   * // Later, update with new data
+   * const newData = {
+   *   nodes: [
+   *     { id: 'A', label: 'New Node A' },
+   *     { id: 'B', label: 'New Node B' }
+   *   ],
+   *   edges: [
+   *     { source: 'A', target: 'B' }
+   *   ]
+   * };
+   * graph.updateData(newData);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Periodic data refresh from API
+   * async function refreshGraph() {
+   *   const freshData = await fetch('/api/graph-data').then(r => r.json());
+   *   graph.updateData(freshData);
+   * }
+   *
+   * // Refresh every 30 seconds
+   * setInterval(refreshGraph, 30000);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Switch between different data views
+   * const datasets = {
+   *   overview: { nodes: [...], edges: [...] },
+   *   detailed: { nodes: [...], edges: [...] }
+   * };
+   *
+   * // Toggle between views
+   * function switchView(viewName: 'overview' | 'detailed') {
+   *   graph.updateData(datasets[viewName]);
+   * }
+   * ```
    */
   updateData(data: GraphData): void {
     this.data = data;
@@ -300,14 +522,134 @@ export class KnowledgeGraph {
   }
 
   /**
-   * Get the current simulation instance
+   * Gets the D3 force simulation instance for advanced customization.
+   *
+   * @returns The D3 simulation instance, or null if the graph hasn't been rendered yet.
+   *
+   * @remarks
+   * This method provides direct access to the underlying D3 force simulation,
+   * allowing advanced users to customize forces, adjust parameters, or hook into
+   * simulation events. The simulation controls the physics-based positioning of nodes.
+   *
+   * Common use cases:
+   * - Adjusting force strengths dynamically
+   * - Restarting the simulation with different alpha values
+   * - Adding custom forces
+   * - Listening to simulation events ('tick', 'end')
+   * - Programmatically fixing node positions
+   *
+   * @example
+   * ```typescript
+   * // Access simulation for customization
+   * const graph = new KnowledgeGraph(container, data);
+   * graph.render();
+   *
+   * const simulation = graph.getSimulation();
+   * if (simulation) {
+   *   // Adjust charge force strength
+   *   simulation.force('charge', d3.forceManyBody().strength(-1000));
+   *
+   *   // Restart with higher alpha for more movement
+   *   simulation.alpha(0.5).restart();
+   *
+   *   // Listen to simulation events
+   *   simulation.on('end', () => {
+   *     console.log('Simulation stabilized');
+   *   });
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Fix node positions programmatically
+   * const simulation = graph.getSimulation();
+   * if (simulation) {
+   *   const nodes = simulation.nodes();
+   *   // Fix the first node at center
+   *   nodes[0].fx = 400;
+   *   nodes[0].fy = 300;
+   *   simulation.alpha(0.3).restart();
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Add a custom force
+   * const simulation = graph.getSimulation();
+   * if (simulation) {
+   *   // Add a force that pulls nodes toward the center
+   *   simulation.force('pullToCenter', (alpha) => {
+   *     const nodes = simulation.nodes();
+   *     nodes.forEach(node => {
+   *       node.vx += (400 - node.x) * 0.01 * alpha;
+   *       node.vy += (300 - node.y) * 0.01 * alpha;
+   *     });
+   *   });
+   *   simulation.alpha(0.5).restart();
+   * }
+   * ```
    */
   getSimulation(): d3.Simulation<d3.SimulationNodeDatum, undefined> | null {
     return this.simulation;
   }
 
   /**
-   * Destroy the graph and clean up
+   * Destroys the graph visualization and cleans up all resources.
+   *
+   * @remarks
+   * This method performs a complete cleanup of the graph visualization:
+   * - Stops the force simulation
+   * - Removes the SVG element from the DOM
+   * - Cleans up edge renderer resources
+   * - Releases all internal references
+   *
+   * Call this method when:
+   * - The graph is no longer needed
+   * - Before removing the container element
+   * - To prevent memory leaks in single-page applications
+   * - Before calling `render()` again on the same instance
+   *
+   * After calling destroy(), the graph instance can be re-rendered by calling
+   * `render()` again, or you can create a new instance.
+   *
+   * @example
+   * ```typescript
+   * // Basic cleanup
+   * const graph = new KnowledgeGraph(container, data);
+   * graph.render();
+   *
+   * // Later, when done with the graph
+   * graph.destroy();
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // In a single-page application component
+   * class GraphComponent {
+   *   private graph: KnowledgeGraph;
+   *
+   *   onMount() {
+   *     this.graph = new KnowledgeGraph(this.container, data);
+   *     this.graph.render();
+   *   }
+   *
+   *   onUnmount() {
+   *     // Clean up when component unmounts
+   *     this.graph.destroy();
+   *   }
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Re-rendering after destroy
+   * const graph = new KnowledgeGraph(container, data, config);
+   * graph.render();
+   *
+   * // Destroy and re-render with same instance
+   * graph.destroy();
+   * graph.render(); // Creates fresh visualization
+   * ```
    */
   destroy(): void {
     if (this.edgeRenderResult) {

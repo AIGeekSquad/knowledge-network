@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { KnowledgeGraph } from '../KnowledgeGraph';
-import type { GraphData, Node } from '../types';
+import { KnowledgeGraph } from '../src/KnowledgeGraph';
+import type { GraphData, Node } from '../src/types';
 
 describe('KnowledgeGraph', () => {
   let container: HTMLDivElement;

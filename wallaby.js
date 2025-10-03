@@ -1,65 +1,40 @@
 module.exports = function (wallaby) {
+  process.chdir('packages/knowledge-network');
+  
+  // Set up JSDOM globals immediately
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
+    url: 'http://localhost',
+    pretendToBeVisual: true,
+    resources: 'usable'
+  });
+
+  // Set up DOM globals before returning config
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.navigator = dom.window.navigator;
+  global.HTMLElement = dom.window.HTMLElement;
+  global.SVGElement = dom.window.SVGElement;
+  global.Element = dom.window.Element;
+  global.Node = dom.window.Node;
+  global.DocumentFragment = dom.window.DocumentFragment;
+  global.HTMLDivElement = dom.window.HTMLDivElement;
+
   return {
     files: [
-      'packages/knowledge-network/src/**/*.ts',
-      '!packages/knowledge-network/src/**/*.test.ts',
-      'packages/knowledge-network/tsconfig.json',
-      'packages/knowledge-network/vitest.config.ts',
-      'tsconfig.json',
+      'src/**/*.ts',
+      '!src/**/*.test.ts',
+      'vitest.config.ts'
+    ],
+    
+    tests: [
+      'src/**/*.test.ts'
     ],
 
-    tests: ['packages/knowledge-network/src/**/*.test.ts'],
-
     env: {
-      type: 'node',
+      type: 'node'
     },
 
-    testFramework: 'vitest',
-
-    debug: true,
-
-    // Vitest-specific configuration
-    workers: {
-      restart: true,
-    },
-
-    // TypeScript support
-    preprocessors: {
-      '**/*.ts': (file) =>
-        require('@swc/core').transformSync(file.content, {
-          jsc: {
-            parser: {
-              syntax: 'typescript',
-              tsx: false,
-              decorators: false,
-              dynamicImport: true,
-            },
-            target: 'es2022',
-            loose: false,
-            externalHelpers: false,
-            keepClassNames: false,
-            transform: null,
-            baseUrl: '.',
-          },
-          module: {
-            type: 'es6',
-          },
-          sourceMaps: 'inline',
-          isModule: true,
-        }).code,
-    },
-
-    setup: function (wallaby) {
-      const path = require('path');
-      const { createVitest } = require('vitest/node');
-
-      return createVitest('test', {
-        watch: false,
-        config: path.join(
-          wallaby.projectCacheDir,
-          'packages/knowledge-network/vitest.config.ts'
-        ),
-      });
-    },
+    testFramework: 'vitest'
   };
 };
