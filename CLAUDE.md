@@ -100,7 +100,6 @@ The main library follows a modular architecture:
 ## Testing
 
 - **Framework**: Vitest with jsdom for DOM testing
-- **Real-time Testing**: Wallaby.js configuration available for IDE integration
 - **Test Location**: Tests are co-located in `src/__tests__/` directories
 
 ## Build System
