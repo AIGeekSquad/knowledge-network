@@ -1,324 +1,338 @@
-import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
-import type { GraphData, Node } from '@aigeeksquad/knowledge-network';
+// Import from the built library, not source TypeScript
+import { KnowledgeGraph, Node, Edge, GraphData } from '../../knowledge-network/dist/index.js';
 
-const container = document.getElementById('graph') as HTMLElement;
-let currentGraph: KnowledgeGraph | null = null;
-
-// Helper function to calculate cosine similarity
-function cosineSimilarity(a: number[], b: number[]): number {
-  if (!a || !b || a.length !== b.length) return 0;
+// Helper function to create a network graph structure
+function createNetworkGraph(nodeCount: number, connectionDensity: number): GraphData {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
   
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+  // Create nodes in a circular layout initially
+  for (let i = 0; i < nodeCount; i++) {
+    const angle = (i / nodeCount) * 2 * Math.PI;
+    nodes.push({
+      id: `node-${i}`,
+      label: `Node ${i}`,
+      x: 400 + Math.cos(angle) * 200,
+      y: 300 + Math.sin(angle) * 200,
+      metadata: {
+        group: Math.floor(i / (nodeCount / 3)), // Divide into 3 groups
+        importance: Math.random()
+      }
+    });
   }
   
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  // Create edges based on connection patterns
+  for (let i = 0; i < nodeCount; i++) {
+    for (let j = i + 1; j < nodeCount; j++) {
+      // Create connections based on patterns
+      const sameGroup = nodes[i].metadata?.group === nodes[j].metadata?.group;
+      const crossGroup = Math.abs((nodes[i].metadata?.group as number || 0) - (nodes[j].metadata?.group as number || 0)) === 1;
+      
+      // Higher probability for same group connections
+      const probability = sameGroup ? 0.3 : (crossGroup ? 0.15 : 0.05);
+      
+      if (Math.random() < probability * connectionDensity) {
+        edges.push({
+          id: `edge-${i}-${j}`,
+          source: `node-${i}`,
+          target: `node-${j}`,
+          metadata: {
+            type: sameGroup ? 'intra-group' : 'inter-group',
+            weight: Math.random() * 3 + 1
+          }
+        });
+      }
+    }
+  }
+  
+  return { nodes, edges };
 }
 
-// Example 1: Simple Graph with type-based styling
-const simpleGraphData: GraphData = {
-  nodes: [
-    { id: 'A', label: 'Concept A', type: 'primary' },
-    { id: 'B', label: 'Concept B', type: 'secondary' },
-    { id: 'C', label: 'Concept C', type: 'secondary' },
-    { id: 'D', label: 'Concept D', type: 'primary' },
-  ],
-  edges: [
-    { source: 'A', target: 'B', label: 'relates to', type: 'is-a' },
-    { source: 'B', target: 'C', label: 'connected to', type: 'related-to' },
-    { source: 'C', target: 'D', label: 'links to', type: 'part-of' },
-    { source: 'D', target: 'A', label: 'references', type: 'similar-to' },
-  ],
-};
+// Create hierarchical graph for better bundling demonstration
+function createHierarchicalGraph(): GraphData {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+  
+  // Create three layers
+  const layers = [
+    { count: 3, y: 100, prefix: 'top' },
+    { count: 5, y: 300, prefix: 'mid' },
+    { count: 8, y: 500, prefix: 'bot' }
+  ];
+  
+  layers.forEach((layer, layerIndex) => {
+    for (let i = 0; i < layer.count; i++) {
+      const x = 100 + (600 / (layer.count - 1)) * i;
+      nodes.push({
+        id: `${layer.prefix}-${i}`,
+        label: `${layer.prefix.toUpperCase()} ${i}`,
+        x: x,
+        y: layer.y,
+        metadata: {
+          layer: layerIndex,
+          position: i
+        }
+      });
+    }
+  });
+  
+  // Connect layers with specific patterns
+  // Top to middle connections
+  for (let i = 0; i < layers[0].count; i++) {
+    for (let j = 0; j < layers[1].count; j++) {
+      // Each top node connects to 2-3 middle nodes
+      if (Math.abs(i * 2 - j) <= 1) {
+        edges.push({
+          id: `edge-t${i}-m${j}`,
+          source: `top-${i}`,
+          target: `mid-${j}`,
+          metadata: {
+            type: 'downward',
+            layer: 'top-mid'
+          }
+        });
+      }
+    }
+  }
+  
+  // Middle to bottom connections
+  for (let i = 0; i < layers[1].count; i++) {
+    for (let j = 0; j < layers[2].count; j++) {
+      // Each middle node connects to 2-3 bottom nodes
+      if (Math.abs(i * 1.6 - j) <= 1.5) {
+        edges.push({
+          id: `edge-m${i}-b${j}`,
+          source: `mid-${i}`,
+          target: `bot-${j}`,
+          metadata: {
+            type: 'downward',
+            layer: 'mid-bot'
+          }
+        });
+      }
+    }
+  }
+  
+  // Add some cross-layer connections for bundling effect
+  edges.push(
+    { id: 'cross-1', source: 'top-0', target: 'bot-0', metadata: { type: 'cross', layer: 'cross' } },
+    { id: 'cross-2', source: 'top-2', target: 'bot-7', metadata: { type: 'cross', layer: 'cross' } },
+    { id: 'cross-3', source: 'top-1', target: 'bot-3', metadata: { type: 'cross', layer: 'cross' } }
+  );
+  
+  return { nodes, edges };
+}
 
-// Example 2: Complex Graph with vector similarity
-const complexGraphData: GraphData = {
-  nodes: [
-    { id: '1', label: 'Machine Learning', type: 'topic', vector: [1.0, 0.8, 0.6, 0.4] },
-    { id: '2', label: 'Neural Networks', type: 'topic', vector: [0.9, 0.9, 0.7, 0.5] },
-    { id: '3', label: 'Deep Learning', type: 'topic', vector: [0.95, 0.85, 0.8, 0.6] },
-    { id: '4', label: 'Computer Vision', type: 'application', vector: [0.7, 0.6, 0.9, 0.3] },
-    { id: '5', label: 'Natural Language Processing', type: 'application', vector: [0.7, 0.5, 0.8, 0.7] },
-    { id: '6', label: 'TensorFlow', type: 'tool', vector: [0.5, 0.4, 0.3, 0.9] },
-    { id: '7', label: 'PyTorch', type: 'tool', vector: [0.5, 0.4, 0.35, 0.85] },
-    { id: '8', label: 'Transformers', type: 'architecture', vector: [0.8, 0.7, 0.75, 0.65] },
-  ],
-  edges: [
-    { source: '1', target: '2', label: 'includes', type: 'is-a' },
-    { source: '2', target: '3', label: 'foundation of', type: 'is-a' },
-    { source: '3', target: '4', label: 'used in', type: 'related-to' },
-    { source: '3', target: '5', label: 'used in', type: 'related-to' },
-    { source: '2', target: '6', label: 'implemented in', type: 'part-of' },
-    { source: '2', target: '7', label: 'implemented in', type: 'part-of' },
-    { source: '3', target: '8', label: 'uses', type: 'part-of' },
-    { source: '8', target: '5', label: 'powers', type: 'related-to' },
-  ],
-};
+// Current graph instance
+let currentGraph: KnowledgeGraph | null = null;
 
-// Example 3: Custom Styling
-const customGraphData: GraphData = {
-  nodes: [
-    { id: 'root', label: 'Root Node' },
-    { id: 'child1', label: 'Child 1' },
-    { id: 'child2', label: 'Child 2' },
-    { id: 'child3', label: 'Child 3' },
-    { id: 'leaf1', label: 'Leaf 1' },
-    { id: 'leaf2', label: 'Leaf 2' },
-  ],
-  edges: [
-    { source: 'root', target: 'child1' },
-    { source: 'root', target: 'child2' },
-    { source: 'root', target: 'child3' },
-    { source: 'child1', target: 'leaf1' },
-    { source: 'child2', target: 'leaf2' },
-  ],
-};
-
-// Example 4: Edge Bundling - Designed to showcase bundling effects
-const edgeBundlingGraphData: GraphData = {
-  nodes: [
-    // Core nodes
-    { id: 'core1', label: 'Data Science', type: 'core' },
-    { id: 'core2', label: 'Machine Learning', type: 'core' },
-    
-    // Left cluster
-    { id: 'left1', label: 'Statistics', type: 'foundation' },
-    { id: 'left2', label: 'Mathematics', type: 'foundation' },
-    { id: 'left3', label: 'Programming', type: 'foundation' },
-    { id: 'left4', label: 'Databases', type: 'foundation' },
-    
-    // Right cluster
-    { id: 'right1', label: 'Computer Vision', type: 'application' },
-    { id: 'right2', label: 'NLP', type: 'application' },
-    { id: 'right3', label: 'Robotics', type: 'application' },
-    { id: 'right4', label: 'Speech', type: 'application' },
-    
-    // Middle connectors
-    { id: 'mid1', label: 'Neural Nets', type: 'method' },
-    { id: 'mid2', label: 'Deep Learning', type: 'method' },
-  ],
-  edges: [
-    // Multiple edges flowing from left to core1 - these should bundle together
-    { source: 'left1', target: 'core1', type: 'foundation' },
-    { source: 'left2', target: 'core1', type: 'foundation' },
-    { source: 'left3', target: 'core1', type: 'foundation' },
-    { source: 'left4', target: 'core1', type: 'foundation' },
-    
-    // Multiple edges flowing from core1 to core2 - different type
-    { source: 'core1', target: 'mid1', type: 'method' },
-    { source: 'core1', target: 'mid2', type: 'method' },
-    { source: 'mid1', target: 'core2', type: 'method' },
-    { source: 'mid2', target: 'core2', type: 'method' },
-    
-    // Multiple edges flowing from core2 to right cluster - these should bundle together
-    { source: 'core2', target: 'right1', type: 'application' },
-    { source: 'core2', target: 'right2', type: 'application' },
-    { source: 'core2', target: 'right3', type: 'application' },
-    { source: 'core2', target: 'right4', type: 'application' },
-    
-    // Some cross connections to create more bundling opportunities
-    { source: 'left1', target: 'mid1', type: 'foundation' },
-    { source: 'left2', target: 'mid1', type: 'foundation' },
-    { source: 'mid1', target: 'right1', type: 'application' },
-    { source: 'mid1', target: 'right2', type: 'application' },
-    { source: 'mid2', target: 'right3', type: 'application' },
-    { source: 'mid2', target: 'right4', type: 'application' },
-    { source: 'left3', target: 'mid2', type: 'foundation' },
-    { source: 'left4', target: 'mid2', type: 'foundation' },
-  ],
-};
-
-function renderGraph(data: GraphData, config = {}) {
+// Function to clear and prepare the graph container
+function clearGraph() {
+  const graphContainer = document.querySelector('#graph') as HTMLElement;
+  if (graphContainer) {
+    graphContainer.innerHTML = '';
+    graphContainer.style.height = '600px';
+    graphContainer.style.width = '100%';
+  }
   if (currentGraph) {
     currentGraph.destroy();
+    currentGraph = null;
   }
+}
 
-  currentGraph = new KnowledgeGraph(container, data, {
-    width: 1000,
-    height: 600,
-    enableZoom: true,
-    enableDrag: true,
-    ...config,
-  });
-
+// Example 1: Type-Based Styling
+function showExample1() {
+  clearGraph();
+  const graphContainer = document.querySelector('#graph') as HTMLElement;
+  
+  const data = createNetworkGraph(12, 0.8);
+  currentGraph = new KnowledgeGraph(
+    graphContainer,
+    data,
+    {
+      nodeRadius: (node: Node) => {
+        const group = node.metadata?.group as number || 0;
+        return 8 + group * 3;
+      },
+      nodeFill: (node: Node) => {
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1'];
+        const group = node.metadata?.group as number || 0;
+        return colors[group];
+      },
+      linkStroke: '#999',
+      linkStrokeWidth: 1.5,
+      chargeStrength: -400,
+      linkDistance: 80,
+      waitForStable: false
+    }
+  );
   currentGraph.render();
 }
 
-// Event listeners
-document.getElementById('example1')?.addEventListener('click', () => {
-  // Example 1: Type-based node styling (accessor function)
-  renderGraph(simpleGraphData, {
-    nodeRadius: (d: Node) => d.type === 'primary' ? 15 : 10,
-    nodeFill: (d: Node) => d.type === 'primary' ? '#ff6b6b' : '#4ecdc4',
-    linkDistance: 150,
-    chargeStrength: -400,
-    // Collision detection to prevent overlap
-    collisionRadius: (d: Node) => (d.type === 'primary' ? 15 : 10) + 5,
+// Example 2: Similarity Clustering
+function showExample2() {
+  clearGraph();
+  const graphContainer = document.querySelector('#graph') as HTMLElement;
+  
+  const data = createNetworkGraph(20, 0.6);
+  // Add vectors for similarity
+  data.nodes.forEach(node => {
+    const group = node.metadata?.group as number || 0;
+    node.vector = [
+      group === 0 ? 1 : 0,
+      group === 1 ? 1 : 0,
+      group === 2 ? 1 : 0,
+      Math.random()
+    ];
   });
-});
+  
+  currentGraph = new KnowledgeGraph(
+    graphContainer,
+    data,
+    {
+      nodeFill: (node: Node) => {
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1'];
+        const group = node.metadata?.group as number || 0;
+        return colors[group];
+      },
+      similarityFunction: (a: Node, b: Node) => {
+        if (!a.vector || !b.vector) return 0;
+        // Cosine similarity
+        let dot = 0;
+        let magA = 0;
+        let magB = 0;
+        for (let i = 0; i < a.vector.length; i++) {
+          dot += a.vector[i] * b.vector[i];
+          magA += a.vector[i] * a.vector[i];
+          magB += b.vector[i] * b.vector[i];
+        }
+        return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+      },
+      chargeStrength: -300,
+      linkDistance: 100,
+      waitForStable: false
+    }
+  );
+  currentGraph.render();
+}
 
-document.getElementById('example2')?.addEventListener('click', () => {
-  // Example 2: Similarity-based clustering with ontology-aware links
-  renderGraph(complexGraphData, {
-    nodeRadius: (d: Node) => {
-      // Size by type
-      if (d.type === 'topic') return 15;
-      if (d.type === 'application') return 12;
-      if (d.type === 'tool') return 10;
-      return 8;
-    },
-    nodeFill: (d: Node) => {
-      // Color by type
-      const colors: Record<string, string> = {
-        'topic': '#ff6b6b',
-        'application': '#4ecdc4',
-        'tool': '#45b7d1',
-        'architecture': '#f9ca24',
-      };
-      return colors[d.type || ''] || '#95afc0';
-    },
-    linkDistance: 100,
-    linkStroke: (d) => {
-      // Color edges by ontology type
-      const colors: Record<string, string> = {
-        'is-a': '#e74c3c',
-        'part-of': '#3498db',
-        'related-to': '#95a5a6',
-        'similar-to': '#2ecc71',
-      };
-      return colors[d.type || ''] || '#999';
-    },
-    linkStrokeWidth: (d) => d.type === 'is-a' ? 3 : 1.5,
-    chargeStrength: -500,
-    // Use vector similarity for clustering
-    similarityFunction: (a: Node, b: Node) => {
-      if (a.vector && b.vector) {
-        return cosineSimilarity(a.vector, b.vector);
-      }
-      return 0;
-    },
-    collisionRadius: (d: Node) => {
-      if (d.type === 'topic') return 20;
-      if (d.type === 'application') return 17;
-      if (d.type === 'tool') return 15;
-      return 13;
-    },
-  });
-});
+// Example 3: Custom Accessors
+function showExample3() {
+  clearGraph();
+  const graphContainer = document.querySelector('#graph') as HTMLElement;
+  
+  const data = createNetworkGraph(15, 0.7);
+  currentGraph = new KnowledgeGraph(
+    graphContainer,
+    data,
+    {
+      nodeRadius: (node: Node, i: number) => {
+        return 5 + (i % 3) * 5;
+      },
+      nodeFill: (node: Node, i: number) => {
+        const importance = node.metadata?.importance as number || 0;
+        return importance > 0.5 ? '#ff6b6b' : '#4ecdc4';
+      },
+      nodeStroke: (node: Node) => {
+        const group = node.metadata?.group as number || 0;
+        return group === 1 ? '#333' : '#999';
+      },
+      nodeStrokeWidth: (node: Node) => {
+        const group = node.metadata?.group as number || 0;
+        return group === 1 ? 3 : 1.5;
+      },
+      linkStroke: (edge: Edge) => {
+        return edge.metadata?.type === 'intra-group' ? '#4ecdc4' : '#ff6b6b';
+      },
+      linkStrokeWidth: (edge: Edge) => {
+        const weight = edge.metadata?.weight as number || 1;
+        return weight;
+      },
+      chargeStrength: -350,
+      linkDistance: 90,
+      waitForStable: false
+    }
+  );
+  currentGraph.render();
+}
 
-document.getElementById('example3')?.addEventListener('click', () => {
-  // Example 3: Custom accessor-based styling
-  renderGraph(customGraphData, {
-    nodeRadius: 15,
-    nodeFill: (d: Node, i: number) => {
-      // Gradient based on position in array
-      const hue = (i * 60) % 360;
-      return `hsl(${hue}, 70%, 60%)`;
-    },
-    linkDistance: 200,
-    chargeStrength: (d: Node) => d.id === 'root' ? -800 : -300,
-    collisionRadius: 20,
-  });
-});
+// Example 4: Simple Edges
+function showExample4() {
+  clearGraph();
+  const graphContainer = document.querySelector('#graph') as HTMLElement;
+  
+  const data = createNetworkGraph(15, 0.8);
+  currentGraph = new KnowledgeGraph(
+    graphContainer,
+    data,
+    {
+      edgeRenderer: 'simple',
+      linkStroke: (edge: Edge) => {
+        const colors: Record<string, string> = {
+          'intra-group': '#4ecdc4',
+          'inter-group': '#ff6b6b'
+        };
+        return colors[edge.metadata?.type as string] || '#999';
+      },
+      linkStrokeWidth: (edge: Edge) => (edge.metadata?.weight as number) || 1.5,
+      chargeStrength: -300,
+      linkDistance: 80,
+      waitForStable: false
+    }
+  );
+  currentGraph.render();
+}
 
-document.getElementById('example4')?.addEventListener('click', () => {
-  // Example 4: Simple edges (no bundling) - for comparison
-  renderGraph(edgeBundlingGraphData, {
-    nodeRadius: (d: Node) => {
-      if (d.type === 'core') return 20;
-      if (d.type === 'foundation') return 15;
-      if (d.type === 'method') return 15;
-      if (d.type === 'application') return 15;
-      return 12;
-    },
-    nodeFill: (d: Node) => {
-      const colors: Record<string, string> = {
-        'core': '#ff6b6b',
-        'foundation': '#4ecdc4',
-        'method': '#f9ca24',
-        'application': '#45b7d1',
-      };
-      return colors[d.type || ''] || '#95afc0';
-    },
-    linkDistance: 150,
-    linkStroke: (d) => {
-      const colors: Record<string, string> = {
-        'foundation': '#4ecdc4',
-        'method': '#f9ca24',
-        'application': '#45b7d1',
-      };
-      return colors[d.type || ''] || '#999';
-    },
-    linkStrokeWidth: 2,
-    chargeStrength: -300,
-    collisionRadius: (d: Node) => {
-      if (d.type === 'core') return 25;
-      return 20;
-    },
-    // Use simple edge renderer (straight lines)
-    edgeRenderer: 'simple',
-  });
-});
+// Example 5: Edge Bundling
+function showExample5() {
+  clearGraph();
+  const graphContainer = document.querySelector('#graph') as HTMLElement;
+  
+  const data = createHierarchicalGraph();
+  currentGraph = new KnowledgeGraph(
+    graphContainer,
+    data,
+    {
+      edgeRenderer: 'bundled',
+      edgeBundling: {
+        subdivisions: 25,
+        iterations: 80,
+        compatibilityThreshold: 0.55,
+        stepSize: 0.04,
+        stiffness: 0.15
+      },
+      linkStroke: (edge: Edge) => {
+        const colors: Record<string, string> = {
+          'downward': '#4ecdc4',
+          'cross': '#ff6b6b'
+        };
+        return colors[edge.metadata?.type as string] || '#999';
+      },
+      linkStrokeWidth: 2,
+      chargeStrength: -500,
+      linkDistance: 100,
+      waitForStable: false
+    }
+  );
+  currentGraph.render();
+}
 
-document.getElementById('example5')?.addEventListener('click', () => {
-  // Example 5: Edge bundling demonstration
-  renderGraph(edgeBundlingGraphData, {
-    nodeRadius: (d: Node) => {
-      if (d.type === 'core') return 20;
-      if (d.type === 'foundation') return 15;
-      if (d.type === 'method') return 15;
-      if (d.type === 'application') return 15;
-      return 12;
-    },
-    nodeFill: (d: Node) => {
-      const colors: Record<string, string> = {
-        'core': '#ff6b6b',
-        'foundation': '#4ecdc4',
-        'method': '#f9ca24',
-        'application': '#45b7d1',
-      };
-      return colors[d.type || ''] || '#95afc0';
-    },
-    linkDistance: 150,
-    linkStroke: (d) => {
-      const colors: Record<string, string> = {
-        'foundation': '#4ecdc4',
-        'method': '#f9ca24',
-        'application': '#45b7d1',
-      };
-      return colors[d.type || ''] || '#999';
-    },
-    linkStrokeWidth: 2,
-    chargeStrength: -300,
-    collisionRadius: (d: Node) => {
-      if (d.type === 'core') return 25;
-      return 20;
-    },
-    // Enable edge bundling with highly aggressive parameters for dramatic effect
-    edgeRenderer: 'bundled',
-    waitForStable: true,
-    stabilityThreshold: 0.005,
-    edgeBundling: {
-      subdivisions: 60,              // More control points for smoother curves
-      compatibilityThreshold: 0.2,   // Very low threshold for maximum bundling
-      iterations: 150,                // Many iterations for tight bundles
-      stepSize: 0.25,                // Very large steps for dramatic bundling
-      stiffness: 0.01,               // Very low stiffness for extreme curvature
-    },
-  });
-});
-
-// Render the first example by default
-renderGraph(simpleGraphData, {
-  nodeRadius: (d: Node) => d.type === 'primary' ? 15 : 10,
-  nodeFill: (d: Node) => d.type === 'primary' ? '#ff6b6b' : '#4ecdc4',
-  linkDistance: 150,
-  chargeStrength: -400,
-  collisionRadius: (d: Node) => (d.type === 'primary' ? 15 : 10) + 5,
+// Initialize event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Initializing Knowledge Network Examples');
+  
+  const example1Btn = document.getElementById('example1');
+  const example2Btn = document.getElementById('example2');
+  const example3Btn = document.getElementById('example3');
+  const example4Btn = document.getElementById('example4');
+  const example5Btn = document.getElementById('example5');
+  
+  if (example1Btn) example1Btn.addEventListener('click', showExample1);
+  if (example2Btn) example2Btn.addEventListener('click', showExample2);
+  if (example3Btn) example3Btn.addEventListener('click', showExample3);
+  if (example4Btn) example4Btn.addEventListener('click', showExample4);
+  if (example5Btn) example5Btn.addEventListener('click', showExample5);
+  
+  // Show first example by default
+  showExample4(); // Start with simple edges
 });

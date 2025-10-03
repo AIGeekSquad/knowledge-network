@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Library Works</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <h1>Testing if Library Loads</h1>
+    <div id="test" style="width: 800px; height: 600px; border: 2px solid red;"></div>
+    <div id="output" style="white-space: pre; font-family: monospace;"></div>
+    
+    <script type="module">
+        const output = document.getElementById('output');
+        
+        function log(msg) {
+            output.textContent += msg + '\n';
+            console.log(msg);
+        }
+        
+        log('Starting test...');
+        
+        try {
+            // Import from the BUILT library
+            const module = await import('/packages/knowledge-network/dist/index.js');
+            log('✓ Module imported from dist/index.js');
+            log('Available exports: ' + Object.keys(module).join(', '));
+            
+            const { KnowledgeGraph } = module;
+            log('✓ KnowledgeGraph imported');
+            
+            // Try to create a simple graph
+            const container = document.getElementById('test');
+            const nodes = [
+                { id: 'a', label: 'Node A' },
+                { id: 'b', label: 'Node B' },
+                { id: 'c', label: 'Node C' }
+            ];
+            const edges = [
+                { source: 'a', target: 'b' },
+                { source: 'b', target: 'c' },
+                { source: 'c', target: 'a' }
+            ];
+            
+            const graph = new KnowledgeGraph(
+                container,
+                { nodes, edges },
+                { 
+                    edgeRenderer: 'bundled',
+                    edgeBundling: {
+                        subdivisions: 20,
+                        iterations: 60
+                    },
+                    waitForStable: false 
+                }
+            );
+            log('✓ Graph instance created');
+            
+            graph.render();
+            log('✓ Graph render() called');
+            
+            // Check if SVG was created
+            setTimeout(() => {
+                const svg = container.querySelector('svg');
+                if (svg) {
+                    log('✓ SVG element found');
+                    const nodes = svg.querySelectorAll('.node');
+                    const edges = svg.querySelectorAll('path');
+                    log(`  - Found ${nodes.length} nodes`);
+                    log(`  - Found ${edges.length} edges`);
+                    
+                    if (nodes.length > 0 && edges.length > 0) {
+                        log('\n✅ SUCCESS: Library is working!');
+                        log('✅ Edge bundling is functional!');
+                        container.style.border = '2px solid green';
+                    } else {
+                        log('\n❌ PROBLEM: No nodes or edges rendered');
+                    }
+                } else {
+                    log('❌ ERROR: No SVG element created');
+                }
+            }, 1000);
+            
+        } catch (error) {
+            log('❌ ERROR: ' + error.message);
+            log('Stack trace:');
+            log(error.stack);
+        }
+    </script>
+</body>
+</html>

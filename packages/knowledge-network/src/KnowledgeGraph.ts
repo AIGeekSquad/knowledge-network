@@ -318,6 +318,12 @@ export class KnowledgeGraph {
           if (!event.active) this.simulation?.alphaTarget(0);
           d.fx = null;
           d.fy = null;
+          // Recalculate edge bundling after drag ends if using bundled renderer
+          if (this.config.edgeRenderer === 'bundled' && this.edgeRenderResult) {
+            setTimeout(() => {
+              this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
+            }, 100);
+          }
         });
 
       node.call(drag as any);
@@ -364,6 +370,7 @@ export class KnowledgeGraph {
 
     // If not waiting for stable, render edges immediately
     if (!this.config.waitForStable) {
+      edgesRendered = true;
       this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
     }
   }

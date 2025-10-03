@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Library Test</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <h1>Testing Knowledge Network Library</h1>
+    <div id="test" style="width: 800px; height: 600px; border: 1px solid black;"></div>
+    
+    <script type="module">
+        import { KnowledgeGraph } from '/src/../../knowledge-network/src/index.js';
+        
+        console.log('Loading library...');
+        
+        const nodes = [
+            { id: 'a', label: 'Node A', x: 200, y: 200 },
+            { id: 'b', label: 'Node B', x: 400, y: 200 },
+            { id: 'c', label: 'Node C', x: 300, y: 400 }
+        ];
+        
+        const edges = [
+            { source: 'a', target: 'b' },
+            { source: 'b', target: 'c' },
+            { source: 'c', target: 'a' }
+        ];
+        
+        try {
+            const container = document.getElementById('test');
+            console.log('Container:', container);
+            
+            const graph = new KnowledgeGraph(
+                container,
+                { nodes, edges },
+                {
+                    edgeRenderer: 'bundled',
+                    edgeBundling: {
+                        subdivisions: 20,
+                        iterations: 60
+                    },
+                    waitForStable: false
+                }
+            );
+            
+            console.log('Graph created:', graph);
+            graph.render();
+            console.log('Graph rendered');
+        } catch (error) {
+            console.error('ERROR:', error);
+            document.body.innerHTML += '<pre style="color: red;">' + error.stack + '</pre>';
+        }
+    </script>
+</body>
+</html>

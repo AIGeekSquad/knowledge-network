@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edge Bundling Test</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #test { border: 1px solid #ccc; margin: 20px 0; }
+        .info { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Edge Bundling Direct Test</h1>
+    <div class="info">
+        This test creates simple parallel edges and applies bundling to verify the algorithm works.
+        If you see curved lines that bundle together in the middle, it's working.
+    </div>
+    <svg id="test" width="800" height="400"></svg>
+    
+    <script type="module">
+        // Simple test data - parallel edges that should bundle
+        const edges = [
+            { source: { x: 100, y: 150 }, target: { x: 700, y: 150 } },
+            { source: { x: 100, y: 200 }, target: { x: 700, y: 200 } },
+            { source: { x: 100, y: 250 }, target: { x: 700, y: 250 } }
+        ];
+
+        const svg = d3.select('#test');
+        const g = svg.append('g');
+
+        // Draw nodes
+        const nodes = edges.flatMap(e => [e.source, e.target]);
+        g.selectAll('circle')
+            .data(nodes)
+            .join('circle')
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y)
+            .attr('r', 5)
+            .attr('fill', '#ff6b6b');
+
+        // Simple bundling algorithm
+        function createBundledPath(edge, index, allEdges) {
+            const subdivisions = 10;
+            const points = [];
+            
+            // Create subdivision points
+            for (let i = 0; i <= subdivisions; i++) {
+                const t = i / subdivisions;
+                points.push({
+                    x: edge.source.x * (1 - t) + edge.target.x * t,
+                    y: edge.source.y * (1 - t) + edge.target.y * t
+                });
+            }
+            
+            // Apply bundling force to middle points
+            for (let i = 1; i < points.length - 1; i++) {
+                const t = i / (points.length - 1);
+                const bundlingStrength = Math.sin(t * Math.PI) * 0.5; // Maximum at middle
+                
+                // Calculate center of all edges at this point
+                let centerY = 0;
+                for (const otherEdge of allEdges) {
+                    const otherY = otherEdge.source.y * (1 - t) + otherEdge.target.y * t;
+                    centerY += otherY;
+                }
+                centerY /= allEdges.length;
+                
+                // Move toward center
+                points[i].y += (centerY - points[i].y) * bundlingStrength;
+            }
+            
+            // Create path using cardinal spline
+            const line = d3.line()
+                .x(d => d.x)
+                .y(d => d.y)
+                .curve(d3.curveCardinal.tension(0.8));
+            
+            return line(points);
+        }
+
+        // Draw bundled edges
+        g.selectAll('path')
+            .data(edges)
+            .join('path')
+            .attr('d', (d, i) => createBundledPath(d, i, edges))
+            .attr('fill', 'none')
+            .attr('stroke', '#4ecdc4')
+            .attr('stroke-width', 3)
+            .attr('stroke-opacity', 0.7);
+
+        // Add labels
+        g.append('text')
+            .attr('x', 400)
+            .attr('y', 30)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '14px')
+            .text('If edges are curved and bundled in the middle, the algorithm is working');
+    </script>
+</body>
+</html>

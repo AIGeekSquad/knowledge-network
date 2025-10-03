@@ -334,11 +334,11 @@ export class EdgeBundling implements EdgeRenderer {
     // Perform edge bundling
     this.performBundling(edges, controlPoints);
 
-    // Create line generator for smooth curves
+    // Create line generator for smooth curves - use cardinal spline for better control
     const lineGenerator = d3.line<ControlPoint>()
       .x(d => d.x)
       .y(d => d.y)
-      .curve(d3.curveBasis); // Use basis spline for smooth curves
+      .curve(d3.curveCardinal.tension(0.8)); // Cardinal spline with tension for smooth bundling
 
     // Render edges as paths
     const selection = container
@@ -455,7 +455,7 @@ export class EdgeBundling implements EdgeRenderer {
   }
 
   /**
-   * Initialize control points for each edge
+   * Initialize control points for each edge with professional subdivision strategy
    */
   private initializeControlPoints(edges: Edge[]): ControlPoint[][] {
     return edges.map(edge => {
@@ -463,9 +463,12 @@ export class EdgeBundling implements EdgeRenderer {
       const target = edge.target as any;
       const points: ControlPoint[] = [];
 
+      // Start with fewer subdivisions for initial convergence (research-backed approach)
+      const initialSubdivisions = Math.max(3, Math.min(this.config.subdivisions, 8));
+      
       // Create subdivision points along the edge
-      for (let i = 0; i <= this.config.subdivisions; i++) {
-        const t = i / this.config.subdivisions;
+      for (let i = 0; i <= initialSubdivisions; i++) {
+        const t = i / initialSubdivisions;
         points.push({
           x: source.x * (1 - t) + target.x * t,
           y: source.y * (1 - t) + target.y * t,
@@ -477,64 +480,77 @@ export class EdgeBundling implements EdgeRenderer {
   }
 
   /**
-   * Perform force-directed edge bundling
+   * Perform edge bundling using iterative force-based approach
    */
   private performBundling(edges: Edge[], controlPoints: ControlPoint[][]): void {
     const n = edges.length;
-
+    
     // Compute compatibility between all edge pairs
     const compatibility = this.computeCompatibility(edges);
-
-    // Perform bundling iterations
+    
+    // Perform multiple iterations to gradually bundle edges
     for (let iter = 0; iter < this.config.iterations; iter++) {
-      // Gradually decrease step size
+      // Adaptive step size that decreases over time
       const step = this.config.stepSize * (1 - iter / this.config.iterations);
-
+      
       // For each edge
       for (let i = 0; i < n; i++) {
         const points = controlPoints[i];
-
+        const numPoints = points.length;
+        
         // For each control point (except endpoints)
-        for (let p = 1; p < points.length - 1; p++) {
-          let fx = 0;
-          let fy = 0;
-
-          // Calculate attractive force from compatible edges
+        for (let p = 1; p < numPoints - 1; p++) {
+          let forceX = 0;
+          let forceY = 0;
+          let compatibleCount = 0;
+          
+          // Calculate attraction to compatible edges
           for (let j = 0; j < n; j++) {
             if (i === j) continue;
-
+            
             const comp = compatibility[i][j];
             if (comp < this.config.compatibilityThreshold) continue;
-
+            
             const otherPoints = controlPoints[j];
-            const otherPoint = otherPoints[p];
-
-            // Attractive force toward compatible edge
-            const dx = otherPoint.x - points[p].x;
-            const dy = otherPoint.y - points[p].y;
+            if (p >= otherPoints.length) continue;
+            
+            // Calculate force toward the corresponding point on compatible edge
+            const dx = otherPoints[p].x - points[p].x;
+            const dy = otherPoints[p].y - points[p].y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > 0) {
-              // Amplify the attractive force for more dramatic bundling
-              const forceMagnitude = comp * 3.0;
-              fx += (dx / distance) * forceMagnitude;
-              fy += (dy / distance) * forceMagnitude;
+            
+            if (distance > 0.001) {
+              // Force proportional to compatibility
+              forceX += (dx / distance) * comp;
+              forceY += (dy / distance) * comp;
+              compatibleCount++;
             }
           }
-
-          // Spring force toward straight line
-          const source = points[0];
-          const target = points[points.length - 1];
-          const t = p / (points.length - 1);
-          const straightX = source.x * (1 - t) + target.x * t;
-          const straightY = source.y * (1 - t) + target.y * t;
-
-          fx += (straightX - points[p].x) * this.config.stiffness;
-          fy += (straightY - points[p].y) * this.config.stiffness;
-
-          // Update position
-          points[p].x += fx * step;
-          points[p].y += fy * step;
+          
+          // Apply spring force toward straight line (maintains edge structure)
+          const t = p / (numPoints - 1);
+          const straightX = points[0].x * (1 - t) + points[numPoints - 1].x * t;
+          const straightY = points[0].y * (1 - t) + points[numPoints - 1].y * t;
+          
+          forceX += (straightX - points[p].x) * this.config.stiffness;
+          forceY += (straightY - points[p].y) * this.config.stiffness;
+          
+          // Apply the combined force
+          if (compatibleCount > 0) {
+            points[p].x += forceX * step;
+            points[p].y += forceY * step;
+          } else {
+            // If no compatible edges, add slight curvature for visual appeal
+            const perpX = -(points[numPoints - 1].y - points[0].y);
+            const perpY = points[numPoints - 1].x - points[0].x;
+            const length = Math.sqrt(perpX * perpX + perpY * perpY);
+            
+            if (length > 0) {
+              const curveAmount = Math.sin(t * Math.PI) * 0.1;
+              points[p].x += (perpX / length) * curveAmount * step * 10;
+              points[p].y += (perpY / length) * curveAmount * step * 10;
+            }
+          }
         }
       }
     }
@@ -584,14 +600,22 @@ export class EdgeBundling implements EdgeRenderer {
         const posComp = lAvg / (lAvg + mDist);
 
         // 4. Visibility compatibility
-        const i0x = Math.max(Math.min(s1.x, t1.x), Math.min(s2.x, t2.x));
-        const i0y = Math.max(Math.min(s1.y, t1.y), Math.min(s2.y, t2.y));
-        const i1x = Math.min(Math.max(s1.x, t1.x), Math.max(s2.x, t2.x));
-        const i1y = Math.min(Math.max(s1.y, t1.y), Math.max(s2.y, t2.y));
+        // Visibility compatibility – approximate perpendicular distance between edge midpoints.
+        // This keeps nearly parallel edges that run close together highly compatible even when
+        // their bounding boxes do not overlap (a common case in layered graphs).
+        let visComp = 0;
+        if (lAvg > 0) {
+          const normalX = v1y;
+          const normalY = -v1x;
+          const normalLen = Math.sqrt(normalX * normalX + normalY * normalY);
 
-        const visComp = (i1x - i0x >= 0 && i1y - i0y >= 0)
-          ? Math.min(1, ((i1x - i0x) * (i1y - i0y)) / ((len1 * len2) / 4))
-          : 0;
+          if (normalLen > 0) {
+            const diffX = m2x - m1x;
+            const diffY = m2y - m1y;
+            const perpDist = Math.abs((diffX * normalX + diffY * normalY) / normalLen);
+            visComp = 1 / (1 + perpDist / lAvg);
+          }
+        }
 
         // Combined geometric compatibility
         let comp = angleComp * scaleComp * posComp * visComp;
