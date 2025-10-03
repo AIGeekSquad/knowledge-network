@@ -4,7 +4,9 @@ module.exports = function (wallaby) {
   return {
     files: [
       'src/**/*.ts',
-      'vitest.config.ts'
+      '!src/**/*.test.ts',
+      'vitest.config.ts',
+      'tsconfig.json'
     ],
     
     tests: [
@@ -15,7 +17,36 @@ module.exports = function (wallaby) {
       type: 'node'
     },
 
-    setup: function() {
+    testFramework: 'vitest',
+
+    // TypeScript support using @swc/core
+    preprocessors: {
+      '**/*.ts': (file) =>
+        require('@swc/core').transformSync(file.content, {
+          jsc: {
+            parser: {
+              syntax: 'typescript',
+              tsx: false,
+              decorators: false,
+              dynamicImport: true,
+            },
+            target: 'es2022',
+            loose: false,
+            externalHelpers: false,
+            keepClassNames: false,
+            transform: null,
+            baseUrl: '.',
+          },
+          module: {
+            type: 'es6',
+          },
+          sourceMaps: 'inline',
+          isModule: true,
+        }).code,
+    },
+
+    // Set up JSDOM environment manually BEFORE tests run
+    setup: function (wallaby) {
       // Set up JSDOM environment
       const { JSDOM } = require('jsdom');
       
@@ -25,7 +56,7 @@ module.exports = function (wallaby) {
         resources: 'usable'
       });
 
-      // Set up DOM globals
+      // Attach DOM globals to the global object
       global.window = dom.window;
       global.document = dom.window.document;
       global.navigator = dom.window.navigator;
@@ -35,8 +66,13 @@ module.exports = function (wallaby) {
       global.Node = dom.window.Node;
       global.DocumentFragment = dom.window.DocumentFragment;
       global.HTMLDivElement = dom.window.HTMLDivElement;
-    },
-
-    testFramework: 'vitest'
+      
+      // Set up additional DOM properties that might be needed
+      global.getComputedStyle = dom.window.getComputedStyle;
+      global.requestAnimationFrame = dom.window.requestAnimationFrame || function(fn) { return setTimeout(fn, 16); };
+      global.cancelAnimationFrame = dom.window.cancelAnimationFrame || function(id) { clearTimeout(id); };
+      
+      console.log('JSDOM setup completed. Document available:', typeof global.document);
+    }
   };
 };
