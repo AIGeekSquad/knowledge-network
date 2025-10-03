@@ -1,46 +1,63 @@
 import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
-import type { GraphData } from '@aigeeksquad/knowledge-network';
+import type { GraphData, Node } from '@aigeeksquad/knowledge-network';
 
 const container = document.getElementById('graph') as HTMLElement;
 let currentGraph: KnowledgeGraph | null = null;
 
-// Example 1: Simple Graph
+// Helper function to calculate cosine similarity
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (!a || !b || a.length !== b.length) return 0;
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+// Example 1: Simple Graph with type-based styling
 const simpleGraphData: GraphData = {
   nodes: [
-    { id: 'A', label: 'Concept A' },
-    { id: 'B', label: 'Concept B' },
-    { id: 'C', label: 'Concept C' },
-    { id: 'D', label: 'Concept D' },
+    { id: 'A', label: 'Concept A', type: 'primary' },
+    { id: 'B', label: 'Concept B', type: 'secondary' },
+    { id: 'C', label: 'Concept C', type: 'secondary' },
+    { id: 'D', label: 'Concept D', type: 'primary' },
   ],
   edges: [
-    { source: 'A', target: 'B', label: 'relates to' },
-    { source: 'B', target: 'C', label: 'connected to' },
-    { source: 'C', target: 'D', label: 'links to' },
-    { source: 'D', target: 'A', label: 'references' },
+    { source: 'A', target: 'B', label: 'relates to', type: 'is-a' },
+    { source: 'B', target: 'C', label: 'connected to', type: 'related-to' },
+    { source: 'C', target: 'D', label: 'links to', type: 'part-of' },
+    { source: 'D', target: 'A', label: 'references', type: 'similar-to' },
   ],
 };
 
-// Example 2: Complex Graph
+// Example 2: Complex Graph with vector similarity
 const complexGraphData: GraphData = {
   nodes: [
-    { id: '1', label: 'Machine Learning', type: 'topic' },
-    { id: '2', label: 'Neural Networks', type: 'topic' },
-    { id: '3', label: 'Deep Learning', type: 'topic' },
-    { id: '4', label: 'Computer Vision', type: 'application' },
-    { id: '5', label: 'Natural Language Processing', type: 'application' },
-    { id: '6', label: 'TensorFlow', type: 'tool' },
-    { id: '7', label: 'PyTorch', type: 'tool' },
-    { id: '8', label: 'Transformers', type: 'architecture' },
+    { id: '1', label: 'Machine Learning', type: 'topic', vector: [1.0, 0.8, 0.6, 0.4] },
+    { id: '2', label: 'Neural Networks', type: 'topic', vector: [0.9, 0.9, 0.7, 0.5] },
+    { id: '3', label: 'Deep Learning', type: 'topic', vector: [0.95, 0.85, 0.8, 0.6] },
+    { id: '4', label: 'Computer Vision', type: 'application', vector: [0.7, 0.6, 0.9, 0.3] },
+    { id: '5', label: 'Natural Language Processing', type: 'application', vector: [0.7, 0.5, 0.8, 0.7] },
+    { id: '6', label: 'TensorFlow', type: 'tool', vector: [0.5, 0.4, 0.3, 0.9] },
+    { id: '7', label: 'PyTorch', type: 'tool', vector: [0.5, 0.4, 0.35, 0.85] },
+    { id: '8', label: 'Transformers', type: 'architecture', vector: [0.8, 0.7, 0.75, 0.65] },
   ],
   edges: [
-    { source: '1', target: '2', label: 'includes' },
-    { source: '2', target: '3', label: 'foundation of' },
-    { source: '3', target: '4', label: 'used in' },
-    { source: '3', target: '5', label: 'used in' },
-    { source: '2', target: '6', label: 'implemented in' },
-    { source: '2', target: '7', label: 'implemented in' },
-    { source: '3', target: '8', label: 'uses' },
-    { source: '8', target: '5', label: 'powers' },
+    { source: '1', target: '2', label: 'includes', type: 'is-a' },
+    { source: '2', target: '3', label: 'foundation of', type: 'is-a' },
+    { source: '3', target: '4', label: 'used in', type: 'related-to' },
+    { source: '3', target: '5', label: 'used in', type: 'related-to' },
+    { source: '2', target: '6', label: 'implemented in', type: 'part-of' },
+    { source: '2', target: '7', label: 'implemented in', type: 'part-of' },
+    { source: '3', target: '8', label: 'uses', type: 'part-of' },
+    { source: '8', target: '5', label: 'powers', type: 'related-to' },
   ],
 };
 
@@ -71,9 +88,6 @@ function renderGraph(data: GraphData, config = {}) {
   currentGraph = new KnowledgeGraph(container, data, {
     width: 1000,
     height: 600,
-    nodeRadius: 12,
-    linkDistance: 150,
-    chargeStrength: -400,
     enableZoom: true,
     enableDrag: true,
     ...config,
@@ -84,19 +98,86 @@ function renderGraph(data: GraphData, config = {}) {
 
 // Event listeners
 document.getElementById('example1')?.addEventListener('click', () => {
-  renderGraph(simpleGraphData);
+  // Example 1: Type-based node styling (accessor function)
+  renderGraph(simpleGraphData, {
+    nodeRadius: (d: Node) => d.type === 'primary' ? 15 : 10,
+    nodeFill: (d: Node) => d.type === 'primary' ? '#ff6b6b' : '#4ecdc4',
+    linkDistance: 150,
+    chargeStrength: -400,
+    // Collision detection to prevent overlap
+    collisionRadius: (d: Node) => (d.type === 'primary' ? 15 : 10) + 5,
+  });
 });
 
 document.getElementById('example2')?.addEventListener('click', () => {
-  renderGraph(complexGraphData);
+  // Example 2: Similarity-based clustering with ontology-aware links
+  renderGraph(complexGraphData, {
+    nodeRadius: (d: Node) => {
+      // Size by type
+      if (d.type === 'topic') return 15;
+      if (d.type === 'application') return 12;
+      if (d.type === 'tool') return 10;
+      return 8;
+    },
+    nodeFill: (d: Node) => {
+      // Color by type
+      const colors: Record<string, string> = {
+        'topic': '#ff6b6b',
+        'application': '#4ecdc4',
+        'tool': '#45b7d1',
+        'architecture': '#f9ca24',
+      };
+      return colors[d.type || ''] || '#95afc0';
+    },
+    linkDistance: 100,
+    linkStroke: (d) => {
+      // Color edges by ontology type
+      const colors: Record<string, string> = {
+        'is-a': '#e74c3c',
+        'part-of': '#3498db',
+        'related-to': '#95a5a6',
+        'similar-to': '#2ecc71',
+      };
+      return colors[d.type || ''] || '#999';
+    },
+    linkStrokeWidth: (d) => d.type === 'is-a' ? 3 : 1.5,
+    chargeStrength: -500,
+    // Use vector similarity for clustering
+    similarityFunction: (a: Node, b: Node) => {
+      if (a.vector && b.vector) {
+        return cosineSimilarity(a.vector, b.vector);
+      }
+      return 0;
+    },
+    collisionRadius: (d: Node) => {
+      if (d.type === 'topic') return 20;
+      if (d.type === 'application') return 17;
+      if (d.type === 'tool') return 15;
+      return 13;
+    },
+  });
 });
 
 document.getElementById('example3')?.addEventListener('click', () => {
+  // Example 3: Custom accessor-based styling
   renderGraph(customGraphData, {
     nodeRadius: 15,
+    nodeFill: (d: Node, i: number) => {
+      // Gradient based on position in array
+      const hue = (i * 60) % 360;
+      return `hsl(${hue}, 70%, 60%)`;
+    },
     linkDistance: 200,
+    chargeStrength: (d: Node) => d.id === 'root' ? -800 : -300,
+    collisionRadius: 20,
   });
 });
 
 // Render the first example by default
-renderGraph(simpleGraphData);
+renderGraph(simpleGraphData, {
+  nodeRadius: (d: Node) => d.type === 'primary' ? 15 : 10,
+  nodeFill: (d: Node) => d.type === 'primary' ? '#ff6b6b' : '#4ecdc4',
+  linkDistance: 150,
+  chargeStrength: -400,
+  collisionRadius: (d: Node) => (d.type === 'primary' ? 15 : 10) + 5,
+});

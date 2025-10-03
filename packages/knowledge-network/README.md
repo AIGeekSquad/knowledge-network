@@ -4,12 +4,15 @@ A modern TypeScript library extending d3.js for creating interactive knowledge g
 
 ## Features
 
-- 🎨 Built on top of d3.js for powerful visualizations
+- 🎨 **d3-idiomatic API** - Accessor functions for properties (constant, accessor, or function)
+- 🔄 **Collision detection** - Automatic node overlap prevention
+- 🧲 **Similarity-based clustering** - Vector similarity for intelligent node grouping
+- 🔗 **Ontology-aware links** - Relationship types influence force layout
+- 📐 **2D and 3D support** - Layout calculations in multiple dimensions
 - 📦 Modern ESM/CJS module support
 - 🔧 TypeScript support with full type definitions
-- 🎯 Force-directed layout engine
+- 🎯 Advanced force-directed layout engine
 - 🖱️ Interactive features (zoom, drag, pan)
-- 🎭 Customizable styling and configuration
 - 📱 Responsive and lightweight
 
 ## Installation
@@ -35,13 +38,13 @@ const container = document.getElementById('graph');
 
 const data = {
   nodes: [
-    { id: 'A', label: 'Node A' },
-    { id: 'B', label: 'Node B' },
-    { id: 'C', label: 'Node C' },
+    { id: 'A', label: 'Node A', type: 'concept' },
+    { id: 'B', label: 'Node B', type: 'entity' },
+    { id: 'C', label: 'Node C', type: 'concept' },
   ],
   edges: [
-    { source: 'A', target: 'B' },
-    { source: 'B', target: 'C' },
+    { source: 'A', target: 'B', type: 'is-a' },
+    { source: 'B', target: 'C', type: 'related-to' },
   ],
 };
 
@@ -49,17 +52,95 @@ const graph = new KnowledgeGraph(container, data);
 graph.render();
 ```
 
-### With Configuration
+### d3-Idiomatic Accessor Functions
 
 ```typescript
 const graph = new KnowledgeGraph(container, data, {
   width: 1000,
   height: 600,
+  
+  // Constant value
   nodeRadius: 15,
-  linkDistance: 150,
-  chargeStrength: -400,
+  
+  // Or accessor function from node data
+  nodeRadius: (d) => d.type === 'concept' ? 20 : 10,
+  
+  // Style nodes by type
+  nodeFill: (d) => d.type === 'concept' ? '#ff6b6b' : '#4ecdc4',
+  
+  // Collision detection with custom radius
+  collisionRadius: (d) => (d.type === 'concept' ? 20 : 10) + 5,
+  
   enableZoom: true,
   enableDrag: true,
+});
+
+graph.render();
+```
+
+### Similarity-Based Clustering
+
+```typescript
+const data = {
+  nodes: [
+    { id: 'A', label: 'AI', vector: [1.0, 0.8, 0.6] },
+    { id: 'B', label: 'ML', vector: [0.9, 0.9, 0.7] },
+    { id: 'C', label: 'Art', vector: [0.1, 0.2, 0.9] },
+  ],
+  edges: [],
+};
+
+const graph = new KnowledgeGraph(container, data, {
+  // Attract similar nodes based on vector similarity
+  similarityFunction: (a, b) => {
+    if (!a.vector || !b.vector) return 0;
+    // Cosine similarity calculation
+    const dotProduct = a.vector.reduce((sum, val, i) => sum + val * b.vector[i], 0);
+    const normA = Math.sqrt(a.vector.reduce((sum, val) => sum + val * val, 0));
+    const normB = Math.sqrt(b.vector.reduce((sum, val) => sum + val * val, 0));
+    return dotProduct / (normA * normB);
+  },
+});
+
+graph.render();
+```
+
+### Ontology-Aware Link Forces
+
+```typescript
+const data = {
+  nodes: [
+    { id: 'A', label: 'Animal' },
+    { id: 'B', label: 'Dog' },
+    { id: 'C', label: 'Cat' },
+  ],
+  edges: [
+    { source: 'A', target: 'B', type: 'is-a' },      // Strong hierarchical link
+    { source: 'A', target: 'C', type: 'is-a' },
+    { source: 'B', target: 'C', type: 'similar-to' }, // Weaker associative link
+  ],
+};
+
+const graph = new KnowledgeGraph(container, data, {
+  // Links automatically use ontology types:
+  // 'is-a': 1.5, 'part-of': 1.2, 'related-to': 0.8, 'similar-to': 0.6
+  
+  // Or customize link strength by type
+  linkStrength: (edge) => {
+    if (edge.type === 'is-a') return 2.0;
+    if (edge.type === 'part-of') return 1.5;
+    return 1.0;
+  },
+  
+  // Style links by type
+  linkStroke: (d) => {
+    const colors = {
+      'is-a': '#e74c3c',
+      'part-of': '#3498db',
+      'related-to': '#95a5a6',
+    };
+    return colors[d.type] || '#999';
+  },
 });
 
 graph.render();
@@ -102,6 +183,8 @@ interface Node {
   type?: string;
   x?: number;
   y?: number;
+  z?: number; // For 3D support
+  vector?: number[]; // For similarity-based clustering
   metadata?: Record<string, unknown>;
 }
 
@@ -110,8 +193,9 @@ interface Edge {
   source: string | Node;
   target: string | Node;
   label?: string;
-  type?: string;
+  type?: string; // Ontology type affects layout
   weight?: number;
+  strength?: number; // Link strength for force calculations
   metadata?: Record<string, unknown>;
 }
 
@@ -120,14 +204,42 @@ interface GraphData {
   edges: Edge[];
 }
 
+// Accessor function type - can return value from datum, or be a constant
+type Accessor<T, R> = R | ((d: T, i: number, nodes: T[]) => R);
+
+// Similarity function for node clustering
+type SimilarityFunction = (a: Node, b: Node) => number;
+
+// Link strength function based on edge type
+type LinkStrengthFunction = (edge: Edge, i: number, edges: Edge[]) => number;
+
 interface GraphConfig {
   width?: number;
   height?: number;
-  nodeRadius?: number;
-  linkDistance?: number;
-  chargeStrength?: number;
+  
+  // Node styling - d3 idiomatic accessor pattern
+  nodeRadius?: Accessor<Node, number>;
+  nodeFill?: Accessor<Node, string>;
+  nodeStroke?: Accessor<Node, string>;
+  nodeStrokeWidth?: Accessor<Node, number>;
+  
+  // Link styling - d3 idiomatic accessor pattern
+  linkDistance?: Accessor<Edge, number>;
+  linkStrength?: LinkStrengthFunction;
+  linkStroke?: Accessor<Edge, string>;
+  linkStrokeWidth?: Accessor<Edge, number>;
+  
+  // Force simulation
+  chargeStrength?: Accessor<Node, number>;
+  similarityFunction?: SimilarityFunction; // For clustering based on similarity
+  collisionRadius?: Accessor<Node, number>; // For collision detection
+  
+  // Interaction
   enableZoom?: boolean;
   enableDrag?: boolean;
+  
+  // Dimensionality
+  dimensions?: 2 | 3; // Support 2D and 3D layouts
 }
 ```
 
