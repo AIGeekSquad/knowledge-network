@@ -82,6 +82,10 @@ Edge bundling is particularly effective for:
 - Visualizations where edge flow patterns are important
 - Reducing visual clutter in dense networks
 
+**References:**
+- Holten, D., & Van Wijk, J. J. (2009). "Force-Directed Edge Bundling for Graph Visualization"
+- [Edge Bundling Tutorial (PDF)](https://lliquid.github.io/homepage/files/ts13_edgebundle.pdf)
+
 See the [Edge Bundling documentation](./packages/knowledge-network/README.md#edge-bundling) for configuration options and best practices.
 
 ## 🏗️ Project Structure

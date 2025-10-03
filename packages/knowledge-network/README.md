@@ -215,6 +215,12 @@ graph.render();
 - Increase `iterations` and `subdivisions` for smoother, tighter bundles
 - Always set `waitForStable: true` to ensure bundling works on stable layouts
 
+**References:**
+
+This implementation is based on the force-directed edge bundling algorithm:
+- Holten, D., & Van Wijk, J. J. (2009). "Force-Directed Edge Bundling for Graph Visualization". *Computer Graphics Forum*, 28(3), 983-990.
+- [Edge Bundling Tutorial (PDF)](https://lliquid.github.io/homepage/files/ts13_edgebundle.pdf) - Comprehensive guide to edge bundling techniques and applications
+
 #### Custom Edge Compatibility
 
 You can provide a custom compatibility function to control which edges bundle together based on edge properties and metadata:
