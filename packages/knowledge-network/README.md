@@ -203,7 +203,7 @@ graph.render();
 |-----------|---------|-------------|------|
 | `waitForStable` | `false` | Wait for simulation to stabilize before rendering edges | Set to `true` for bundling to ensure stable node positions |
 | `stabilityThreshold` | `0.005` | Alpha value threshold for stability detection | Lower values = wait longer for more stable layout |
-| `subdivisions` | `20` | Number of control points per edge | Higher values (40-60) create smoother curves but slower computation |
+| `subdivisions` | `60` | Number of control points per edge | Higher values (40-60) create smoother curves but slower computation |
 | `compatibilityThreshold` | `0.6` | How similar edges must be to bundle (0-1) | Lower values (0.3-0.5) = more aggressive bundling |
 | `iterations` | `90` | Number of bundling iterations | More iterations (100-150) = tighter, more visible bundles |
 | `stepSize` | `0.04` | Movement step size per iteration | Larger values (0.08-0.15) = more dramatic bundling effect |
