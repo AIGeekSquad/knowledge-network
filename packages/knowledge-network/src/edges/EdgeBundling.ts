@@ -153,20 +153,26 @@ export class EdgeBundling implements EdgeRenderer {
       const target = edge.target as any;
       const points = data.controlPoints[i];
 
-      // Update start and end points
-      points[0] = { x: source.x, y: source.y };
-      points[points.length - 1] = { x: target.x, y: target.y };
+      // Store the old start and end positions
+      const oldSourceX = points[0].x;
+      const oldSourceY = points[0].y;
+      const oldTargetX = points[points.length - 1].x;
+      const oldTargetY = points[points.length - 1].y;
 
-      // Interpolate intermediate points
-      for (let j = 1; j < points.length - 1; j++) {
+      // Calculate the delta movement of endpoints
+      const deltaSourceX = source.x - oldSourceX;
+      const deltaSourceY = source.y - oldSourceY;
+      const deltaTargetX = target.x - oldTargetX;
+      const deltaTargetY = target.y - oldTargetY;
+
+      // Update all control points proportionally based on endpoint movement
+      for (let j = 0; j < points.length; j++) {
         const t = j / (points.length - 1);
-        points[j].x = source.x * (1 - t) + target.x * t;
-        points[j].y = source.y * (1 - t) + target.y * t;
+        // Interpolate the delta movement across the control points
+        points[j].x += deltaSourceX * (1 - t) + deltaTargetX * t;
+        points[j].y += deltaSourceY * (1 - t) + deltaTargetY * t;
       }
     });
-
-    // Re-run bundling with updated positions
-    this.performBundling(edges, data.controlPoints);
 
     // Update paths
     result.selection.attr('d', (_d, i) => data.lineGenerator(data.controlPoints[i]));
