@@ -3,6 +3,23 @@ import type { Edge, Node } from '../types';
 import type { EdgeRenderer, EdgeRenderConfig, EdgeRenderResult } from './EdgeRenderer';
 
 /**
+ * Curve type for edge rendering
+ * - 'basis': B-spline curve (smooth, doesn't pass through control points)
+ * - 'cardinal': Cardinal spline (smooth, passes through control points)
+ * - 'catmullRom': Catmull-Rom spline (smooth, passes through control points)
+ * - 'bundle': Beta spline for tight bundling
+ */
+export type CurveType = 'basis' | 'cardinal' | 'catmullRom' | 'bundle';
+
+/**
+ * Smoothing algorithm type
+ * - 'laplacian': Laplacian smoothing (averaging neighbor positions)
+ * - 'gaussian': Gaussian-weighted smoothing
+ * - 'bilateral': Edge-preserving bilateral filtering
+ */
+export type SmoothingType = 'laplacian' | 'gaussian' | 'bilateral';
+
+/**
  * Custom edge compatibility function for determining which edges should bundle together.
  *
  * This function allows you to define custom logic for edge compatibility based on
@@ -99,6 +116,13 @@ export interface EdgeBundlingConfig extends EdgeRenderConfig {
   subdivisions?: number;
 
   /**
+   * Whether to use adaptive subdivision based on edge length
+   * When true, longer edges get more subdivision points
+   * @default true
+   */
+  adaptiveSubdivision?: boolean;
+
+  /**
    * Compatibility threshold for edge bundling (0-1)
    * Edges with compatibility above this threshold will bundle together
    * @default 0.6
@@ -127,6 +151,45 @@ export interface EdgeBundlingConfig extends EdgeRenderConfig {
   stiffness?: number;
 
   /**
+   * Momentum factor for force application (0-1)
+   * Higher values create smoother movement over iterations
+   * @default 0.5
+   */
+  momentum?: number;
+
+  /**
+   * Type of curve to use for rendering
+   * @default 'basis'
+   */
+  curveType?: CurveType;
+
+  /**
+   * Tension parameter for cardinal and catmullRom curves
+   * 0 = straight lines, 1 = maximum curvature
+   * @default 0.85
+   */
+  curveTension?: number;
+
+  /**
+   * Type of smoothing algorithm to apply
+   * @default 'laplacian'
+   */
+  smoothingType?: SmoothingType;
+
+  /**
+   * Number of smoothing iterations
+   * @default 2
+   */
+  smoothingIterations?: number;
+
+  /**
+   * How often to apply smoothing during bundling iterations
+   * E.g., 5 means smooth every 5 iterations
+   * @default 5
+   */
+  smoothingFrequency?: number;
+
+  /**
    * Custom compatibility function
    * Allows custom logic based on edge properties and metadata
    * If provided, this function's result is multiplied with the default geometric compatibility
@@ -136,11 +199,13 @@ export interface EdgeBundlingConfig extends EdgeRenderConfig {
 }
 
 /**
- * Control point for edge bundling
+ * Control point for edge bundling with velocity tracking
  */
 interface ControlPoint {
   x: number;
   y: number;
+  vx?: number; // Velocity in x direction for momentum
+  vy?: number; // Velocity in y direction for momentum
 }
 
 /**
@@ -155,7 +220,9 @@ interface EdgeBundlingData {
  * Internal config type for EdgeBundling
  * All properties required except compatibilityFunction, which remains optional
  */
-type EdgeBundlingInternalConfig = Required<Omit<EdgeBundlingConfig, 'compatibilityFunction'>> & { compatibilityFunction?: EdgeCompatibilityFunction };
+type EdgeBundlingInternalConfig = Required<Omit<EdgeBundlingConfig, 'compatibilityFunction'>> & {
+  compatibilityFunction?: EdgeCompatibilityFunction;
+};
 
 /**
  * Edge bundling renderer using the force-directed edge bundling algorithm.
@@ -287,10 +354,17 @@ export class EdgeBundling implements EdgeRenderer {
       strokeWidth: config.strokeWidth ?? (() => 1.5),
       strokeOpacity: config.strokeOpacity ?? 0.6,
       subdivisions: config.subdivisions ?? 20,
+      adaptiveSubdivision: config.adaptiveSubdivision ?? true,
       compatibilityThreshold: config.compatibilityThreshold ?? 0.6,
       iterations: config.iterations ?? 90,
       stepSize: config.stepSize ?? 0.04,
       stiffness: config.stiffness ?? 0.1,
+      momentum: config.momentum ?? 0.5,
+      curveType: config.curveType ?? 'basis',
+      curveTension: config.curveTension ?? 0.85,
+      smoothingType: config.smoothingType ?? 'laplacian',
+      smoothingIterations: config.smoothingIterations ?? 2,
+      smoothingFrequency: config.smoothingFrequency ?? 5,
       compatibilityFunction: config.compatibilityFunction,
     };
   }
@@ -334,11 +408,11 @@ export class EdgeBundling implements EdgeRenderer {
     // Perform edge bundling
     this.performBundling(edges, controlPoints);
 
-    // Create line generator for smooth curves - use cardinal spline for better control
-    const lineGenerator = d3.line<ControlPoint>()
-      .x(d => d.x)
-      .y(d => d.y)
-      .curve(d3.curveCardinal.tension(0.8)); // Cardinal spline with tension for smooth bundling
+    // Apply final smoothing pass for clean curves
+    this.applySmoothing(controlPoints, this.config.smoothingIterations * 2);
+
+    // Create line generator with configured curve type
+    const lineGenerator = this.createLineGenerator();
 
     // Render edges as paths
     const selection = container
@@ -455,7 +529,40 @@ export class EdgeBundling implements EdgeRenderer {
   }
 
   /**
-   * Initialize control points for each edge with professional subdivision strategy
+   * Create line generator based on configured curve type
+   *
+   * Based on research from:
+   * - Holten, D. (2006). Hierarchical edge bundles: Visualization of adjacency relations in hierarchical data.
+   * - Gansner, E. R., et al. (2011). Multilevel agglomerative edge bundling for visualizing large graphs.
+   */
+  private createLineGenerator(): d3.Line<ControlPoint> {
+    const lineGenerator = d3.line<ControlPoint>()
+      .x(d => d.x)
+      .y(d => d.y);
+
+    switch (this.config.curveType) {
+      case 'cardinal':
+        lineGenerator.curve(d3.curveCardinal.tension(this.config.curveTension));
+        break;
+      case 'catmullRom':
+        lineGenerator.curve(d3.curveCatmullRom.alpha(this.config.curveTension));
+        break;
+      case 'bundle':
+        lineGenerator.curve(d3.curveBundle.beta(this.config.curveTension));
+        break;
+      case 'basis':
+      default:
+        lineGenerator.curve(d3.curveBasis);
+        break;
+    }
+
+    return lineGenerator;
+  }
+
+  /**
+   * Initialize control points for each edge with adaptive subdivision
+   *
+   * Based on: Pupyrev, S., et al. (2011). Improving layered graph layouts with edge bundling.
    */
   private initializeControlPoints(edges: Edge[]): ControlPoint[][] {
     return edges.map(edge => {
@@ -463,15 +570,29 @@ export class EdgeBundling implements EdgeRenderer {
       const target = edge.target as any;
       const points: ControlPoint[] = [];
 
-      // Start with fewer subdivisions for initial convergence (research-backed approach)
-      const initialSubdivisions = Math.max(3, Math.min(this.config.subdivisions, 8));
-      
-      // Create subdivision points along the edge
-      for (let i = 0; i <= initialSubdivisions; i++) {
-        const t = i / initialSubdivisions;
+      // Calculate edge length for adaptive subdivision
+      const dx = target.x - source.x;
+      const dy = target.y - source.y;
+      const length = Math.sqrt(dx * dx + dy * dy);
+
+      // Determine number of subdivisions
+      let subdivisions = this.config.subdivisions;
+      if (this.config.adaptiveSubdivision) {
+        // Base subdivisions + additional based on length (1 per 30px)
+        subdivisions = Math.max(
+          this.config.subdivisions,
+          Math.floor(this.config.subdivisions + length / 30)
+        );
+      }
+
+      // Create subdivision points with velocity initialization
+      for (let i = 0; i <= subdivisions; i++) {
+        const t = i / subdivisions;
         points.push({
           x: source.x * (1 - t) + target.x * t,
           y: source.y * (1 - t) + target.y * t,
+          vx: 0, // Initialize velocity for momentum
+          vy: 0,
         });
       }
 
@@ -480,80 +601,264 @@ export class EdgeBundling implements EdgeRenderer {
   }
 
   /**
-   * Perform edge bundling using iterative force-based approach
+   * Perform edge bundling using momentum-based force approach with smoothing
+   *
+   * Based on research from:
+   * - Holten, D., & Van Wijk, J. J. (2009). Force-directed edge bundling for graph visualization.
+   * - Cui, W., et al. (2008). Geometry-based edge clustering for graph visualization.
+   * - Lambert, A., et al. (2010). Winding roads: Routing edges into bundles.
    */
   private performBundling(edges: Edge[], controlPoints: ControlPoint[][]): void {
     const n = edges.length;
-    
+
     // Compute compatibility between all edge pairs
     const compatibility = this.computeCompatibility(edges);
-    
+
     // Perform multiple iterations to gradually bundle edges
     for (let iter = 0; iter < this.config.iterations; iter++) {
-      // Adaptive step size that decreases over time
-      const step = this.config.stepSize * (1 - iter / this.config.iterations);
-      
+      // Cosine-based step decay for smooth convergence
+      const progress = iter / this.config.iterations;
+      const step = this.config.stepSize * (0.5 + 0.5 * Math.cos(progress * Math.PI));
+
+      // Apply smoothing periodically during bundling
+      if (iter > 0 && iter % this.config.smoothingFrequency === 0) {
+        this.applySmoothing(controlPoints, this.config.smoothingIterations);
+      }
+
       // For each edge
       for (let i = 0; i < n; i++) {
         const points = controlPoints[i];
         const numPoints = points.length;
-        
+
         // For each control point (except endpoints)
         for (let p = 1; p < numPoints - 1; p++) {
+          const point = points[p];
           let forceX = 0;
           let forceY = 0;
           let compatibleCount = 0;
-          
+
           // Calculate attraction to compatible edges
           for (let j = 0; j < n; j++) {
             if (i === j) continue;
-            
+
             const comp = compatibility[i][j];
             if (comp < this.config.compatibilityThreshold) continue;
-            
+
             const otherPoints = controlPoints[j];
-            if (p >= otherPoints.length) continue;
-            
+            // Handle different subdivision counts gracefully
+            const otherP = Math.min(p, otherPoints.length - 1);
+            const otherPoint = otherPoints[otherP];
+
             // Calculate force toward the corresponding point on compatible edge
-            const dx = otherPoints[p].x - points[p].x;
-            const dy = otherPoints[p].y - points[p].y;
+            const dx = otherPoint.x - point.x;
+            const dy = otherPoint.y - point.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            
+
             if (distance > 0.001) {
-              // Force proportional to compatibility
-              forceX += (dx / distance) * comp;
-              forceY += (dy / distance) * comp;
+              // Force proportional to compatibility with distance falloff
+              const forceMag = comp / (1 + distance * 0.001);
+              forceX += (dx / distance) * forceMag;
+              forceY += (dy / distance) * forceMag;
               compatibleCount++;
             }
           }
-          
+
+          // Normalize bundling forces
+          if (compatibleCount > 0) {
+            forceX /= compatibleCount;
+            forceY /= compatibleCount;
+          }
+
           // Apply spring force toward straight line (maintains edge structure)
           const t = p / (numPoints - 1);
           const straightX = points[0].x * (1 - t) + points[numPoints - 1].x * t;
           const straightY = points[0].y * (1 - t) + points[numPoints - 1].y * t;
-          
-          forceX += (straightX - points[p].x) * this.config.stiffness;
-          forceY += (straightY - points[p].y) * this.config.stiffness;
-          
-          // Apply the combined force
-          if (compatibleCount > 0) {
-            points[p].x += forceX * step;
-            points[p].y += forceY * step;
-          } else {
-            // If no compatible edges, add slight curvature for visual appeal
-            const perpX = -(points[numPoints - 1].y - points[0].y);
-            const perpY = points[numPoints - 1].x - points[0].x;
-            const length = Math.sqrt(perpX * perpX + perpY * perpY);
-            
-            if (length > 0) {
-              const curveAmount = Math.sin(t * Math.PI) * 0.1;
-              points[p].x += (perpX / length) * curveAmount * step * 10;
-              points[p].y += (perpY / length) * curveAmount * step * 10;
-            }
+
+          forceX += (straightX - point.x) * this.config.stiffness;
+          forceY += (straightY - point.y) * this.config.stiffness;
+
+          // Add smooth sine-based curvature (no randomness)
+          const perpX = -(points[numPoints - 1].y - points[0].y);
+          const perpY = points[numPoints - 1].x - points[0].x;
+          const length = Math.sqrt(perpX * perpX + perpY * perpY);
+
+          if (length > 0) {
+            // Smooth sine-based curvature without random factors
+            const curveAmount = Math.sin(t * Math.PI) * 15; // Moderate curvature
+            const curveFactor = compatibleCount > 0 ? 0.5 : 1.0; // Reduce for bundled edges
+            forceX += (perpX / length) * curveAmount * curveFactor * 0.01;
+            forceY += (perpY / length) * curveAmount * curveFactor * 0.01;
           }
+
+          // Apply momentum-based force application
+          if (!point.vx) point.vx = 0;
+          if (!point.vy) point.vy = 0;
+
+          // Update velocity with momentum
+          point.vx = point.vx * this.config.momentum + forceX * step * (1 - this.config.momentum);
+          point.vy = point.vy * this.config.momentum + forceY * step * (1 - this.config.momentum);
+
+          // Apply velocity to position
+          point.x += point.vx;
+          point.y += point.vy;
         }
       }
     }
+  }
+
+  /**
+   * Apply smoothing to control points to reduce jaggedness
+   *
+   * Based on: Hurter, C., et al. (2012). Graph bundling by kernel density estimation.
+   */
+  private applySmoothing(controlPoints: ControlPoint[][], iterations: number): void {
+    for (let iter = 0; iter < iterations; iter++) {
+      switch (this.config.smoothingType) {
+        case 'gaussian':
+          this.applyGaussianSmoothing(controlPoints);
+          break;
+        case 'bilateral':
+          this.applyBilateralSmoothing(controlPoints);
+          break;
+        case 'laplacian':
+        default:
+          this.applyLaplacianSmoothing(controlPoints);
+          break;
+      }
+    }
+  }
+
+  /**
+   * Laplacian smoothing - averages neighboring control points
+   */
+  private applyLaplacianSmoothing(controlPoints: ControlPoint[][]): void {
+    controlPoints.forEach(points => {
+      const numPoints = points.length;
+      const smoothed: ControlPoint[] = [];
+
+      for (let i = 0; i < numPoints; i++) {
+        if (i === 0 || i === numPoints - 1) {
+          // Keep endpoints fixed
+          smoothed.push({ ...points[i] });
+        } else {
+          // Average with neighbors
+          smoothed.push({
+            x: (points[i - 1].x + 2 * points[i].x + points[i + 1].x) / 4,
+            y: (points[i - 1].y + 2 * points[i].y + points[i + 1].y) / 4,
+            vx: points[i].vx,
+            vy: points[i].vy,
+          });
+        }
+      }
+
+      // Update original points
+      for (let i = 0; i < numPoints; i++) {
+        points[i].x = smoothed[i].x;
+        points[i].y = smoothed[i].y;
+      }
+    });
+  }
+
+  /**
+   * Gaussian smoothing - weighted average with Gaussian kernel
+   */
+  private applyGaussianSmoothing(controlPoints: ControlPoint[][]): void {
+    const sigma = 1.0; // Standard deviation for Gaussian
+    const kernelSize = 3; // Size of smoothing kernel
+
+    controlPoints.forEach(points => {
+      const numPoints = points.length;
+      const smoothed: ControlPoint[] = [];
+
+      for (let i = 0; i < numPoints; i++) {
+        if (i === 0 || i === numPoints - 1) {
+          // Keep endpoints fixed
+          smoothed.push({ ...points[i] });
+        } else {
+          let sumX = 0, sumY = 0, sumWeight = 0;
+
+          // Apply Gaussian kernel
+          for (let j = -kernelSize; j <= kernelSize; j++) {
+            const idx = i + j;
+            if (idx >= 0 && idx < numPoints) {
+              const weight = Math.exp(-(j * j) / (2 * sigma * sigma));
+              sumX += points[idx].x * weight;
+              sumY += points[idx].y * weight;
+              sumWeight += weight;
+            }
+          }
+
+          smoothed.push({
+            x: sumX / sumWeight,
+            y: sumY / sumWeight,
+            vx: points[i].vx,
+            vy: points[i].vy,
+          });
+        }
+      }
+
+      // Update original points
+      for (let i = 0; i < numPoints; i++) {
+        points[i].x = smoothed[i].x;
+        points[i].y = smoothed[i].y;
+      }
+    });
+  }
+
+  /**
+   * Bilateral smoothing - edge-preserving smoothing
+   */
+  private applyBilateralSmoothing(controlPoints: ControlPoint[][]): void {
+    const spatialSigma = 1.0;
+    const intensitySigma = 10.0;
+    const kernelSize = 3;
+
+    controlPoints.forEach(points => {
+      const numPoints = points.length;
+      const smoothed: ControlPoint[] = [];
+
+      for (let i = 0; i < numPoints; i++) {
+        if (i === 0 || i === numPoints - 1) {
+          // Keep endpoints fixed
+          smoothed.push({ ...points[i] });
+        } else {
+          let sumX = 0, sumY = 0, sumWeight = 0;
+
+          // Apply bilateral filter
+          for (let j = -kernelSize; j <= kernelSize; j++) {
+            const idx = i + j;
+            if (idx >= 0 && idx < numPoints) {
+              // Spatial weight
+              const spatialWeight = Math.exp(-(j * j) / (2 * spatialSigma * spatialSigma));
+
+              // Intensity weight (based on position difference)
+              const dx = points[idx].x - points[i].x;
+              const dy = points[idx].y - points[i].y;
+              const intensityDiff = Math.sqrt(dx * dx + dy * dy);
+              const intensityWeight = Math.exp(-(intensityDiff * intensityDiff) / (2 * intensitySigma * intensitySigma));
+
+              const weight = spatialWeight * intensityWeight;
+              sumX += points[idx].x * weight;
+              sumY += points[idx].y * weight;
+              sumWeight += weight;
+            }
+          }
+
+          smoothed.push({
+            x: sumX / sumWeight,
+            y: sumY / sumWeight,
+            vx: points[i].vx,
+            vy: points[i].vy,
+          });
+        }
+      }
+
+      // Update original points
+      for (let i = 0; i < numPoints; i++) {
+        points[i].x = smoothed[i].x;
+        points[i].y = smoothed[i].y;
+      }
+    });
   }
 
   /**

@@ -53,6 +53,9 @@ pnpm test
 # Run tests in watch mode
 pnpm test:watch
 
+# Run a specific test file
+pnpm test EdgeBundling.test.ts
+
 # Lint TypeScript files
 pnpm lint
 
@@ -100,7 +103,7 @@ The main library follows a modular architecture:
 ## Testing
 
 - **Framework**: Vitest with jsdom for DOM testing
-- **Test Location**: Tests are co-located in `src/__tests__/` directories
+- **Test Location**: Tests are in the `tests/` directory
 
 ## Build System
 

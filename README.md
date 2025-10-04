@@ -378,8 +378,6 @@ pnpm test -- --grep "EdgeBundling"
 pnpm test:coverage
 ```
 
-For real-time test feedback, Wallaby.js configuration is included.
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
