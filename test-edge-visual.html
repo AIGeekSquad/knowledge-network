@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edge Bundling Visual Test</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      width: 800px;
+      height: 600px;
+      border: 2px solid #ddd;
+      background: white;
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; color: #333; }
+    .info {
+      text-align: center;
+      color: #666;
+      margin: 10px;
+    }
+    .config {
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px auto;
+      width: 800px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Enhanced Edge Bundling Test</h1>
+  <div class="info">Testing curved edges with catmullRom curve type and enhanced configuration</div>
+
+  <div class="config">
+    <strong>Configuration:</strong><br>
+    curveType: 'catmullRom'<br>
+    curveTension: 0.9<br>
+    subdivisions: 30<br>
+    adaptiveSubdivision: true<br>
+    momentum: 0.7<br>
+    smoothingType: 'gaussian'<br>
+    smoothingIterations: 3
+  </div>
+
+  <div id="graph" class="container"></div>
+
+  <script type="module">
+    import { KnowledgeGraph } from './packages/knowledge-network/dist/index.js';
+
+    // Create test data with multiple edges that should bundle
+    const nodes = [
+      { id: 'A', x: 100, y: 300 },
+      { id: 'B', x: 250, y: 100 },
+      { id: 'C', x: 250, y: 500 },
+      { id: 'D', x: 550, y: 100 },
+      { id: 'E', x: 550, y: 500 },
+      { id: 'F', x: 700, y: 300 }
+    ];
+
+    const edges = [
+      // Left to right edges that should bundle
+      { source: 'A', target: 'D', type: 'flow' },
+      { source: 'A', target: 'E', type: 'flow' },
+      { source: 'B', target: 'F', type: 'flow' },
+      { source: 'C', target: 'F', type: 'flow' },
+
+      // Cross edges that should bundle differently
+      { source: 'B', target: 'E', type: 'cross' },
+      { source: 'C', target: 'D', type: 'cross' },
+
+      // Some internal connections
+      { source: 'B', target: 'C', type: 'internal' },
+      { source: 'D', target: 'E', type: 'internal' }
+    ];
+
+    const data = { nodes, edges };
+
+    // Enhanced configuration to test new features
+    const config = {
+      width: 800,
+      height: 600,
+      nodeRadius: 12,
+      nodeFill: (d) => {
+        const colors = {
+          'A': '#e74c3c',
+          'B': '#3498db',
+          'C': '#3498db',
+          'D': '#2ecc71',
+          'E': '#2ecc71',
+          'F': '#e74c3c'
+        };
+        return colors[d.id] || '#95a5a6';
+      },
+      nodeStroke: '#fff',
+      nodeStrokeWidth: 2,
+      edgeRenderer: 'bundled',
+      edgeBundling: {
+        // Enhanced options
+        subdivisions: 30,
+        adaptiveSubdivision: true,
+        compatibilityThreshold: 0.6,
+        iterations: 100,
+        stepSize: 0.05,
+        stiffness: 0.1,
+        momentum: 0.7,
+        curveType: 'catmullRom',  // Use curved rendering
+        curveTension: 0.9,         // High tension for smooth curves
+        smoothingType: 'gaussian',
+        smoothingIterations: 3,
+        smoothingFrequency: 10,
+
+        // Custom compatibility to bundle by edge type
+        compatibilityFunction: (e1, e2) => {
+          if (e1.type === e2.type) return 1.0;  // Same type = high compatibility
+          if (e1.type === 'internal' || e2.type === 'internal') return 0.2;  // Internal edges bundle less
+          return 0.5;  // Moderate compatibility for different types
+        },
+
+        // Visual styling
+        stroke: (edge) => {
+          const typeColors = {
+            'flow': '#3498db',
+            'cross': '#e74c3c',
+            'internal': '#95a5a6'
+          };
+          return typeColors[edge.type] || '#999';
+        },
+        strokeWidth: () => 2,
+        strokeOpacity: 0.7
+      },
+      chargeStrength: -400,
+      linkDistance: 150,
+      enableZoom: true,
+      enableDrag: true
+    };
+
+    // Create and render the graph
+    const container = document.getElementById('graph');
+    const graph = new KnowledgeGraph(container, data, config);
+    graph.render();
+
+    // Add status message
+    setTimeout(() => {
+      const info = document.querySelector('.info');
+      info.innerHTML = 'Enhanced edge bundling active - edges should appear as smooth curves bundles by type';
+      info.style.color = '#27ae60';
+    }, 2000);
+  </script>
+</body>
+</html>

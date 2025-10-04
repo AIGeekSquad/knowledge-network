@@ -14,12 +14,14 @@ export {
   LinkStrengthFunction
 } from './types';
 export { ForceLayoutEngine } from './layout/ForceLayoutEngine';
-export { 
-  EdgeRenderer, 
-  EdgeRenderConfig, 
+export {
+  EdgeRenderer,
+  EdgeRenderConfig,
   EdgeRenderResult,
-  SimpleEdge, 
+  SimpleEdge,
   EdgeBundling,
   EdgeBundlingConfig,
-  EdgeCompatibilityFunction
+  EdgeCompatibilityFunction,
+  CurveType,
+  SmoothingType
 } from './edges';

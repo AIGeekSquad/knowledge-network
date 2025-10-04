@@ -387,6 +387,7 @@ describe('EdgeBundling Enhanced', () => {
     it('should apply Gaussian smoothing correctly', () => {
       const bundler = new EdgeBundling({
         subdivisions: 12,
+        adaptiveSubdivision: false, // Disable adaptive subdivision for predictable test
         smoothingType: 'gaussian',
         smoothingIterations: 2,
         iterations: 30
@@ -417,6 +418,7 @@ describe('EdgeBundling Enhanced', () => {
     it('should apply bilateral smoothing correctly', () => {
       const bundler = new EdgeBundling({
         subdivisions: 10,
+        adaptiveSubdivision: false, // Disable adaptive subdivision for predictable test
         smoothingType: 'bilateral',
         smoothingIterations: 2,
         iterations: 25
@@ -575,14 +577,18 @@ describe('EdgeBundling Enhanced', () => {
         curveType: 'cardinal',
         curveTension: 0.1,
         subdivisions: 8,
-        iterations: 20
+        adaptiveSubdivision: false, // Disable for consistent test
+        iterations: 5, // Fewer iterations to preserve more variation
+        stiffness: 0.05 // Lower stiffness for more curve
       });
 
       const highTensionBundler = new EdgeBundling({
         curveType: 'cardinal',
         curveTension: 0.9,
         subdivisions: 8,
-        iterations: 20
+        adaptiveSubdivision: false, // Disable for consistent test
+        iterations: 5, // Fewer iterations to preserve more variation
+        stiffness: 0.05 // Lower stiffness for more curve
       });
 
       const edges: TestEdge[] = [
@@ -593,8 +599,12 @@ describe('EdgeBundling Enhanced', () => {
         { x: 400, y: 300, id: 'b' }
       ];
 
-      const lowTensionResult = lowTensionBundler.render(container, edges as any, nodes as any, {});
-      const highTensionResult = highTensionBundler.render(container, edges as any, nodes as any, {});
+      // Use separate containers to avoid overwriting
+      const container1 = container.append('g');
+      const container2 = container.append('g');
+
+      const lowTensionResult = lowTensionBundler.render(container1, edges as any, nodes as any, {});
+      const highTensionResult = highTensionBundler.render(container2, edges as any, nodes as any, {});
 
       // Both should render successfully
       expect(lowTensionResult.selection.size()).toBe(1);
@@ -989,6 +999,7 @@ describe('EdgeBundling Enhanced', () => {
     it('should handle single edge correctly', () => {
       const bundler = new EdgeBundling({
         subdivisions: 10,
+        adaptiveSubdivision: false, // Disable adaptive subdivision for predictable test
         iterations: 30,
         momentum: 0.6
       });

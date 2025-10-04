@@ -487,9 +487,16 @@ export interface GraphConfig {
     /**
      * Number of subdivision points for curved edges.
      * More subdivisions create smoother curves.
-     * @default 10
+     * @default 20
      */
     subdivisions?: number;
+
+    /**
+     * Whether to use adaptive subdivision based on edge length.
+     * When true, longer edges get more subdivision points.
+     * @default true
+     */
+    adaptiveSubdivision?: boolean;
 
     /**
      * Minimum compatibility score for edges to bundle together.
@@ -508,7 +515,7 @@ export interface GraphConfig {
     /**
      * Step size for force-directed bundling.
      * Smaller values create more gradual bundling.
-     * @default 0.1
+     * @default 0.04
      */
     stepSize?: number;
 
@@ -518,6 +525,47 @@ export interface GraphConfig {
      * @default 0.1
      */
     stiffness?: number;
+
+    /**
+     * Momentum factor for force application (0-1).
+     * Higher values create smoother movement over iterations.
+     * @default 0.5
+     */
+    momentum?: number;
+
+    /**
+     * Type of curve to use for rendering.
+     * Options: 'basis', 'cardinal', 'catmullRom', 'bundle'
+     * @default 'basis'
+     */
+    curveType?: 'basis' | 'cardinal' | 'catmullRom' | 'bundle';
+
+    /**
+     * Tension parameter for cardinal and catmullRom curves.
+     * 0 = straight lines, 1 = maximum curvature.
+     * @default 0.85
+     */
+    curveTension?: number;
+
+    /**
+     * Type of smoothing algorithm to apply.
+     * Options: 'laplacian', 'gaussian', 'bilateral'
+     * @default 'laplacian'
+     */
+    smoothingType?: 'laplacian' | 'gaussian' | 'bilateral';
+
+    /**
+     * Number of smoothing iterations.
+     * @default 2
+     */
+    smoothingIterations?: number;
+
+    /**
+     * How often to apply smoothing during bundling iterations.
+     * E.g., 5 means smooth every 5 iterations.
+     * @default 5
+     */
+    smoothingFrequency?: number;
 
     /**
      * Custom compatibility function for edge pairs.

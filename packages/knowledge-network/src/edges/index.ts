@@ -133,4 +133,10 @@ export { EdgeRenderer, EdgeRenderConfig, EdgeRenderResult } from './EdgeRenderer
 
 // Built-in renderers
 export { SimpleEdge } from './SimpleEdge';
-export { EdgeBundling, EdgeBundlingConfig, EdgeCompatibilityFunction } from './EdgeBundling';
+export {
+  EdgeBundling,
+  EdgeBundlingConfig,
+  EdgeCompatibilityFunction,
+  CurveType,
+  SmoothingType
+} from './EdgeBundling';

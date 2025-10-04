@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Edge Bundling</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #graph { border: 1px solid #ccc; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Direct Edge Bundling Test</h1>
+    <div id="status" class="debug">Loading...</div>
+    <div id="graph"></div>
+
+    <script type="module">
+        // Import the knowledge-network package
+        import { KnowledgeGraph } from './packages/knowledge-network/dist/index.js';
+
+        console.log('Knowledge Graph imported:', !!KnowledgeGraph);
+
+        // Simple test data
+        const data = {
+            nodes: [
+                { id: 'A', label: 'Node A', x: 100, y: 100 },
+                { id: 'B', label: 'Node B', x: 300, y: 100 },
+                { id: 'C', label: 'Node C', x: 100, y: 200 },
+                { id: 'D', label: 'Node D', x: 300, y: 200 }
+            ],
+            edges: [
+                { source: 'A', target: 'B', label: 'edge AB' },
+                { source: 'C', target: 'D', label: 'edge CD' },
+                { source: 'A', target: 'C', label: 'edge AC' },
+                { source: 'B', target: 'D', label: 'edge BD' }
+            ]
+        };
+
+        const config = {
+            width: 500,
+            height: 300,
+            edgeRenderer: 'bundled',
+            edgeBundling: {
+                subdivisions: 10,
+                iterations: 20,
+                compatibilityThreshold: 0.3
+            },
+            nodeLabel: true,
+            edgeLabel: true,
+            waitForStable: false
+        };
+
+        document.getElementById('status').textContent = 'Creating graph with bundled edges...';
+        console.log('Creating KnowledgeGraph with config:', config);
+        console.log('Data:', data);
+
+        try {
+            const container = document.getElementById('graph');
+            const graph = new KnowledgeGraph(container, data, config);
+
+            console.log('KnowledgeGraph created, calling render()');
+            graph.render();
+
+            document.getElementById('status').textContent = 'Graph rendered. Check console for EdgeBundling debug messages.';
+
+        } catch (error) {
+            console.error('Error creating graph:', error);
+            document.getElementById('status').textContent = 'Error: ' + error.message;
+        }
+    </script>
+</body>
+</html>
