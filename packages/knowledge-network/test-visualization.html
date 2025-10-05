@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Graph Visualization Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        #container {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #ddd;
+            background: white;
+            position: relative;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            margin-right: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Knowledge Graph Visualization Test</h1>
+
+    <div class="controls">
+        <button onclick="testBasic()">Test Basic</button>
+        <button onclick="testWithStyling()">Test With Styling</button>
+        <button onclick="testWithBundling()">Test With Edge Bundling</button>
+        <button onclick="testWithLabels()">Test With Edge Labels</button>
+        <button onclick="clearGraph()">Clear</button>
+    </div>
+
+    <div id="container"></div>
+
+    <div class="info" id="info">
+        Click a test button to visualize the graph
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script type="module">
+        import { KnowledgeGraph, EdgeBundling } from './dist/index.js';
+
+        window.KnowledgeGraph = KnowledgeGraph;
+        window.EdgeBundling = EdgeBundling;
+
+        // Sample data with metadata for styling
+        const createSampleData = () => ({
+            nodes: [
+                { id: 'A', label: 'Node A', metadata: { type: 'concept', importance: 0.9 } },
+                { id: 'B', label: 'Node B', metadata: { type: 'concept', importance: 0.7 } },
+                { id: 'C', label: 'Node C', metadata: { type: 'person', importance: 0.5 } },
+                { id: 'D', label: 'Node D', metadata: { type: 'person', importance: 0.8 } },
+                { id: 'E', label: 'Node E', metadata: { type: 'place', importance: 0.6 } },
+                { id: 'F', label: 'Node F', metadata: { type: 'place', importance: 0.4 } },
+                { id: 'G', label: 'Node G', metadata: { type: 'concept', importance: 0.7 } },
+                { id: 'H', label: 'Node H', metadata: { type: 'person', importance: 0.5 } }
+            ],
+            edges: [
+                { source: 'A', target: 'B', label: 'relates to', metadata: { type: 'semantic', strength: 0.9 } },
+                { source: 'A', target: 'C', label: 'created by', metadata: { type: 'authorship', strength: 0.7 } },
+                { source: 'B', target: 'D', label: 'influenced', metadata: { type: 'influence', strength: 0.6 } },
+                { source: 'C', target: 'D', label: 'knows', metadata: { type: 'social', strength: 0.8 } },
+                { source: 'D', target: 'E', label: 'located at', metadata: { type: 'spatial', strength: 0.5 } },
+                { source: 'E', target: 'F', label: 'near', metadata: { type: 'spatial', strength: 0.7 } },
+                { source: 'A', target: 'G', label: 'similar to', metadata: { type: 'semantic', strength: 0.85 } },
+                { source: 'G', target: 'H', label: 'created by', metadata: { type: 'authorship', strength: 0.6 } },
+                { source: 'H', target: 'D', label: 'colleague', metadata: { type: 'social', strength: 0.75 } },
+                { source: 'B', target: 'E', label: 'references', metadata: { type: 'reference', strength: 0.4 } },
+                { source: 'F', target: 'A', label: 'origin of', metadata: { type: 'origin', strength: 0.5 } }
+            ]
+        });
+
+        let currentGraph = null;
+
+        // Node type colors
+        const nodeColors = {
+            concept: '#4CAF50',
+            person: '#2196F3',
+            place: '#FF9800'
+        };
+
+        // Edge type colors
+        const edgeColors = {
+            semantic: '#4CAF50',
+            authorship: '#9C27B0',
+            influence: '#FF5722',
+            social: '#2196F3',
+            spatial: '#FF9800',
+            reference: '#795548',
+            origin: '#607D8B'
+        };
+
+        window.testBasic = () => {
+            clearGraph();
+            const data = createSampleData();
+            const container = document.getElementById('container');
+
+            currentGraph = new KnowledgeGraph(container, data, {
+                width: container.clientWidth,
+                height: container.clientHeight,
+                waitForStable: false
+            });
+
+            currentGraph.render();
+            document.getElementById('info').innerText = 'Basic graph rendered (no custom styling, edges should render immediately)';
+        };
+
+        window.testWithStyling = () => {
+            clearGraph();
+            const data = createSampleData();
+            const container = document.getElementById('container');
+
+            currentGraph = new KnowledgeGraph(container, data, {
+                width: container.clientWidth,
+                height: container.clientHeight,
+                waitForStable: true,
+                nodeRadius: (d) => 5 + (d.metadata?.importance || 0.5) * 20,
+                nodeFill: (d) => nodeColors[d.metadata?.type] || '#666',
+                nodeStroke: (d) => d3.color(nodeColors[d.metadata?.type] || '#666').darker(1),
+                nodeStrokeWidth: () => 2,
+                linkStroke: (d) => {
+                    console.log('linkStroke called for edge:', d);
+                    return edgeColors[d.metadata?.type] || '#999';
+                },
+                linkStrokeWidth: (d) => {
+                    console.log('linkStrokeWidth called for edge:', d);
+                    return 1 + (d.metadata?.strength || 0.5) * 3;
+                }
+            });
+
+            currentGraph.render();
+            document.getElementById('info').innerText = 'Graph with custom styling (nodes should be colored, edges should wait for stability)';
+        };
+
+        window.testWithBundling = () => {
+            clearGraph();
+            const data = createSampleData();
+            const container = document.getElementById('container');
+
+            const bundler = new EdgeBundling({
+                subdivisions: 30,
+                iterations: 60,
+                compatibilityThreshold: 0.5,
+                curveType: 'basis',
+                curveTension: 0.85,
+                stroke: (d) => {
+                    console.log('EdgeBundling stroke called for edge:', d);
+                    return edgeColors[d.metadata?.type] || '#999';
+                },
+                strokeWidth: (d) => {
+                    console.log('EdgeBundling strokeWidth called for edge:', d);
+                    return 1 + (d.metadata?.strength || 0.5) * 3;
+                },
+                strokeOpacity: 0.7
+            });
+
+            currentGraph = new KnowledgeGraph(container, data, {
+                width: container.clientWidth,
+                height: container.clientHeight,
+                edgeRenderer: bundler,
+                waitForStable: true,
+                nodeRadius: (d) => 5 + (d.metadata?.importance || 0.5) * 20,
+                nodeFill: (d) => nodeColors[d.metadata?.type] || '#666',
+                nodeStroke: (d) => d3.color(nodeColors[d.metadata?.type] || '#666').darker(1),
+                nodeStrokeWidth: () => 2,
+                linkStroke: (d) => edgeColors[d.metadata?.type] || '#999',
+                linkStrokeWidth: (d) => 1 + (d.metadata?.strength || 0.5) * 3,
+            });
+
+            currentGraph.render();
+            document.getElementById('info').innerText = 'Graph with edge bundling (edges should be curved and bundled)';
+        };
+
+        window.testWithLabels = () => {
+            clearGraph();
+            const data = createSampleData();
+            const container = document.getElementById('container');
+
+            const bundler = new EdgeBundling({
+                subdivisions: 25,
+                iterations: 50,
+                compatibilityThreshold: 0.55,
+                curveType: 'cardinal',
+                curveTension: 0.7
+            });
+
+            currentGraph = new KnowledgeGraph(container, data, {
+                width: container.clientWidth,
+                height: container.clientHeight,
+                edgeRenderer: bundler,
+                waitForStable: true,
+                showEdgeLabels: true,  // Enable edge labels
+                nodeRadius: (d) => 5 + (d.metadata?.importance || 0.5) * 20,
+                nodeFill: (d) => nodeColors[d.metadata?.type] || '#666',
+                linkStroke: (d) => edgeColors[d.metadata?.type] || '#999',
+                linkStrokeWidth: (d) => 1 + (d.metadata?.strength || 0.5) * 3,
+            });
+
+            currentGraph.render();
+            document.getElementById('info').innerText = 'Graph with edge labels (labels should appear along edges)';
+        };
+
+        window.clearGraph = () => {
+            if (currentGraph) {
+                currentGraph.destroy();
+                currentGraph = null;
+            }
+            document.getElementById('info').innerText = 'Graph cleared';
+        };
+    </script>
+</body>
+</html>

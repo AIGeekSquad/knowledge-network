@@ -432,9 +432,17 @@ export class EdgeBundling implements EdgeRenderer {
       .data(edges)
       .join('path')
       .attr('fill', 'none')
-      .attr('stroke', renderConfig.stroke ? (_d, i) => renderConfig.stroke!(_d, i) : '#999')
+      .attr('stroke', (d, i) => {
+        const color = renderConfig.stroke ? renderConfig.stroke(d, i) : '#999';
+        console.log(`Edge ${i} stroke color:`, color, 'for edge:', d);
+        return color;
+      })
       .attr('stroke-opacity', renderConfig.strokeOpacity)
-      .attr('stroke-width', renderConfig.strokeWidth ? (_d, i) => renderConfig.strokeWidth!(_d, i) : 1.5)
+      .attr('stroke-width', (d, i) => {
+        const width = renderConfig.strokeWidth ? renderConfig.strokeWidth(d, i) : 1.5;
+        console.log(`Edge ${i} stroke width:`, width);
+        return width;
+      })
       .attr('d', (_d, i) => {
         const pathData = lineGenerator(controlPoints[i]);
         if (i === 0) {
@@ -699,17 +707,17 @@ export class EdgeBundling implements EdgeRenderer {
           forceX += (straightX - point.x) * this.config.stiffness;
           forceY += (straightY - point.y) * this.config.stiffness;
 
-          // Add smooth sine-based curvature (no randomness)
+          // Add smooth sine-based curvature for visibility
           const perpX = -(points[numPoints - 1].y - points[0].y);
           const perpY = points[numPoints - 1].x - points[0].x;
           const length = Math.sqrt(perpX * perpX + perpY * perpY);
 
           if (length > 0) {
-            // Smooth sine-based curvature without random factors
-            const curveAmount = Math.sin(t * Math.PI) * 30; // Increased curvature for visibility
-            const curveFactor = compatibleCount > 0 ? 0.3 : 1.0; // Reduce for bundled edges
-            forceX += (perpX / length) * curveAmount * curveFactor * 0.05; // Increased force multiplier
-            forceY += (perpY / length) * curveAmount * curveFactor * 0.05;
+            // Create very visible curvature for prominent bundling demo
+            const curveAmount = Math.sin(t * Math.PI) * 80; // Much higher curvature for demo
+            const curveFactor = compatibleCount > 0 ? 0.7 : 2.0; // Dramatic curves for non-bundled edges
+            forceX += (perpX / length) * curveAmount * curveFactor * 0.15; // Stronger force for visibility
+            forceY += (perpY / length) * curveAmount * curveFactor * 0.15;
           }
 
           // Apply momentum-based force application

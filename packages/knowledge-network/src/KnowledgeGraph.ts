@@ -357,6 +357,11 @@ export class KnowledgeGraph {
       // Update edge positions if already rendered
       if (edgesRendered && this.edgeRenderResult) {
         this.edgeRenderer.update(this.edgeRenderResult);
+
+        // Update edge labels if they exist
+        if (this.config.showEdgeLabels) {
+          this.updateEdgeLabels();
+        }
       }
 
       node
@@ -394,6 +399,79 @@ export class KnowledgeGraph {
         strokeOpacity: 0.6,
       }
     );
+
+    // Render edge labels if enabled
+    if (this.config.showEdgeLabels) {
+      this.renderEdgeLabels();
+    }
+  }
+
+  /**
+   * Render edge labels along the edges
+   */
+  private renderEdgeLabels(): void {
+    if (!this.linkGroup || !this.edgeRenderResult) return;
+
+    // Remove existing labels
+    this.linkGroup.selectAll('.edge-label').remove();
+    this.linkGroup.selectAll('.edge-label-path').remove();
+
+    // Create a group for labels
+    const labelGroup = this.linkGroup.append('g')
+      .attr('class', 'edge-labels');
+
+    // For each edge, create a text element along the path
+    const edges = this.data.edges;
+    const paths = this.edgeRenderResult.selection;
+
+    paths.each(function(_d: any, i: number) {
+      const path = d3.select(this) as d3.Selection<SVGPathElement, any, any, any>;
+      const edge = edges[i];
+
+      if (!edge.label) return;
+
+      // Create a unique ID for this path
+      const pathId = `edge-label-path-${i}`;
+
+      // Clone the path for the text to follow
+      labelGroup.append('path')
+        .attr('id', pathId)
+        .attr('class', 'edge-label-path')
+        .attr('d', path.attr('d'))
+        .style('fill', 'none')
+        .style('stroke', 'none');
+
+      // Create text element that follows the path
+      labelGroup.append('text')
+        .attr('class', 'edge-label')
+        .append('textPath')
+        .attr('href', `#${pathId}`)
+        .attr('startOffset', '50%')
+        .style('text-anchor', 'middle')
+        .style('font-size', '10px')
+        .style('fill', '#666')
+        .style('font-family', 'Arial, sans-serif')
+        .style('pointer-events', 'none')
+        .text(edge.label);
+    });
+  }
+
+  /**
+   * Update edge labels positions during simulation
+   */
+  private updateEdgeLabels(): void {
+    if (!this.linkGroup || !this.edgeRenderResult) return;
+
+    const paths = this.edgeRenderResult.selection;
+
+    // Update the hidden path elements that the text follows
+    this.linkGroup.selectAll('.edge-label-path')
+      .each(function(_d: any, i: number) {
+        const pathElement = paths.nodes()[i];
+        if (pathElement) {
+          d3.select(this).attr('d', d3.select(pathElement).attr('d'));
+        }
+      });
   }
 
   /**

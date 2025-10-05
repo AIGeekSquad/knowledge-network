@@ -629,6 +629,13 @@ export interface GraphConfig {
    */
   stabilityThreshold?: number;
 
+  /**
+   * Whether to show edge labels along the edges.
+   * Labels are rendered as text along the edge paths.
+   * @default false
+   */
+  showEdgeLabels?: boolean;
+
   // Interaction
 
   /**

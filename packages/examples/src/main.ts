@@ -45,27 +45,29 @@ function showEnhancedEdgeBundling() {
   const config = {
     width: 1200,
     height: 700,
-    chargeStrength: -2000,      // Stronger charge for better node separation
-    linkDistance: 280,          // Optimal distance for edge bundling
+    chargeStrength: -2500,      // Very strong charge for wide node separation
+    linkDistance: 320,          // Longer distance creates more bundling opportunities
     edgeRenderer: 'bundled' as const,
     edgeBundling: {
-      // Enhanced algorithm features
-      subdivisions: 25,                    // High subdivision for ultra-smooth curves
+      // Enhanced algorithm features for maximum visual impact
+      subdivisions: 35,                    // Very high subdivision for ultra-smooth curves
       adaptiveSubdivision: true,          // Longer edges get more subdivisions
-      iterations: 80,                     // More iterations for better bundling
-      compatibilityThreshold: 0.4,       // Lower threshold bundles more edge types
-      stepSize: 0.05,                     // Slightly larger steps for faster convergence
-      stiffness: 0.2,                     // Lower stiffness allows more curvature
-      momentum: 0.7,                      // High momentum for smooth movement
+      iterations: 120,                    // More iterations for tighter bundling
+      compatibilityThreshold: 0.3,       // Lower threshold for more aggressive bundling
+      stepSize: 0.08,                     // Larger steps for more pronounced bundling
+      stiffness: 0.15,                    // Reduced stiffness for more dramatic curves
+      momentum: 0.8,                      // Higher momentum for ultra-smooth movement
       curveType: 'cardinal' as const,     // Cardinal splines for natural curves
-      curveTension: 0.8,                  // High tension for controlled curves
+      curveTension: 0.9,                  // Maximum tension for controlled curves
       smoothingType: 'gaussian' as const, // Gaussian smoothing for ultra-smooth edges
-      smoothingIterations: 3,             // Multiple smoothing passes
-      smoothingFrequency: 5,              // Smooth every 5 iterations during bundling
+      smoothingIterations: 4,             // More smoothing passes
+      smoothingFrequency: 4,              // More frequent smoothing during bundling
       compatibilityFunction: (edge1: Edge, edge2: Edge) => {
         const type1 = edge1.metadata?.type as string;
         const type2 = edge2.metadata?.type as string;
-        return getEdgeCompatibility(type1, type2);
+        // Boost compatibility for more dramatic bundling
+        const baseCompatibility = getEdgeCompatibility(type1, type2);
+        return Math.min(baseCompatibility * 1.3, 1.0); // 30% boost
       }
     },
     // Enhanced node styling with clear visual hierarchy
@@ -81,44 +83,32 @@ function showEnhancedEdgeBundling() {
     nodeStroke: '#ffffff',      // White border for contrast
     nodeStrokeWidth: 2,         // Clear node boundaries
 
-    // Enhanced edge styling with semantic coloring
+    // Enhanced edge styling with high-contrast semantic coloring
     linkStroke: (edge: Edge) => {
       const type = (edge.metadata?.type as string) || '';
-      return edgeStyles.colors[type as keyof typeof edgeStyles.colors] || '#999';
+      const color = edgeStyles.colors[type as keyof typeof edgeStyles.colors] || '#999';
+      console.log(`Edge ${edge.source}->${edge.target} type:${type} color:${color}`);
+      return color;
     },
     linkStrokeWidth: (edge: Edge) => {
       const type = (edge.metadata?.type as string) || '';
       const baseWidth = edgeStyles.widths[type as keyof typeof edgeStyles.widths] || 1;
-      return Math.max(baseWidth, 1.5); // Minimum width for visibility
+      return Math.max(baseWidth * 1.8, 2.0); // Thicker edges for bundling visibility
     },
-    linkStrokeOpacity: 0.7,     // Higher opacity for clearer visibility
 
     // Enhanced labeling for clear understanding
-    nodeLabel: true,
-    nodeLabelFontSize: 11,      // Slightly larger for readability
-    nodeLabelFontWeight: '600', // Semi-bold for clarity
-    nodeLabelFill: '#2c3e50',   // Dark color for contrast
+    showEdgeLabels: true,       // Enable edge labels along paths
 
-    edgeLabel: true,
-    edgeLabelFontSize: 9,       // Clear edge labels
-    edgeLabelFontWeight: '500',
-    edgeLabelFill: '#34495e',   // Readable dark gray
-    edgeLabelOpacity: 0.9,      // High opacity for readability
-
-    // Animation settings for smooth interactions
+    // Wait for simulation stability before rendering edges
     waitForStable: true,        // Wait for layout to stabilize
-    animationDuration: 1500,    // Smooth animations
-
-    // Force simulation tuning for optimal layout
-    alphaDecay: 0.01,          // Slower cooling for better convergence
-    velocityDecay: 0.15        // Lower decay preserves momentum
+    stabilityThreshold: 0.005   // Lower threshold for better stability
   };
 
   // Fix: Pass data and config as separate arguments
   currentGraph = new KnowledgeGraph(container, data, config);
   currentGraph.render();
 
-  updateStatus('Enhanced Edge Bundling: Semantic gaming session with smooth flows, adaptive subdivision, and momentum-based bundling');
+  updateStatus('🌟 ENHANCED BUNDLING ACTIVE: Watch edges flow and bundle by semantic similarity! Curved paths show relationships.');
 }
 
 // Simple comparison mode
@@ -158,10 +148,7 @@ function showSimpleEdges() {
     },
     linkStrokeOpacity: 0.6,
 
-    nodeLabel: true,
-    nodeLabelFontSize: 10,
-    edgeLabel: true,
-    edgeLabelFontSize: 8,
+    showEdgeLabels: true,       // Show edge labels for comparison
     waitForStable: false
   };
 
@@ -169,7 +156,7 @@ function showSimpleEdges() {
   currentGraph = new KnowledgeGraph(container, data, config);
   currentGraph.render();
 
-  updateStatus('Simple Edges: Basic straight-line connections for comparison');
+  updateStatus('📏 SIMPLE EDGES: Basic straight lines - compare with Enhanced Bundling to see the difference!');
 }
 
 // Add legend for understanding the semantic graph

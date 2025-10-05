@@ -2,35 +2,77 @@
 import { Node, Edge } from '../../knowledge-network/dist/index.js';
 
 /**
- * Creates a comprehensive gaming session knowledge graph with semantic edge labels
- * This represents a multiplayer online battle arena (MOBA) game session with:
- * - Players with roles and teams
- * - Locations with zone types
- * - Time-based events
- * - Items with tiers and powers
- * - Rich edge metadata including labels, relationships, and temporal data
+ * Creates a proper semantic space-time gaming session knowledge graph
+ *
+ * Based on semantic space-time graph theory principles:
+ * - Temporal coherence: Each node represents a specific space-time state
+ * - Spatial precision: All entities have precise spatial coordinates
+ * - Semantic richness: Rich semantic properties enable similarity calculations
+ * - Relationship specificity: Precise edge types (causation, succession, transformation)
+ * - Multi-dimensional properties: Edges capture temporal gaps, spatial distances, semantic similarity
+ *
+ * References:
+ * - Yuan, M. (2001). Representing complex geographic phenomena with both object- and field-like properties
+ * - Goodchild, M. F. (2013). The quality of big (geo)data
+ * - Janowicz, K. et al. (2014). Five stars of linked data vocabulary use
  */
 export function createGamingSessionGraph(): { nodes: Node[], edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
-  
-  // Players (core nodes) - widely spread out
-  const players = [
-    { id: 'Player1', label: 'Alice (Tank)', team: 'red', role: 'tank' },
-    { id: 'Player2', label: 'Bob (Healer)', team: 'red', role: 'healer' },
-    { id: 'Player3', label: 'Charlie (DPS)', team: 'blue', role: 'dps' },
-    { id: 'Player4', label: 'Diana (Support)', team: 'blue', role: 'support' }
+
+  // SEMANTIC SPACE-TIME NODES: Player States at Specific Times and Locations
+
+  // Alice (Tank) - Temporal State Sequence
+  const aliceStates = [
+    {
+      id: 'Alice_T0',
+      label: 'Alice spawns',
+      x: 100, y: 100,
+      metadata: {
+        type: 'player_state',
+        player_id: 'Alice',
+        role: 'tank',
+        team: 'red',
+        timestamp: 0,
+        location: 'red_spawn',
+        health: 100,
+        mana: 100,
+        semantic_context: 'game_initialization'
+      }
+    },
+    {
+      id: 'Alice_T150',
+      label: 'Alice advances',
+      x: 300, y: 200,
+      metadata: {
+        type: 'player_state',
+        player_id: 'Alice',
+        role: 'tank',
+        team: 'red',
+        timestamp: 150,
+        location: 'mid_lane',
+        health: 100,
+        mana: 85,
+        semantic_context: 'tactical_positioning'
+      }
+    },
+    {
+      id: 'Alice_T300',
+      label: 'Alice engages',
+      x: 600, y: 350,
+      metadata: {
+        type: 'player_state',
+        player_id: 'Alice',
+        role: 'tank',
+        team: 'red',
+        timestamp: 300,
+        location: 'team_fight_zone',
+        health: 65,
+        mana: 40,
+        semantic_context: 'combat_engagement'
+      }
+    }
   ];
-  
-  players.forEach((player, i) => {
-    nodes.push({
-      id: player.id,
-      label: player.label,
-      x: 600 + Math.cos(i * Math.PI / 2) * 450,
-      y: 350 + Math.sin(i * Math.PI / 2) * 350,
-      metadata: { type: 'player', team: player.team, role: player.role }
-    });
-  });
   
   // Locations - well distributed across the canvas
   const locations = [
@@ -455,22 +497,27 @@ export const nodeStyles = {
 
 export const edgeStyles = {
   colors: {
-    spawn: '#ff6b6b',
-    movement: '#4ecdc4',
-    combat: '#ff4444',
-    pickup: '#6bcf7f',
-    path: '#888',
-    sequence: '#dda0dd',
-    event_participation: '#ffd93d',
-    kill: '#ff0000',
-    death: '#666',
-    victory: '#ffd700'
+    spawn: '#e74c3c',      // Bright red for spawning
+    movement: '#3498db',   // Bright blue for movement
+    combat: '#f39c12',     // Orange for combat actions
+    pickup: '#27ae60',     // Green for item pickups
+    path: '#9b59b6',       // Purple for location paths
+    sequence: '#e67e22',   // Dark orange for event sequences
+    event_participation: '#f1c40f', // Yellow for event participation
+    kill: '#c0392b',       // Dark red for kills
+    death: '#7f8c8d',      // Gray for deaths
+    victory: '#d4af37'     // Gold for victory
   },
   widths: {
-    combat: 3, 
-    movement: 2, 
-    sequence: 1.5,
-    kill: 4,
-    victory: 3
+    combat: 4,       // Thicker for combat prominence
+    movement: 3,     // Thicker movement paths
+    sequence: 2.5,   // Prominent sequences
+    kill: 5,         // Very thick kill edges
+    victory: 4,      // Thick victory edges
+    path: 2,         // Visible path edges
+    spawn: 2.5,      // Clear spawn connections
+    pickup: 2,       // Visible pickups
+    event_participation: 2, // Clear event participation
+    death: 1.5       // Subtle death edges
   }
 };
