@@ -1,185 +1,380 @@
 // World of Warcraft Gaming Session: Semantic Space-Time Graph Data Generator
-// Realistic WoW dungeon run through Deadmines with accurate game mechanics
+// Mythic+ Necrotic Wake dungeon run with comprehensive game mechanics and edge bundling
 import { Node, Edge } from '../../knowledge-network/dist/index.js';
 
 /**
- * Creates a realistic World of Warcraft gaming session knowledge graph
- * Using accurate WoW zones, classes, abilities, and game mechanics
+ * Enhanced node interface for World of Warcraft entities with agent-like properties
+ * Based on semantic space-time theory: every entity has autonomy, goals, and behaviors
+ */
+export interface WoWNode extends Node {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  metadata: {
+    type: 'player' | 'boss' | 'mob' | 'location' | 'ability' | 'buff' | 'debuff' | 'mechanic' | 'phase';
+
+    // Agent properties (for entities with autonomy)
+    autonomy_level?: number; // 0-1 scale of self-direction
+    goals?: string[]; // Current objectives
+    decision_patterns?: string[]; // Behavioral patterns
+    resource_pools?: Record<string, number>; // Health, mana, energy, etc.
+
+    // Spatial properties
+    zone?: string;
+    subzone?: string;
+    coordinates?: {
+      x: number;
+      y: number;
+      z: number;
+      zone_id: number;
+    };
+
+    // Temporal properties
+    spawn_time?: number;
+    despawn_time?: number;
+    phase_active?: number[];
+
+    // Combat properties
+    level?: number;
+    health?: number;
+    max_health?: number;
+    power_type?: string;
+    power_value?: number;
+    threat_table?: Record<string, number>;
+
+    // Additional metadata
+    [key: string]: any;
+  };
+}
+
+/**
+ * Enhanced edge interface with comprehensive metadata for edge bundling
+ */
+export interface WoWEdge extends Edge {
+  source: string;
+  target: string;
+  label: string;
+  metadata: {
+    type: EdgeType;
+    timestamp: number; // Seconds since encounter start
+    duration?: number; // For channeled or periodic effects
+
+    // Semantic categories for bundling
+    semantic_category: SemanticCategory;
+    phase?: number; // Combat phase (1-3 for most bosses)
+    role_category?: 'tank' | 'healer' | 'dps' | 'utility';
+
+    // Spatial context
+    distance?: number;
+    position_requirement?: string; // "spread", "stack", "behind_boss", etc.
+
+    // Combat metrics
+    value?: number; // Damage, healing, threat, etc.
+    critical?: boolean;
+    blocked?: boolean;
+    absorbed?: number;
+    overkill?: number;
+
+    // Additional metadata
+    [key: string]: any;
+  };
+}
+
+/**
+ * Comprehensive edge types for WoW interactions
+ */
+export enum EdgeType {
+  // Movement and Positioning
+  MOVEMENT = 'movement',
+  TELEPORT = 'teleport',
+  KNOCKBACK = 'knockback',
+  PULL = 'pull',
+  CHARGE = 'charge',
+
+  // Combat Actions
+  MELEE_ATTACK = 'melee_attack',
+  RANGED_ATTACK = 'ranged_attack',
+  SPELL_CAST = 'spell_cast',
+  CHANNEL = 'channel',
+  INTERRUPT = 'interrupt',
+  DISPEL = 'dispel',
+
+  // Healing and Support
+  DIRECT_HEAL = 'direct_heal',
+  HOT = 'hot', // Heal over time
+  ABSORB_SHIELD = 'absorb_shield',
+  BUFF_APPLICATION = 'buff_application',
+  BUFF_REMOVAL = 'buff_removal',
+
+  // Debuffs and Control
+  DEBUFF_APPLICATION = 'debuff_application',
+  DEBUFF_REMOVAL = 'debuff_removal',
+  STUN = 'stun',
+  ROOT = 'root',
+  SILENCE = 'silence',
+  FEAR = 'fear',
+
+  // Threat and Aggro
+  THREAT_GENERATION = 'threat_generation',
+  THREAT_DROP = 'threat_drop',
+  TAUNT = 'taunt',
+  AGGRO_CHANGE = 'aggro_change',
+
+  // Boss Mechanics
+  BOSS_PHASE = 'boss_phase',
+  MECHANIC_START = 'mechanic_start',
+  MECHANIC_RESOLVE = 'mechanic_resolve',
+  ENRAGE = 'enrage',
+
+  // Resource Management
+  RESOURCE_GAIN = 'resource_gain',
+  RESOURCE_SPEND = 'resource_spend',
+  COOLDOWN_USE = 'cooldown_use',
+  COOLDOWN_READY = 'cooldown_ready',
+
+  // Social and Coordination
+  READY_CHECK = 'ready_check',
+  MARKER_ASSIGN = 'marker_assign',
+  VOICE_CALL = 'voice_call',
+  STRATEGY_ADJUST = 'strategy_adjust'
+}
+
+/**
+ * Semantic categories for edge bundling
+ */
+export enum SemanticCategory {
+  COMBAT_DAMAGE = 'combat_damage',
+  COMBAT_HEALING = 'combat_healing',
+  COMBAT_MITIGATION = 'combat_mitigation',
+  POSITIONING = 'positioning',
+  RESOURCE_MANAGEMENT = 'resource_management',
+  CROWD_CONTROL = 'crowd_control',
+  BUFF_MANAGEMENT = 'buff_management',
+  THREAT_MANAGEMENT = 'threat_management',
+  MECHANIC_HANDLING = 'mechanic_handling',
+  COORDINATION = 'coordination'
+}
+
+/**
+ * Creates a comprehensive Mythic+ Necrotic Wake dungeon run knowledge graph
+ * Simulates a 12-minute run with 5 players through the dungeon
  *
  * Based on semantic space-time graph theory principles:
- * - Temporal coherence: Each node represents a specific space-time state
- * - Spatial precision: All entities have precise WoW coordinates
- * - Semantic richness: Rich WoW-specific metadata enables similarity calculations
- * - Relationship specificity: WoW-specific edge types (aggro, cast_sequence, threat, etc.)
- * - Multi-dimensional properties: Captures WoW combat mechanics, movement, social interactions
+ * - Temporal coherence: 720-second timeline with precise event sequences
+ * - Spatial precision: Exact dungeon coordinates and positioning requirements
+ * - Agent autonomy: Each entity has goals, resources, and decision patterns
+ * - Rich associations: Four types per semantic theory (spatial, temporal, causal, semantic)
+ * - Edge bundling optimization: Semantic categories enable natural grouping
  */
-export function createGamingSessionGraph(): { nodes: Node[], edges: Edge[] } {
-  const nodes: Node[] = [];
-  const edges: Edge[] = [];
+export function createGamingSessionGraph(): { nodes: WoWNode[], edges: WoWEdge[] } {
+  const nodes: WoWNode[] = [];
+  const edges: WoWEdge[] = [];
 
-  // PLAYER CHARACTERS - Authentic WoW Classes with Real Coordinates
-  const players = [
+  // PLAYER CHARACTERS - Mythic+ Team Composition for Necrotic Wake
+  const players: WoWNode[] = [
     {
-      id: 'Throgrim_DK',
-      label: 'Throgrim (Death Knight)',
-      x: 120, y: 150, // Westfall coordinates
-      metadata: {
-        type: 'player',
-        class: 'Death Knight',
-        spec: 'Unholy',
-        level: 85,
-        guild: 'Stormrage Vanguard',
-        health: 185000,
-        runic_power: 1000,
-        zone: 'Westfall',
-        subzone: 'Moonbrook',
-        coordinates: { x: -10684, y: 1033, zone_id: 40 }, // Real WoW coords
-        primary_stats: { strength: 2845, stamina: 3420, haste: 1205 }
-      }
-    },
-    {
-      id: 'Liadrin_Paladin',
-      label: 'Liadrin (Holy Paladin)',
-      x: 150, y: 180,
-      metadata: {
-        type: 'player',
-        class: 'Paladin',
-        spec: 'Holy',
-        level: 85,
-        guild: 'Stormrage Vanguard',
-        health: 165000,
-        mana: 85000,
-        zone: 'Westfall',
-        subzone: 'Moonbrook',
-        coordinates: { x: -10678, y: 1028, zone_id: 40 },
-        primary_stats: { intellect: 2654, spirit: 1876, spell_power: 3241 }
-      }
-    },
-    {
-      id: 'Kael_Mage',
-      label: 'Kael (Fire Mage)',
+      id: 'tank_vdh',
+      label: 'Illidari (Vengeance DH)',
       x: 100, y: 200,
       metadata: {
         type: 'player',
-        class: 'Mage',
-        spec: 'Fire',
-        level: 85,
-        guild: 'Stormrage Vanguard',
-        health: 125000,
-        mana: 95000,
-        zone: 'Westfall',
-        subzone: 'Moonbrook',
-        coordinates: { x: -10692, y: 1021, zone_id: 40 },
-        primary_stats: { intellect: 3120, haste: 1654, crit: 1432 }
+        autonomy_level: 0.95,
+        goals: ['maintain_aggro', 'position_mobs', 'mitigate_damage', 'set_pace'],
+        decision_patterns: ['kite_on_necrotic', 'face_away_frontal', 'use_cooldowns_proactively'],
+        resource_pools: { health: 420000, max_health: 420000, fury: 120, soul_fragments: 0 },
+        zone: 'The Necrotic Wake',
+        subzone: 'Entrance',
+        coordinates: { x: 3150.5, y: -3015.2, z: 94.7, zone_id: 2286 },
+        level: 70,
+        spec: 'Vengeance',
+        item_level: 440,
+        key_abilities: ['Fel Devastation', 'Metamorphosis', 'Fiery Brand', 'Sigil of Flame'],
+        covenant: 'Kyrian',
+        role: 'tank'
       }
     },
     {
-      id: 'Garona_Rogue',
-      label: 'Garona (Assassination Rogue)',
-      x: 180, y: 160,
+      id: 'healer_rsham',
+      label: 'Thrall (Resto Shaman)',
+      x: 120, y: 180,
       metadata: {
         type: 'player',
-        class: 'Rogue',
-        spec: 'Assassination',
-        level: 85,
-        guild: 'Stormrage Vanguard',
-        health: 142000,
-        energy: 100,
-        zone: 'Westfall',
-        subzone: 'Moonbrook',
-        coordinates: { x: -10671, y: 1035, zone_id: 40 },
-        primary_stats: { agility: 3045, expertise: 781, mastery: 1234 }
+        autonomy_level: 0.9,
+        goals: ['keep_party_alive', 'dispel_debuffs', 'manage_cooldowns', 'interrupt_casts'],
+        decision_patterns: ['predictive_healing', 'cooldown_rotation', 'triage_priority'],
+        resource_pools: { health: 380000, max_health: 380000, mana: 120000, max_mana: 120000 },
+        zone: 'The Necrotic Wake',
+        subzone: 'Entrance',
+        coordinates: { x: 3148.2, y: -3013.5, z: 94.7, zone_id: 2286 },
+        level: 70,
+        spec: 'Restoration',
+        item_level: 437,
+        key_abilities: ['Spirit Link Totem', 'Healing Tide Totem', 'Riptide', 'Wind Shear'],
+        covenant: 'Necrolord',
+        role: 'healer'
+      }
+    },
+    {
+      id: 'dps_fire_mage',
+      label: 'Khadgar (Fire Mage)',
+      x: 140, y: 220,
+      metadata: {
+        type: 'player',
+        autonomy_level: 0.85,
+        goals: ['maximize_damage', 'interrupt_priority_casts', 'execute_mechanics', 'decurse'],
+        decision_patterns: ['combustion_windows', 'movement_optimization', 'target_priority'],
+        resource_pools: { health: 320000, max_health: 320000, mana: 100000, max_mana: 100000 },
+        zone: 'The Necrotic Wake',
+        subzone: 'Entrance',
+        coordinates: { x: 3152.1, y: -3016.8, z: 94.7, zone_id: 2286 },
+        level: 70,
+        spec: 'Fire',
+        item_level: 441,
+        key_abilities: ['Combustion', 'Fire Blast', 'Phoenix Flames', 'Counterspell'],
+        covenant: 'Night Fae',
+        role: 'dps'
+      }
+    },
+    {
+      id: 'dps_havoc_dh',
+      label: 'Kayn (Havoc DH)',
+      x: 80, y: 240,
+      metadata: {
+        type: 'player',
+        autonomy_level: 0.85,
+        goals: ['maximize_aoe_damage', 'priority_interrupt', 'execute_mechanics', 'consume_magic'],
+        decision_patterns: ['eye_beam_timing', 'meta_windows', 'mobility_usage'],
+        resource_pools: { health: 340000, max_health: 340000, fury: 120, max_fury: 120 },
+        zone: 'The Necrotic Wake',
+        subzone: 'Entrance',
+        coordinates: { x: 3149.8, y: -3017.3, z: 94.7, zone_id: 2286 },
+        level: 70,
+        spec: 'Havoc',
+        item_level: 439,
+        key_abilities: ['Eye Beam', 'Blade Dance', 'Metamorphosis', 'Disrupt'],
+        covenant: 'Venthyr',
+        role: 'dps'
+      }
+    },
+    {
+      id: 'dps_sub_rogue',
+      label: 'Garona (Sub Rogue)',
+      x: 160, y: 200,
+      metadata: {
+        type: 'player',
+        autonomy_level: 0.88,
+        goals: ['priority_damage', 'kick_rotation', 'execute_mechanics', 'apply_shroud'],
+        decision_patterns: ['shadow_dance_windows', 'symbols_timing', 'energy_pooling'],
+        resource_pools: { health: 330000, max_health: 330000, energy: 100, max_energy: 100, combo: 0 },
+        zone: 'The Necrotic Wake',
+        subzone: 'Entrance',
+        coordinates: { x: 3151.3, y: -3014.1, z: 94.7, zone_id: 2286 },
+        level: 70,
+        spec: 'Subtlety',
+        item_level: 438,
+        key_abilities: ['Shadow Dance', 'Symbols of Death', 'Shadow Blades', 'Kick'],
+        covenant: 'Kyrian',
+        role: 'dps'
       }
     }
   ];
 
   players.forEach(player => nodes.push(player));
-  
-  // DEADMINES DUNGEON LOCATIONS - Authentic WoW Coordinates
-  const dungeonLocations = [
+
+  // NECROTIC WAKE DUNGEON LOCATIONS - Shadowlands Mythic+ Dungeon
+  const dungeonLocations: WoWNode[] = [
     {
-      id: 'DM_Entrance',
-      label: 'Deadmines Entrance',
+      id: 'nw_entrance',
+      label: 'Necrotic Wake Entrance',
       x: 100, y: 100,
       metadata: {
         type: 'location',
-        zone: 'Westfall',
-        dungeon: 'Deadmines',
-        coordinates: { x: -11209, y: 1666, zone_id: 40 },
-        danger_level: 'safe',
-        boss_encounter: false
+        zone: 'The Necrotic Wake',
+        subzone: 'Zolramus Vestibule',
+        coordinates: { x: 3150.0, y: -3015.0, z: 94.7, zone_id: 2286 },
+        affixes: ['Fortified', 'Sanguine', 'Necrotic'],
+        keystone_level: 15,
+        timer: 2160 // 36 minutes
       }
     },
     {
-      id: 'DM_Mine_Tunnels',
-      label: 'Mine Tunnels',
-      x: 250, y: 150,
+      id: 'nw_stitchflesh_arena',
+      label: 'Stitchflesh\'s Workshop',
+      x: 200, y: 150,
       metadata: {
         type: 'location',
-        zone: 'The Deadmines',
-        coordinates: { x: -102, y: -688, zone_id: 36 },
-        danger_level: 'moderate',
-        mob_density: 'high',
-        boss_encounter: false
-      }
-    },
-    {
-      id: 'DM_Goblin_Foundry',
-      label: 'Goblin Foundry',
-      x: 400, y: 200,
-      metadata: {
-        type: 'location',
-        zone: 'The Deadmines',
-        coordinates: { x: -290, y: -545, zone_id: 36 },
-        danger_level: 'dangerous',
+        zone: 'The Necrotic Wake',
+        subzone: 'The Stitchworks',
+        coordinates: { x: 3210.5, y: -2950.3, z: 96.2, zone_id: 2286 },
         boss_encounter: true,
-        boss_name: 'Sneed'
+        boss_name: 'Blightbone',
+        mechanic_zones: ['Heaving_Retch_Area', 'Fetid_Gas_Cloud']
       }
     },
     {
-      id: 'DM_Ship_Dock',
-      label: 'Underground Ship',
-      x: 550, y: 250,
+      id: 'nw_abomination_wing',
+      label: 'Abomination Wing',
+      x: 300, y: 200,
       metadata: {
         type: 'location',
-        zone: 'The Deadmines',
-        coordinates: { x: -144, y: -355, zone_id: 36 },
-        danger_level: 'very_dangerous',
+        zone: 'The Necrotic Wake',
+        subzone: 'Stitchflesh Laboratory',
+        coordinates: { x: 3280.2, y: -2890.7, z: 98.5, zone_id: 2286 },
         boss_encounter: true,
-        boss_name: 'Edwin VanCleef'
+        boss_name: 'Amarth',
+        mechanic_zones: ['Necrotic_Bolt_Landing', 'Add_Spawn_Points']
       }
     },
     {
-      id: 'Stormwind_Harbor',
-      label: 'Stormwind Harbor',
-      x: 50, y: 50,
+      id: 'nw_surgeon_hall',
+      label: 'Surgeon\'s Hall',
+      x: 400, y: 250,
       metadata: {
         type: 'location',
-        zone: 'Stormwind City',
-        coordinates: { x: -8245, y: 816, zone_id: 0 },
-        danger_level: 'safe',
-        is_sanctuary: true
+        zone: 'The Necrotic Wake',
+        subzone: 'Hall of Reconstruction',
+        coordinates: { x: 3350.8, y: -2820.4, z: 101.3, zone_id: 2286 },
+        boss_encounter: true,
+        boss_name: 'Surgeon Stitchflesh',
+        mechanic_zones: ['Hook_Platforms', 'Meat_Hook_Path']
+      }
+    },
+    {
+      id: 'nw_nalthor_platform',
+      label: 'Nalthor\'s Sanctum',
+      x: 500, y: 300,
+      metadata: {
+        type: 'location',
+        zone: 'The Necrotic Wake',
+        subzone: 'The Golden Repose',
+        coordinates: { x: 3420.3, y: -2750.1, z: 105.8, zone_id: 2286 },
+        boss_encounter: true,
+        boss_name: 'Nalthor the Rimebinder',
+        mechanic_zones: ['Comet_Storm_Areas', 'Ice_Shard_Zones', 'Frozen_Binds_Positions']
       }
     }
   ];
 
   dungeonLocations.forEach(loc => nodes.push(loc));
 
-  // DUNGEON BOSSES AND NPCS - Real WoW Enemies
-  const npcs = [
+  // NECROTIC WAKE BOSSES AND KEY MOBS
+  const npcs: WoWNode[] = [
     {
-      id: 'Edwin_VanCleef',
-      label: 'Edwin VanCleef',
-      x: 550, y: 250,
+      id: 'boss_blightbone',
+      label: 'Blightbone',
+      x: 200, y: 150,
       metadata: {
         type: 'boss',
-        level: 20,
-        health: 2637,
-        faction: 'Defias Brotherhood',
-        abilities: ['Sinister Strike', 'Backstab', 'Thrash Blade'],
-        loot_table: ['Blackened Defias Armor', 'VanCleef\'s Battlegear'],
-        dungeon: 'Deadmines',
-        elite: true
+        autonomy_level: 0.8,
+        goals: ['eliminate_party', 'execute_mechanics'],
+        decision_patterns: ['heaving_retch_cone', 'fetid_gas_placement', 'crunch_target'],
+        resource_pools: { health: 4200000, max_health: 4200000 },
+        zone: 'The Necrotic Wake',
+        coordinates: { x: 3210.5, y: -2950.3, z: 96.2, zone_id: 2286 },
+        level: 72,
+        abilities: ['Heaving Retch', 'Fetid Gas', 'Crunch', 'Carrion Worms'],
+        mechanics: ['frontal_cone', 'gas_clouds', 'tank_buster', 'add_summon']
       }
     },
     {
