@@ -45,29 +45,57 @@ function showEnhancedEdgeBundling() {
   const config = {
     width: 1200,
     height: 700,
-    chargeStrength: -2500,      // Very strong charge for wide node separation
-    linkDistance: 320,          // Longer distance creates more bundling opportunities
+    chargeStrength: -3000,      // Stronger charge for better node separation
+    linkDistance: 400,          // Longer distance creates more bundling opportunities
     edgeRenderer: 'bundled' as const,
     edgeBundling: {
-      // Enhanced algorithm features for maximum visual impact
-      subdivisions: 35,                    // Very high subdivision for ultra-smooth curves
-      adaptiveSubdivision: true,          // Longer edges get more subdivisions
-      iterations: 120,                    // More iterations for tighter bundling
-      compatibilityThreshold: 0.3,       // Lower threshold for more aggressive bundling
-      stepSize: 0.08,                     // Larger steps for more pronounced bundling
-      stiffness: 0.15,                    // Reduced stiffness for more dramatic curves
-      momentum: 0.8,                      // Higher momentum for ultra-smooth movement
-      curveType: 'cardinal' as const,     // Cardinal splines for natural curves
-      curveTension: 0.9,                  // Maximum tension for controlled curves
-      smoothingType: 'gaussian' as const, // Gaussian smoothing for ultra-smooth edges
-      smoothingIterations: 4,             // More smoothing passes
-      smoothingFrequency: 4,              // More frequent smoothing during bundling
+      // ORGANIC BUNDLING ALGORITHM - Maximum visual impact with fluid curves
+      subdivisions: 60,                    // Ultra-high subdivision for maximum smoothness
+      adaptiveSubdivision: true,          // Longer edges get even more subdivisions
+      iterations: 200,                    // Many more iterations for dramatic bundling
+      compatibilityThreshold: 0.25,      // Lower threshold for aggressive bundling
+      stepSize: 0.12,                     // Larger steps for pronounced bundling effects
+      stiffness: 0.08,                    // Very low stiffness for dramatic organic curves
+      momentum: 0.85,                     // High momentum for fluid, smooth movement
+      curveType: 'bundle' as const,       // Bundle curves for tighter bundling
+      curveTension: 0.95,                 // Maximum tension for controlled organic flow
+      smoothingType: 'bilateral' as const, // Advanced edge-preserving smoothing
+      smoothingIterations: 6,             // More smoothing for ultra-smooth appearance
+      smoothingFrequency: 3,              // Frequent smoothing during bundling process
       compatibilityFunction: (edge1: Edge, edge2: Edge) => {
         const type1 = edge1.metadata?.type as string;
         const type2 = edge2.metadata?.type as string;
-        // Boost compatibility for more dramatic bundling
+
+        // Get WoW-specific semantic compatibility
         const baseCompatibility = getEdgeCompatibility(type1, type2);
-        return Math.min(baseCompatibility * 1.3, 1.0); // 30% boost
+
+        // Boost compatibility significantly for dramatic organic bundling
+        const organicBoost = 1.6; // 60% boost for dramatic effect
+
+        // Add distance-based compatibility for organic flow
+        const source1 = edge1.source as any;
+        const target1 = edge1.target as any;
+        const source2 = edge2.source as any;
+        const target2 = edge2.target as any;
+
+        if (source1 && target1 && source2 && target2) {
+          const midpoint1x = (source1.x + target1.x) / 2;
+          const midpoint1y = (source1.y + target1.y) / 2;
+          const midpoint2x = (source2.x + target2.x) / 2;
+          const midpoint2y = (source2.y + target2.y) / 2;
+
+          const distance = Math.sqrt(
+            Math.pow(midpoint1x - midpoint2x, 2) +
+            Math.pow(midpoint1y - midpoint2y, 2)
+          );
+
+          // Closer edges have higher compatibility for organic bundling
+          const distanceBoost = Math.max(0.2, 1 - distance / 300);
+
+          return Math.min(baseCompatibility * organicBoost * distanceBoost, 1.0);
+        }
+
+        return Math.min(baseCompatibility * organicBoost, 1.0);
       }
     },
     // Enhanced node styling with clear visual hierarchy

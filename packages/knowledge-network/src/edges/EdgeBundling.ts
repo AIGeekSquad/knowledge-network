@@ -615,15 +615,52 @@ export class EdgeBundling implements EdgeRenderer {
         );
       }
 
-      // Create subdivision points with velocity initialization
+      // Create subdivision points with dramatic initial organic curves
+      const dx = target.x - source.x;
+      const dy = target.y - source.y;
+      const perpX = -dy;
+      const perpY = dx;
+      const perpLength = Math.sqrt(perpX * perpX + perpY * perpY);
+
       for (let i = 0; i <= subdivisions; i++) {
         const t = i / subdivisions;
-        points.push({
-          x: source.x * (1 - t) + target.x * t,
-          y: source.y * (1 - t) + target.y * t,
-          vx: 0, // Initialize velocity for momentum
-          vy: 0,
-        });
+
+        // Base linear interpolation
+        const baseX = source.x * (1 - t) + target.x * t;
+        const baseY = source.y * (1 - t) + target.y * t;
+
+        // Dramatic initial organic curvature for visual impact
+        if (perpLength > 0) {
+          // Multi-frequency organic initial curve
+          const freq1 = Math.sin(t * Math.PI);
+          const freq2 = Math.sin(t * Math.PI * 2 + Math.PI/4) * 0.3;
+          const freq3 = Math.sin(t * Math.PI * 4 + Math.PI/8) * 0.15;
+          const organicCurve = freq1 + freq2 + freq3;
+
+          // Large initial amplitude for dramatic visual effect
+          const initialAmplitude = Math.min(200, length * 0.3); // Scale with edge length
+
+          // Add edge-specific variation using edge ID for uniqueness
+          const edgeVariation = Math.sin((source.x + target.x + source.y + target.y) * 0.01) * 0.5 + 0.5;
+          const curveStrength = initialAmplitude * (0.8 + edgeVariation * 0.4);
+
+          // Apply dramatic initial organic curve
+          const curveOffset = organicCurve * curveStrength;
+
+          points.push({
+            x: baseX + (perpX / perpLength) * curveOffset,
+            y: baseY + (perpY / perpLength) * curveOffset,
+            vx: 0, // Initialize velocity for momentum
+            vy: 0,
+          });
+        } else {
+          points.push({
+            x: baseX,
+            y: baseY,
+            vx: 0,
+            vy: 0,
+          });
+        }
       }
 
       return points;
@@ -707,17 +744,41 @@ export class EdgeBundling implements EdgeRenderer {
           forceX += (straightX - point.x) * this.config.stiffness;
           forceY += (straightY - point.y) * this.config.stiffness;
 
-          // Add smooth sine-based curvature for visibility
+          // Enhanced organic curvature with multiple frequency components
           const perpX = -(points[numPoints - 1].y - points[0].y);
           const perpY = points[numPoints - 1].x - points[0].x;
           const length = Math.sqrt(perpX * perpX + perpY * perpY);
 
           if (length > 0) {
-            // Create very visible curvature for prominent bundling demo
-            const curveAmount = Math.sin(t * Math.PI) * 80; // Much higher curvature for demo
-            const curveFactor = compatibleCount > 0 ? 0.7 : 2.0; // Dramatic curves for non-bundled edges
-            forceX += (perpX / length) * curveAmount * curveFactor * 0.15; // Stronger force for visibility
-            forceY += (perpY / length) * curveAmount * curveFactor * 0.15;
+            // Progressive curvature based on iteration progress
+            const progress = iter / this.config.iterations;
+
+            // Multi-frequency organic curves for natural flow patterns
+            const baseFreq = Math.sin(t * Math.PI);
+            const harmonic1 = Math.sin(t * Math.PI * 2 + Math.PI/3) * 0.4;
+            const harmonic2 = Math.sin(t * Math.PI * 3 + Math.PI/6) * 0.2;
+            const organicCurve = baseFreq + harmonic1 + harmonic2;
+
+            // Dynamic amplitude that increases with bundling iterations
+            const baseAmplitude = 150; // Increased base amplitude
+            const progressiveAmplitude = baseAmplitude * (1 + progress * 2); // Grows over iterations
+
+            // Adaptive curve factor - stronger for isolated edges, moderate for bundles
+            const adaptiveFactor = compatibleCount > 0 ?
+              (0.8 + Math.sin(progress * Math.PI) * 0.4) :  // Organic variation for bundles
+              (2.5 + Math.sin(progress * Math.PI * 2) * 0.8); // Dramatic curves for isolated edges
+
+            // Apply organic force with natural flow characteristics
+            const organicForce = organicCurve * progressiveAmplitude * adaptiveFactor * 0.12;
+            forceX += (perpX / length) * organicForce;
+            forceY += (perpY / length) * organicForce;
+
+            // Add slight random perturbation for organic variation
+            const perturbationStrength = 0.05;
+            const randomX = (Math.random() - 0.5) * perturbationStrength * progressiveAmplitude;
+            const randomY = (Math.random() - 0.5) * perturbationStrength * progressiveAmplitude;
+            forceX += randomX;
+            forceY += randomY;
           }
 
           // Apply momentum-based force application
