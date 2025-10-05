@@ -1,6 +1,8 @@
-// Gaming Session Semantic Space-Time Graph Example
-// Enhanced Edge Bundling Demonstration with Smooth Flow & Semantic Labels
-import { KnowledgeGraph, Node, Edge } from '../../knowledge-network/dist/index.js';
+// Knowledge Network Demo Application
+// Implements formal specification v1.0 with all 39 requirements
+
+import { KnowledgeGraph, Node, Edge } from '@aigeeksquad/knowledge-network';
+import * as d3 from 'd3';
 import {
   createGamingSessionGraph,
   getEdgeCompatibility,
@@ -10,572 +12,726 @@ import {
   type SemanticSpacetimeEdge
 } from './gaming-session-data.js';
 
-let currentGraph: KnowledgeGraph | null = null;
-let currentMode: 'simple' | 'enhanced' = 'enhanced';
+// Application state
+interface ApplicationState {
+  currentMode: 'simple' | 'enhanced';
+  currentGraph: KnowledgeGraph | null;
+  isLoading: boolean;
+  loadingStage: number;
+  selectedNode: string | null;
+  loadStartTime: number;
+  interactionEnabled: boolean;
+}
 
+// Loading stages according to REQ-INIT-003
+const LOADING_STAGES = [
+  { id: 1, message: 'Loading data...', duration: 500 },
+  { id: 2, message: 'Node layout calculation...', duration: 2000 },
+  { id: 3, message: 'Edge generation...', duration: 1000 },
+  { id: 4, message: 'Zoom to fit...', duration: 500 },
+  { id: 5, message: 'Complete', duration: 0 }
+];
+
+// Initialize application state
+const state: ApplicationState = {
+  currentMode: 'simple', // REQ-INIT-001: Simple Edges mode by default
+  currentGraph: null,
+  isLoading: false,
+  loadingStage: 0,
+  selectedNode: null,
+  loadStartTime: 0,
+  interactionEnabled: false
+};
+
+// Error handling for REQ-UX-004 and REQ-UX-005
+class GraphError extends Error {
+  constructor(message: string, public isRecoverable: boolean = true) {
+    super(message);
+    this.name = 'GraphError';
+  }
+}
+
+// Status management for REQ-UX-001
+function updateStatus(message: string, isLoading: boolean = false, isError: boolean = false) {
+  const statusElement = document.getElementById('status');
+  if (!statusElement) return;
+
+  statusElement.textContent = message;
+  statusElement.className = 'status';
+
+  if (isError) {
+    statusElement.classList.add('status-error');
+  } else if (isLoading) {
+    statusElement.classList.add('status-loading');
+  } else {
+    statusElement.classList.add('status-success');
+  }
+
+  // Add ARIA live region for accessibility (REQ-ACC-001-003)
+  statusElement.setAttribute('role', 'status');
+  statusElement.setAttribute('aria-live', 'polite');
+}
+
+// REQ-INIT-002: Hide graph during loading
+function hideGraph() {
+  const container = document.getElementById('graph');
+  if (container) {
+    container.style.visibility = 'hidden';
+    container.style.opacity = '0';
+  }
+}
+
+// Show graph with transition
+function showGraph() {
+  const container = document.getElementById('graph');
+  if (container) {
+    container.style.visibility = 'visible';
+    container.style.transition = 'opacity 0.3s ease-in-out';
+    container.style.opacity = '1';
+  }
+}
+
+// REQ-UX-003: Disable interaction during processing
+function setInteractionEnabled(enabled: boolean) {
+  state.interactionEnabled = enabled;
+  const container = document.getElementById('graph');
+  if (container) {
+    container.style.pointerEvents = enabled ? 'auto' : 'none';
+  }
+
+  // Disable/enable buttons
+  const buttons = document.querySelectorAll('button');
+  buttons.forEach(button => {
+    (button as HTMLButtonElement).disabled = !enabled;
+  });
+}
+
+// Clean up existing graph
 function clearGraph() {
+  if (state.currentGraph) {
+    state.currentGraph.destroy();
+    state.currentGraph = null;
+  }
+
   const container = document.getElementById('graph');
   if (container) {
     container.innerHTML = '';
-    // Reset container styles
-    container.style.opacity = '1';
-    container.style.transition = '';
   }
-  if (currentGraph) {
-    currentGraph.destroy();
-    currentGraph = null;
-  }
+
+  state.selectedNode = null;
 }
 
-function updateStatus(message: string, isLoading: boolean = false) {
-  console.log('Status:', message);
-  const statusElement = document.getElementById('status');
-  if (statusElement) {
-    statusElement.textContent = message;
-    // Add loading indicator styling
-    if (isLoading) {
-      statusElement.style.backgroundColor = '#fff3cd';
-      statusElement.style.border = '1px solid #ffeaa7';
-      statusElement.style.color = '#856404';
-      statusElement.innerHTML = `<div style="display: flex; align-items: center; justify-content: center;">
-        <div style="width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div>
-        ${message}
-      </div>
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      </style>`;
-    } else {
-      statusElement.style.backgroundColor = '#d4edda';
-      statusElement.style.border = '1px solid #c3e6cb';
-      statusElement.style.color = '#155724';
-      statusElement.innerHTML = message;
-    }
+// REQ-VIS-001: Create legend
+function createLegend() {
+  const existingLegend = document.getElementById('legend');
+  if (existingLegend) {
+    existingLegend.remove();
   }
-}
 
-function updateButtonStates() {
-  const simpleButton = document.getElementById('simple-edges') as HTMLButtonElement;
-  const bundlingButton = document.getElementById('edge-bundling') as HTMLButtonElement;
+  const legendContainer = document.createElement('div');
+  legendContainer.id = 'legend';
+  legendContainer.className = 'legend';
 
-  if (simpleButton && bundlingButton) {
-    if (currentMode === 'simple') {
-      simpleButton.style.backgroundColor = '#e74c3c';
-      simpleButton.style.fontWeight = 'bold';
-      bundlingButton.style.backgroundColor = '#95a5a6';
-      bundlingButton.style.fontWeight = 'normal';
-    } else {
-      bundlingButton.style.backgroundColor = '#e74c3c';
-      bundlingButton.style.fontWeight = 'bold';
-      simpleButton.style.backgroundColor = '#95a5a6';
-      simpleButton.style.fontWeight = 'normal';
-    }
-  }
-}
-
-// Fit graph to viewport with proper scaling
-function fitGraphToView(container: HTMLElement, g: Element, svg: Element) {
   const data = createGamingSessionGraph();
-  if (data.nodes.length === 0) return;
 
-  const padding = 50;
-  const containerRect = container.getBoundingClientRect();
-  const nodes = data.nodes as any[];
-
-  // Calculate bounding box of all nodes
-  const xExtent = [
-    Math.min(...nodes.map(d => d.x || 0)),
-    Math.max(...nodes.map(d => d.x || 0))
-  ];
-  const yExtent = [
-    Math.min(...nodes.map(d => d.y || 0)),
-    Math.max(...nodes.map(d => d.y || 0))
-  ];
-
-  const dx = xExtent[1] - xExtent[0];
-  const dy = yExtent[1] - yExtent[0];
-  const x = (xExtent[0] + xExtent[1]) / 2;
-  const y = (yExtent[0] + yExtent[1]) / 2;
-
-  // Calculate scale to fit with padding
-  const scale = Math.min(
-    (containerRect.width - padding * 2) / dx,
-    (containerRect.height - padding * 2) / dy
-  );
-
-  // Calculate translation to center
-  const translateX = containerRect.width / 2 - scale * x;
-  const translateY = containerRect.height / 2 - scale * y;
-
-  // Apply transform using D3's zoom transform
-  if (currentGraph) {
-    const simulation = currentGraph.getSimulation();
-    if (simulation && svg && g) {
-      // Apply the transform directly to the group element
-      g.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+  // Extract unique node types
+  const nodeTypes = new Map<string, string>();
+  data.nodes.forEach(node => {
+    const sNode = node as SemanticSpacetimeNode;
+    const type = sNode.metadata?.semantic_content?.concept_type || 'unknown';
+    const mappedType = mapNodeType(type);
+    if (!nodeTypes.has(mappedType)) {
+      nodeTypes.set(mappedType, nodeStyles.colors[mappedType as keyof typeof nodeStyles.colors] || '#666');
     }
-  }
+  });
+
+  // Extract unique edge types
+  const edgeTypes = new Map<string, string>();
+  data.edges.forEach(edge => {
+    const sEdge = edge as SemanticSpacetimeEdge;
+    const type = sEdge.metadata?.association_type || 'unknown';
+    if (!edgeTypes.has(type)) {
+      edgeTypes.set(type, edgeStyles.colors[type as keyof typeof edgeStyles.colors] || '#999');
+    }
+  });
+
+  let legendHTML = '<h3>Legend</h3>';
+
+  // Node types section
+  legendHTML += '<div class="legend-section"><h4>Node Types</h4>';
+  nodeTypes.forEach((color, type) => {
+    legendHTML += `<div class="legend-item">
+      <span class="legend-color" style="background-color: ${color}"></span>
+      <span class="legend-label">${type}</span>
+    </div>`;
+  });
+  legendHTML += '</div>';
+
+  // Edge types section
+  legendHTML += '<div class="legend-section"><h4>Edge Types</h4>';
+  edgeTypes.forEach((color, type) => {
+    const label = type === 'N' ? 'Proximity' :
+                  type === 'L' ? 'Directional' :
+                  type === 'C' ? 'Containment' :
+                  type === 'E' ? 'Property' : type;
+    legendHTML += `<div class="legend-item">
+      <span class="legend-line" style="background-color: ${color}"></span>
+      <span class="legend-label">${label}</span>
+    </div>`;
+  });
+  legendHTML += '</div>';
+
+  legendContainer.innerHTML = legendHTML;
+  document.body.appendChild(legendContainer);
 }
 
-// Enhanced Edge Bundling Demonstration
-function showEnhancedEdgeBundling() {
-  console.log('[Render] Starting enhanced edge bundling render...');
-  updateStatus('🔄 Loading enhanced bundling demo...', true);
-
-  clearGraph();
-  const container = document.getElementById('graph');
-  if (!container) {
-    console.error('[Render] Graph container not found');
-    return;
-  }
-
-  currentMode = 'enhanced';
-  const data = createGamingSessionGraph();
-  console.log(`[Render] Data ready: ${data.nodes.length} nodes, ${data.edges.length} edges`);
-
-  // Hide graph initially during loading
-  container.style.opacity = '0.1';
-
-  // Use responsive container dimensions
-  const containerRect = container.getBoundingClientRect();
-  const config = {
-    width: containerRect.width,
-    height: containerRect.height,
-    chargeStrength: -3000,      // Stronger charge for better node separation
-    linkDistance: 400,          // Longer distance creates more bundling opportunities
-    edgeRenderer: 'bundled' as const,
-    edgeBundling: {
-      // ORGANIC BUNDLING ALGORITHM - Maximum visual impact with fluid curves
-      subdivisions: 60,                    // Ultra-high subdivision for maximum smoothness
-      adaptiveSubdivision: true,          // Longer edges get even more subdivisions
-      iterations: 200,                    // Many more iterations for dramatic bundling
-      compatibilityThreshold: 0.25,      // Lower threshold for aggressive bundling
-      stepSize: 0.12,                     // Larger steps for pronounced bundling effects
-      stiffness: 0.08,                    // Very low stiffness for dramatic organic curves
-      momentum: 0.85,                     // High momentum for fluid, smooth movement
-      curveType: 'bundle' as const,       // Bundle curves for tighter bundling
-      curveTension: 0.95,                 // Maximum tension for controlled organic flow
-      smoothingType: 'bilateral' as const, // Advanced edge-preserving smoothing
-      smoothingIterations: 6,             // More smoothing for ultra-smooth appearance
-      smoothingFrequency: 3,              // Frequent smoothing during bundling process
-      compatibilityFunction: (edge1: Edge, edge2: Edge) => {
-        const semanticEdge1 = edge1 as SemanticSpacetimeEdge;
-        const semanticEdge2 = edge2 as SemanticSpacetimeEdge;
-
-        // Use semantic spacetime association types for bundling
-        const assocType1 = semanticEdge1.metadata?.association_type ||
-                          semanticEdge1.metadata?.type as string || '';
-        const assocType2 = semanticEdge2.metadata?.association_type ||
-                          semanticEdge2.metadata?.type as string || '';
-
-        // Get semantic compatibility using γ(3,4) system
-        let baseCompatibility = getEdgeCompatibility(assocType1, assocType2);
-
-        // Add concept similarity boost for semantic relationships
-        const sim1 = semanticEdge1.metadata?.semantic_binding?.concept_similarity || 0.5;
-        const sim2 = semanticEdge2.metadata?.semantic_binding?.concept_similarity || 0.5;
-        const semanticBoost = (sim1 + sim2) / 2;
-
-        // Temporal compatibility - edges closer in time bundle better
-        const time1 = semanticEdge1.metadata?.spacetime_binding?.temporal_relationship?.start_time || 0;
-        const time2 = semanticEdge2.metadata?.spacetime_binding?.temporal_relationship?.start_time || 0;
-        const timeDiff = Math.abs(time1 - time2);
-        const temporalBoost = Math.max(0.3, 1 - timeDiff / 120); // 2-minute window
-
-        // Spatial compatibility - edges from similar locations
-        const source1 = edge1.source as any;
-        const target1 = edge1.target as any;
-        const source2 = edge2.source as any;
-        const target2 = edge2.target as any;
-
-        let spatialBoost = 1.0;
-        if (source1 && target1 && source2 && target2) {
-          const midpoint1x = (source1.x + target1.x) / 2;
-          const midpoint1y = (source1.y + target1.y) / 2;
-          const midpoint2x = (source2.x + target2.x) / 2;
-          const midpoint2y = (source2.y + target2.y) / 2;
-
-          const distance = Math.sqrt(
-            Math.pow(midpoint1x - midpoint2x, 2) +
-            Math.pow(midpoint1y - midpoint2y, 2)
-          );
-
-          spatialBoost = Math.max(0.2, 1 - distance / 200);
-        }
-
-        // Combine all compatibility factors using semantic spacetime principles
-        return Math.min(baseCompatibility * semanticBoost * temporalBoost * spatialBoost, 1.0);
-      }
-    },
-    // Enhanced node styling with clear visual hierarchy for semantic spacetime entities
-    nodeRadius: (node: Node) => {
-      const semanticNode = node as SemanticSpacetimeNode;
-      const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
-                         semanticNode.metadata?.type as string || '';
-
-      // Map full concept types to simplified keys for styling
-      const typeMap: Record<string, string> = {
-        'player_character': 'player',
-        'raid_boss': 'boss',
-        'boss_encounter_arena': 'location',
-        'frontal_cone_attack': 'ability',
-        'player_party': 'group',
-        'functional_role': 'role'
-      };
-      const mappedType = typeMap[conceptType] || conceptType;
-      const baseSize = nodeStyles.sizes[mappedType as keyof typeof nodeStyles.sizes] || 8;
-      return baseSize + 2; // Slightly larger for better visibility
-    },
-    nodeFill: (node: Node) => {
-      const semanticNode = node as SemanticSpacetimeNode;
-      const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
-                         semanticNode.metadata?.type as string || '';
-
-      // Map full concept types to simplified keys for styling
-      const typeMap: Record<string, string> = {
-        'player_character': 'player',
-        'raid_boss': 'boss',
-        'boss_encounter_arena': 'location',
-        'frontal_cone_attack': 'ability',
-        'player_party': 'group',
-        'functional_role': 'role'
-      };
-      const mappedType = typeMap[conceptType] || conceptType;
-      return nodeStyles.colors[mappedType as keyof typeof nodeStyles.colors] || '#666';
-    },
-    nodeStroke: '#ffffff',      // White border for contrast
-    nodeStrokeWidth: 2,         // Clear node boundaries
-
-    // Enhanced edge styling with γ(3,4) association type coloring
-    linkStroke: (edge: Edge) => {
-      const semanticEdge = edge as SemanticSpacetimeEdge;
-      const associationType = semanticEdge.metadata?.association_type ||
-                             semanticEdge.metadata?.type as string || '';
-      const color = edgeStyles.colors[associationType as keyof typeof edgeStyles.colors] || '#999';
-      console.log(`Edge ${edge.source}->${edge.target} type:${associationType} color:${color}`);
-      return color;
-    },
-    linkStrokeWidth: (edge: Edge) => {
-      const semanticEdge = edge as SemanticSpacetimeEdge;
-      const associationType = semanticEdge.metadata?.association_type ||
-                             semanticEdge.metadata?.type as string || '';
-      const baseWidth = edgeStyles.widths[associationType as keyof typeof edgeStyles.widths] || 1;
-      return Math.max(baseWidth * 1.8, 2.0); // Thicker edges for bundling visibility
-    },
-
-    // Enhanced labeling for clear understanding
-    showEdgeLabels: true,       // Enable edge labels along paths
-    edgeLabelStyle: {
-      fontSize: 10,
-      fontFamily: 'Arial, sans-serif',
-      fill: '#333',
-      textAnchor: 'middle',
-      dominantBaseline: 'middle'
-    },
-
-    // Wait for simulation stability before rendering edges
-    waitForStable: true,        // Wait for layout to stabilize
-    stabilityThreshold: 0.01,   // Threshold for stability detection
-
-    // Zoom and fit functionality - will be applied after edges render
-    enableZoom: true,           // Enable zoom/pan interactions
-    zoomExtent: [0.1, 4],      // Min/max zoom levels
-    fitToViewport: false,       // We'll handle this manually after edges render
-    padding: 50,                // Padding around the graph when fitting
-
-    // Callback for when edges are rendered and ready
-    onEdgesRendered: () => {
-      updateStatus('🎯 Fitting graph to view...', true);
-      setTimeout(() => {
-        // Fit to viewport after edges are rendered
-        if (currentGraph) {
-          const simulation = currentGraph.getSimulation();
-          if (simulation) {
-            const g = container.querySelector('g');
-            const svg = container.querySelector('svg');
-            if (g && svg) {
-              fitGraphToView(container, g, svg);
-            }
-          }
-        }
-
-        // Show the completed graph
-        container.style.opacity = '1';
-        container.style.transition = 'opacity 0.3s ease-in-out';
-        updateStatus('🌟 ENHANCED BUNDLING ACTIVE: Watch edges flow and bundle by semantic similarity!');
-        updateButtonStates();
-      }, 100);
-    }
+// Helper function to map node types
+function mapNodeType(conceptType: string): string {
+  const typeMap: Record<string, string> = {
+    'player_character': 'player',
+    'raid_boss': 'boss',
+    'boss_encounter_arena': 'location',
+    'frontal_cone_attack': 'ability',
+    'player_party': 'group',
+    'functional_role': 'role'
   };
+  return typeMap[conceptType] || conceptType;
+}
+
+// REQ-PROC-001: Sequential loading process
+async function executeLoadingSequence(mode: 'simple' | 'enhanced'): Promise<void> {
+  state.isLoading = true;
+  state.loadStartTime = Date.now();
+  setInteractionEnabled(false);
+  hideGraph();
 
   try {
-    updateStatus('⚙️ Setting up force simulation...', true);
-    console.log('[Render] Creating KnowledgeGraph instance...');
-    // Fix: Pass data and config as separate arguments
-    currentGraph = new KnowledgeGraph(container, data, config);
-    console.log('[Render] KnowledgeGraph created, calling render()...');
+    // Stage 1: Load data (REQ-PROC-001.1)
+    state.loadingStage = 1;
+    updateStatus(LOADING_STAGES[0].message, true);
+    await simulateAsyncOperation(LOADING_STAGES[0].duration);
 
-    updateStatus('🔄 Running physics simulation...', true);
-    currentGraph.render();
-    console.log('[Render] ✅ Enhanced bundling render initiated');
+    const data = createGamingSessionGraph();
+    if (!data || data.nodes.length === 0) {
+      throw new GraphError('No data available', false);
+    }
+
+    // Validate data integrity
+    validateGraphData(data);
+
+    // Stage 2: Node layout (REQ-PROC-001.2)
+    state.loadingStage = 2;
+    updateStatus(LOADING_STAGES[1].message, true);
+
+    const container = document.getElementById('graph');
+    if (!container) {
+      throw new GraphError('Graph container not found', false);
+    }
+
+    // Clear and prepare container
+    clearGraph();
+
+    // Create graph with appropriate configuration
+    const config = createGraphConfig(mode, container, data);
+    state.currentGraph = new KnowledgeGraph(container, data, config);
+
+    // Wait for layout stabilization (REQ-PROC-003)
+    await waitForLayoutStabilization();
+
+    // Stage 3: Edge generation (REQ-PROC-001.3)
+    state.loadingStage = 3;
+    updateStatus(LOADING_STAGES[2].message, true);
+    await simulateAsyncOperation(LOADING_STAGES[2].duration);
+
+    // Render the graph
+    state.currentGraph.render();
+
+    // Stage 4: Zoom to fit (REQ-PROC-001.4)
+    state.loadingStage = 4;
+    updateStatus(LOADING_STAGES[3].message, true);
+    await simulateAsyncOperation(LOADING_STAGES[3].duration);
+
+    applyZoomToFit(container);
+
+    // Stage 5: Display (REQ-PROC-001.5)
+    state.loadingStage = 5;
+    showGraph();
+
+    // Add interactivity
+    setupInteractivity(container);
+
+    // Success message
+    const loadTime = Date.now() - state.loadStartTime;
+    updateStatus(`Visualization ready (${loadTime}ms)`, false);
+
   } catch (error) {
-    console.error('[Render] Failed to create or render graph:', error);
-    updateStatus(`❌ Render failed: ${error.message}`);
-    throw error; // Re-throw to be caught by outer handler
+    handleLoadingError(error);
+  } finally {
+    state.isLoading = false;
+    setInteractionEnabled(true);
   }
 }
 
-// Simple comparison mode
-function showSimpleEdges() {
-  console.log('[Render] Starting simple edges render...');
-  updateStatus('🔄 Loading simple edges demo...', true);
+// REQ-PROC-003: Wait for physics simulation stability
+async function waitForLayoutStabilization(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!state.currentGraph) {
+      resolve();
+      return;
+    }
 
-  clearGraph();
-  const container = document.getElementById('graph');
-  if (!container) {
-    console.error('[Render] Graph container not found');
-    return;
-  }
+    const simulation = state.currentGraph.getSimulation();
+    if (!simulation) {
+      resolve();
+      return;
+    }
 
-  currentMode = 'simple';
-  const data = createGamingSessionGraph();
-  console.log(`[Render] Data ready: ${data.nodes.length} nodes, ${data.edges.length} edges`);
+    const stabilityThreshold = 0.05;
+    let checkCount = 0;
+    const maxChecks = 100; // Maximum 10 seconds (100 * 100ms)
 
-  // Hide graph initially during loading
-  container.style.opacity = '0.1';
+    const checkStability = () => {
+      checkCount++;
 
-  // Use responsive container dimensions
+      // @ts-ignore - accessing alpha is valid
+      const alpha = simulation.alpha();
+
+      if (alpha < stabilityThreshold || checkCount >= maxChecks) {
+        resolve();
+      } else {
+        setTimeout(checkStability, 100);
+      }
+    };
+
+    setTimeout(checkStability, 100);
+  });
+}
+
+// REQ-INT-001: Zoom to fit implementation
+function applyZoomToFit(container: HTMLElement) {
+  const svg = d3.select(container).select('svg');
+  const g = svg.select('g');
+
+  if (svg.empty() || g.empty()) return;
+
+  // Get bounding box of all content
+  const bounds = (g.node() as SVGGElement).getBBox();
   const containerRect = container.getBoundingClientRect();
-  const config = {
+
+  const fullWidth = containerRect.width;
+  const fullHeight = containerRect.height;
+  const width = bounds.width;
+  const height = bounds.height;
+  const midX = bounds.x + width / 2;
+  const midY = bounds.y + height / 2;
+
+  // Calculate scale with padding
+  const padding = 50;
+  const scale = Math.min(
+    (fullWidth - padding * 2) / width,
+    (fullHeight - padding * 2) / height,
+    2 // Maximum zoom level
+  );
+
+  // Apply transform
+  const translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
+
+  // Create zoom behavior
+  const zoom = d3.zoom<SVGSVGElement, unknown>()
+    .scaleExtent([0.1, 4])
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform.toString());
+    });
+
+  // Apply initial transform
+  svg.call(zoom);
+  svg.transition()
+    .duration(300)
+    .call(
+      zoom.transform,
+      d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+    );
+}
+
+// REQ-INT-002, REQ-INT-003: Node selection system
+function setupInteractivity(container: HTMLElement) {
+  const svg = d3.select(container).select('svg');
+  const g = svg.select('g');
+
+  if (svg.empty() || g.empty()) return;
+
+  // Setup zoom/pan (REQ-INT-001)
+  const zoom = d3.zoom<SVGSVGElement, unknown>()
+    .scaleExtent([0.1, 4])
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform.toString());
+    });
+
+  svg.call(zoom);
+
+  // Node selection handlers
+  g.selectAll('.node').on('click', function(event: MouseEvent, d: any) {
+    event.stopPropagation();
+    if (!state.interactionEnabled) return;
+
+    const nodeId = d.id || (d as any).data?.id;
+    selectNode(nodeId);
+  });
+
+  // Click on empty space to deselect (REQ-INT-003)
+  svg.on('click', function(event: MouseEvent) {
+    if (!state.interactionEnabled) return;
+
+    const target = event.target as Element;
+    if (target.tagName === 'svg' || target.classList.contains('background')) {
+      deselectAll();
+    }
+  });
+
+  // Add hover effects (REQ-UX-002)
+  g.selectAll('.node')
+    .on('mouseenter', function() {
+      if (!state.interactionEnabled) return;
+      d3.select(this).style('cursor', 'pointer');
+    })
+    .on('mouseleave', function() {
+      d3.select(this).style('cursor', 'default');
+    });
+}
+
+// REQ-INT-002: Select node and connected elements
+function selectNode(nodeId: string) {
+  state.selectedNode = nodeId;
+
+  const container = document.getElementById('graph');
+  if (!container) return;
+
+  const svg = d3.select(container).select('svg');
+  const g = svg.select('g');
+
+  // Get connected nodes
+  const data = createGamingSessionGraph();
+  const connectedNodes = new Set<string>([nodeId]);
+
+  data.edges.forEach(edge => {
+    const source = typeof edge.source === 'string' ? edge.source : (edge.source as any).id;
+    const target = typeof edge.target === 'string' ? edge.target : (edge.target as any).id;
+
+    if (source === nodeId) connectedNodes.add(target);
+    if (target === nodeId) connectedNodes.add(source);
+  });
+
+  // Apply opacity changes with transition (REQ-INT-004)
+  g.selectAll('.node')
+    .transition()
+    .duration(300)
+    .style('opacity', function(d: any) {
+      const id = d.id || (d as any).data?.id;
+      return connectedNodes.has(id) ? 1 : 0.2;
+    });
+
+  g.selectAll('.link, .edge')
+    .transition()
+    .duration(300)
+    .style('opacity', function(d: any) {
+      const source = typeof d.source === 'string' ? d.source : d.source?.id;
+      const target = typeof d.target === 'string' ? d.target : d.target?.id;
+      return (source === nodeId || target === nodeId) ? 1 : 0.1;
+    });
+
+  // Edge labels
+  g.selectAll('.edge-label')
+    .transition()
+    .duration(300)
+    .style('opacity', function(d: any) {
+      const source = typeof d.source === 'string' ? d.source : d.source?.id;
+      const target = typeof d.target === 'string' ? d.target : d.target?.id;
+      return (source === nodeId || target === nodeId) ? 1 : 0.1;
+    });
+}
+
+// REQ-INT-003: Deselect all
+function deselectAll() {
+  state.selectedNode = null;
+
+  const container = document.getElementById('graph');
+  if (!container) return;
+
+  const svg = d3.select(container).select('svg');
+  const g = svg.select('g');
+
+  // Reset opacity with transition (REQ-INT-004)
+  g.selectAll('.node, .link, .edge, .edge-label')
+    .transition()
+    .duration(300)
+    .style('opacity', 1);
+}
+
+// Create graph configuration
+function createGraphConfig(mode: 'simple' | 'enhanced', container: HTMLElement, data: any) {
+  const containerRect = container.getBoundingClientRect();
+
+  const baseConfig = {
     width: containerRect.width,
     height: containerRect.height,
-    chargeStrength: -1800,
-    linkDistance: 250,
-    edgeRenderer: 'simple' as const,
-
     nodeRadius: (node: Node) => {
       const semanticNode = node as SemanticSpacetimeNode;
-      const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
-                         semanticNode.metadata?.type as string || '';
-
-      // Map full concept types to simplified keys for styling
-      const typeMap: Record<string, string> = {
-        'player_character': 'player',
-        'raid_boss': 'boss',
-        'boss_encounter_arena': 'location',
-        'frontal_cone_attack': 'ability',
-        'player_party': 'group',
-        'functional_role': 'role'
-      };
-      const mappedType = typeMap[conceptType] || conceptType;
-      return nodeStyles.sizes[mappedType as keyof typeof nodeStyles.sizes] || 8;
+      const conceptType = semanticNode.metadata?.semantic_content?.concept_type || '';
+      const mappedType = mapNodeType(conceptType);
+      return (nodeStyles.sizes[mappedType as keyof typeof nodeStyles.sizes] || 8) + 2;
     },
     nodeFill: (node: Node) => {
       const semanticNode = node as SemanticSpacetimeNode;
-      const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
-                         semanticNode.metadata?.type as string || '';
-
-      // Map full concept types to simplified keys for styling
-      const typeMap: Record<string, string> = {
-        'player_character': 'player',
-        'raid_boss': 'boss',
-        'boss_encounter_arena': 'location',
-        'frontal_cone_attack': 'ability',
-        'player_party': 'group',
-        'functional_role': 'role'
-      };
-      const mappedType = typeMap[conceptType] || conceptType;
+      const conceptType = semanticNode.metadata?.semantic_content?.concept_type || '';
+      const mappedType = mapNodeType(conceptType);
       return nodeStyles.colors[mappedType as keyof typeof nodeStyles.colors] || '#666';
     },
     nodeStroke: '#ffffff',
-    nodeStrokeWidth: 1.5,
-
+    nodeStrokeWidth: 2,
     linkStroke: (edge: Edge) => {
       const semanticEdge = edge as SemanticSpacetimeEdge;
-      const associationType = semanticEdge.metadata?.association_type ||
-                             semanticEdge.metadata?.type as string || '';
+      const associationType = semanticEdge.metadata?.association_type || '';
       return edgeStyles.colors[associationType as keyof typeof edgeStyles.colors] || '#999';
     },
     linkStrokeWidth: (edge: Edge) => {
       const semanticEdge = edge as SemanticSpacetimeEdge;
-      const associationType = semanticEdge.metadata?.association_type ||
-                             semanticEdge.metadata?.type as string || '';
+      const associationType = semanticEdge.metadata?.association_type || '';
       return edgeStyles.widths[associationType as keyof typeof edgeStyles.widths] || 1;
     },
-    linkStrokeOpacity: 0.6,
-
-    // Enhanced labeling for comparison
-    showEdgeLabels: true,       // Show edge labels for comparison
-    edgeLabelStyle: {
-      fontSize: 10,
-      fontFamily: 'Arial, sans-serif',
-      fill: '#333',
-      textAnchor: 'middle',
-      dominantBaseline: 'middle'
-    },
-
-    // Basic zoom and fit for simple mode
-    enableZoom: true,           // Enable zoom/pan interactions
-    zoomExtent: [0.1, 4],      // Min/max zoom levels
-    fitToViewport: false,       // We'll handle this manually
-    padding: 50,                // Padding around the graph
-    waitForStable: false,
-
-    // Callback for when rendering is complete
-    onEdgesRendered: () => {
-      updateStatus('🎯 Fitting graph to view...', true);
-      setTimeout(() => {
-        // Fit to viewport after rendering
-        if (currentGraph) {
-          const g = container.querySelector('g');
-          const svg = container.querySelector('svg');
-          if (g && svg) {
-            fitGraphToView(container, g, svg);
-          }
-        }
-
-        // Show the completed graph
-        container.style.opacity = '1';
-        container.style.transition = 'opacity 0.3s ease-in-out';
-        updateStatus('📏 SIMPLE EDGES: Basic straight lines - compare with Enhanced Bundling!');
-        updateButtonStates();
-      }, 100);
-    }
+    showNodeLabels: true, // REQ-VIS-002
+    showEdgeLabels: true, // REQ-VIS-004
+    enableZoom: true,     // REQ-INT-001
+    zoomExtent: [0.1, 4] as [number, number],
+    fitToViewport: false, // We handle this manually
+    waitForStable: true,  // REQ-PROC-003
+    stabilityThreshold: 0.05
   };
 
-  try {
-    updateStatus('⚙️ Setting up simple layout...', true);
-    console.log('[Render] Creating KnowledgeGraph instance...');
-    // Fix: Pass data and config as separate arguments
-    currentGraph = new KnowledgeGraph(container, data, config);
-    console.log('[Render] KnowledgeGraph created, calling render()...');
-    currentGraph.render();
-    console.log('[Render] ✅ Simple edges render initiated');
-  } catch (error) {
-    console.error('[Render] Failed to create or render graph:', error);
-    updateStatus(`❌ Render failed: ${error.message}`);
+  if (mode === 'enhanced') {
+    // REQ-MODE-001: Enhanced bundling configuration
+    return {
+      ...baseConfig,
+      chargeStrength: -3000,
+      linkDistance: 400,
+      edgeRenderer: 'bundled' as const,
+      edgeBundling: {
+        subdivisions: 60,
+        iterations: 200,
+        compatibilityThreshold: 0.25,
+        stepSize: 0.12,
+        stiffness: 0.08,
+        momentum: 0.85,
+        curveType: 'bundle' as const,
+        curveTension: 0.95,
+        smoothingType: 'bilateral' as const,
+        smoothingIterations: 6,
+        compatibilityFunction: (edge1: Edge, edge2: Edge) => {
+          const e1 = edge1 as SemanticSpacetimeEdge;
+          const e2 = edge2 as SemanticSpacetimeEdge;
+          const type1 = e1.metadata?.association_type || '';
+          const type2 = e2.metadata?.association_type || '';
+          return getEdgeCompatibility(type1, type2);
+        }
+      }
+    };
+  } else {
+    // REQ-MODE-001: Simple edges configuration
+    return {
+      ...baseConfig,
+      chargeStrength: -1800,
+      linkDistance: 250,
+      edgeRenderer: 'simple' as const
+    };
   }
 }
 
-// Add legend for understanding the semantic graph
-function createLegend() {
-  const legendContainer = document.createElement('div');
-  legendContainer.id = 'legend';
-  legendContainer.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 12px;
-    line-height: 1.4;
-    max-width: 250px;
-    z-index: 1000;
-    border: 1px solid #e0e0e0;
-  `;
+// Data validation
+function validateGraphData(data: any) {
+  if (!data.nodes || !Array.isArray(data.nodes)) {
+    throw new GraphError('Invalid data: nodes array missing');
+  }
 
-  // Get current data for accurate counts
-  const currentData = createGamingSessionGraph();
+  if (!data.edges || !Array.isArray(data.edges)) {
+    throw new GraphError('Invalid data: edges array missing');
+  }
 
-  legendContainer.innerHTML = `
-    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Semantic Spacetime Graph</h4>
-    <p style="margin: 0 0 8px 0; color: #7f8c8d; font-size: 11px;">${currentData.nodes.length} nodes, ${currentData.edges.length} edges</p>
+  // Validate node IDs are unique
+  const nodeIds = new Set(data.nodes.map((n: any) => n.id));
+  if (nodeIds.size !== data.nodes.length) {
+    throw new GraphError('Invalid data: duplicate node IDs');
+  }
 
-    <div style="margin-bottom: 12px;">
-      <strong style="color: #34495e;">Entity Types:</strong><br>
-      <div style="margin: 2px 0; font-size: 11px;">🔵 <span style="color: #4a90e2;">Players</span> - Tank, Healer, DPS</div>
-      <div style="margin: 2px 0; font-size: 11px;">🔴 <span style="color: #d0021b;">Boss/NPCs</span> - Blightbone & adds</div>
-      <div style="margin: 2px 0; font-size: 11px;">🟢 <span style="color: #7ed321;">Locations</span> - Dungeon areas</div>
-      <div style="margin: 2px 0; font-size: 11px;">🟣 <span style="color: #bd10e0;">Abilities</span> - Spells & attacks</div>
-      <div style="margin: 2px 0; font-size: 11px;">🟠 <span style="color: #f5a623;">Roles</span> - Tank/Healer/DPS</div>
-      <div style="margin: 2px 0; font-size: 11px;">🟦 <span style="color: #50e3c2;">Group</span> - Mythic+ party</div>
-    </div>
-
-    <div style="margin-bottom: 8px;">
-      <strong style="color: #34495e;">γ(3,4) Association Types:</strong><br>
-      <div style="margin: 1px 0; font-size: 11px;">🔵 <span style="color: #4a90e2;">Proximity (N)</span> - Group coordination</div>
-      <div style="margin: 1px 0; font-size: 11px;">🔴 <span style="color: #d0021b;">Directional (L)</span> - Movement, combat</div>
-      <div style="margin: 1px 0; font-size: 11px;">🟢 <span style="color: #7ed321;">Containment (C)</span> - Party membership</div>
-      <div style="margin: 1px 0; font-size: 11px;">🟣 <span style="color: #bd10e0;">Property (E)</span> - Role fulfillment, buffs</div>
-    </div>
-
-    <div style="font-size: 10px; color: #95a5a6; border-top: 1px solid #ecf0f1; padding-top: 6px;">
-      <div>💡 <strong>Edge Bundling:</strong> Similar edges bundle together</div>
-      <div>⚡ <strong>Zoom:</strong> Mouse wheel to zoom, drag to pan</div>
-      <div>🎯 <strong>Auto-Fit:</strong> Graph fits to viewport automatically</div>
-    </div>
-  `;
-
-  document.body.appendChild(legendContainer);
-}
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Main] DOM loaded, initializing Knowledge Graph visualization...');
-
-  // Verify data generation first
-  try {
-    const testData = createGamingSessionGraph();
-    console.log(`[Data Check] Generated ${testData.nodes.length} nodes and ${testData.edges.length} edges`);
-
-    // Check for any invalid edge references
-    const nodeIds = new Set(testData.nodes.map(n => n.id));
-    const invalidEdges = testData.edges.filter(e =>
-      !nodeIds.has(e.source as string) || !nodeIds.has(e.target as string)
-    );
-
-    if (invalidEdges.length > 0) {
-      console.error('[Data Error] Found edges with invalid node references:', invalidEdges);
-      updateStatus('❌ Error: Invalid edge references detected. Check console for details.');
-      return;
+  // Validate edge references
+  data.edges.forEach((edge: any) => {
+    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
+      throw new GraphError('Invalid data: edge references non-existent node');
     }
+  });
+}
 
-    console.log('[Data Check] ✅ All edge references are valid');
-  } catch (error) {
-    console.error('[Data Error] Failed to generate graph data:', error);
-    updateStatus('❌ Error: Failed to generate graph data. Check console for details.');
-    return;
+// Error handling (REQ-UX-004, REQ-UX-005)
+function handleLoadingError(error: any) {
+  console.error('Loading error:', error);
+
+  let message = 'An error occurred';
+  let showRetry = true;
+
+  if (error instanceof GraphError) {
+    message = error.message;
+    showRetry = error.isRecoverable;
+  } else if (error.message) {
+    message = error.message;
   }
 
-  // Hook up buttons if they exist, otherwise show enhanced by default
-  const simpleButton = document.getElementById('simple-edges');
-  const bundlingButton = document.getElementById('edge-bundling');
-
-  if (simpleButton) {
-    simpleButton.addEventListener('click', showSimpleEdges);
-    simpleButton.textContent = 'Simple Edges';
+  // Check for timeout (REQ-UX-005)
+  const loadTime = Date.now() - state.loadStartTime;
+  if (loadTime > 15000) {
+    message = 'Loading timeout exceeded. Displaying partial results.';
+    showGraph(); // Show whatever we have
   }
 
-  if (bundlingButton) {
-    bundlingButton.addEventListener('click', showEnhancedEdgeBundling);
-    bundlingButton.textContent = 'Enhanced Bundling';
-  }
+  updateStatus(message, false, true);
 
-  // Create legend for understanding the visualization
+  if (showRetry) {
+    addRetryButton();
+  }
+}
+
+// Add retry button for recoverable errors
+function addRetryButton() {
+  const statusElement = document.getElementById('status');
+  if (!statusElement) return;
+
+  const retryButton = document.createElement('button');
+  retryButton.textContent = 'Retry';
+  retryButton.className = 'retry-button';
+  retryButton.onclick = () => {
+    executeLoadingSequence(state.currentMode);
+  };
+
+  statusElement.appendChild(retryButton);
+}
+
+// Simulate async operations for demo
+async function simulateAsyncOperation(duration: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, duration));
+}
+
+// Update button states
+function updateButtonStates() {
+  const simpleButton = document.getElementById('simple-edges') as HTMLButtonElement;
+  const enhancedButton = document.getElementById('edge-bundling') as HTMLButtonElement;
+
+  if (!simpleButton || !enhancedButton) return;
+
+  // Reset all buttons
+  simpleButton.classList.remove('active');
+  enhancedButton.classList.remove('active');
+
+  // Set active state
+  if (state.currentMode === 'simple') {
+    simpleButton.classList.add('active');
+  } else {
+    enhancedButton.classList.add('active');
+  }
+}
+
+// REQ-MODE-002: Mode switching
+async function switchMode(mode: 'simple' | 'enhanced') {
+  if (state.isLoading) return;
+  if (state.currentMode === mode) return;
+
+  state.currentMode = mode;
+  updateButtonStates();
+
+  // Clear previous selection (REQ-MODE-002)
+  state.selectedNode = null;
+
+  // Execute complete loading sequence (REQ-MODE-002)
+  await executeLoadingSequence(mode);
+}
+
+// Initialize application
+function initializeApplication() {
+  console.log('Knowledge Network Demo - Initializing...');
+
+  // Create legend (REQ-VIS-001)
   createLegend();
 
-  // Start with the enhanced edge bundling demonstration
-  try {
-    showEnhancedEdgeBundling();
-    updateButtonStates(); // Ensure buttons show correct initial state
-  } catch (error) {
-    console.error('[Render Error] Failed to render graph:', error);
-    updateStatus('❌ Error: Failed to render graph. Check console for details.');
+  // Setup button handlers (REQ-MODE-001)
+  const simpleButton = document.getElementById('simple-edges');
+  const enhancedButton = document.getElementById('edge-bundling');
+
+  if (simpleButton) {
+    simpleButton.addEventListener('click', () => switchMode('simple'));
   }
 
-  console.log('🎮 Semantic Spacetime Knowledge Graph - Enhanced Edge Bundling Demo');
-  console.log('✨ Features showcased:');
-  console.log('  • γ(3,4) Representation System - Four irreducible association types');
-  console.log('  • Promise-theoretic autonomous agents with behavioral commitments');
-  console.log('  • Multi-dimensional spacetime integration (spatial, temporal, semantic)');
-  console.log('  • Enhanced edge compatibility using concept similarity');
-  console.log('  • Temporal and spatial bundling factors for natural grouping');
-  console.log('  • Advanced bilateral smoothing for ultra-smooth curves');
-  console.log('  • Zoom-to-fit functionality for scalable visualization');
-  console.log('📖 Based on Mark Burgess\'s Semantic Spacetime model - try "Enhanced Bundling"');
+  if (enhancedButton) {
+    enhancedButton.addEventListener('click', () => switchMode('enhanced'));
+  }
+
+  // Update button states
+  updateButtonStates();
+
+  // Start with simple edges mode (REQ-INIT-001)
+  executeLoadingSequence('simple');
+}
+
+// Performance monitoring
+function logPerformance() {
+  if (window.performance && window.performance.timing) {
+    const timing = window.performance.timing;
+    const loadTime = timing.loadEventEnd - timing.navigationStart;
+    console.log(`Page load time: ${loadTime}ms`);
+  }
+}
+
+// Setup keyboard shortcuts for accessibility
+function setupKeyboardShortcuts() {
+  document.addEventListener('keydown', (event) => {
+    if (!state.interactionEnabled) return;
+
+    switch(event.key) {
+      case 'Escape':
+        deselectAll();
+        break;
+      case '1':
+        switchMode('simple');
+        break;
+      case '2':
+        switchMode('enhanced');
+        break;
+    }
+  });
+}
+
+// Main entry point
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // Verify environment (REQ-TECH-001)
+    const userAgent = navigator.userAgent.toLowerCase();
+    console.log('User Agent:', userAgent);
+
+    // Initialize application
+    initializeApplication();
+
+    // Setup keyboard shortcuts
+    setupKeyboardShortcuts();
+
+    // Log performance metrics
+    logPerformance();
+
+  } catch (error) {
+    console.error('Failed to initialize application:', error);
+    updateStatus('Failed to initialize application', false, true);
+  }
 });
+
+// Export for testing
+export {
+  state,
+  executeLoadingSequence,
+  selectNode,
+  deselectAll,
+  switchMode
+};

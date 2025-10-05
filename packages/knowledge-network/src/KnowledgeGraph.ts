@@ -351,6 +351,24 @@ export class KnowledgeGraph {
     // Track if edges have been rendered
     let edgesRendered = false;
 
+    // Add a failsafe timeout for edge rendering (max 5 seconds)
+    if (this.config.waitForStable) {
+      setTimeout(() => {
+        if (!edgesRendered) {
+          console.log('Force rendering edges after timeout');
+          edgesRendered = true;
+          this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
+
+          // Call onEdgesRendered callback if provided
+          if (this.config.onEdgesRendered) {
+            setTimeout(() => {
+              this.config.onEdgesRendered?.();
+            }, 50); // Small delay to ensure edges are fully rendered
+          }
+        }
+      }, 5000); // 5 second maximum wait
+    }
+
     // Update positions on simulation tick
     this.simulation.on('tick', () => {
       // Check if simulation has stabilized and render edges
