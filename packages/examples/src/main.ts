@@ -5,7 +5,9 @@ import {
   createGamingSessionGraph,
   getEdgeCompatibility,
   nodeStyles,
-  edgeStyles
+  edgeStyles,
+  type SemanticSpacetimeNode,
+  type SemanticSpacetimeEdge
 } from './gaming-session-data.js';
 
 let currentGraph: KnowledgeGraph | null = null;
@@ -68,21 +70,36 @@ function showEnhancedEdgeBundling() {
       smoothingIterations: 6,             // More smoothing for ultra-smooth appearance
       smoothingFrequency: 3,              // Frequent smoothing during bundling process
       compatibilityFunction: (edge1: Edge, edge2: Edge) => {
-        const type1 = edge1.metadata?.type as string;
-        const type2 = edge2.metadata?.type as string;
+        const semanticEdge1 = edge1 as SemanticSpacetimeEdge;
+        const semanticEdge2 = edge2 as SemanticSpacetimeEdge;
 
-        // Get WoW-specific semantic compatibility
-        const baseCompatibility = getEdgeCompatibility(type1, type2);
+        // Use semantic spacetime association types for bundling
+        const assocType1 = semanticEdge1.metadata?.association_type ||
+                          semanticEdge1.metadata?.type as string || '';
+        const assocType2 = semanticEdge2.metadata?.association_type ||
+                          semanticEdge2.metadata?.type as string || '';
 
-        // Boost compatibility significantly for dramatic organic bundling
-        const organicBoost = 1.6; // 60% boost for dramatic effect
+        // Get semantic compatibility using γ(3,4) system
+        let baseCompatibility = getEdgeCompatibility(assocType1, assocType2);
 
-        // Add distance-based compatibility for organic flow
+        // Add concept similarity boost for semantic relationships
+        const sim1 = semanticEdge1.metadata?.semantic_binding?.concept_similarity || 0.5;
+        const sim2 = semanticEdge2.metadata?.semantic_binding?.concept_similarity || 0.5;
+        const semanticBoost = (sim1 + sim2) / 2;
+
+        // Temporal compatibility - edges closer in time bundle better
+        const time1 = semanticEdge1.metadata?.spacetime_binding?.temporal_relationship?.start_time || 0;
+        const time2 = semanticEdge2.metadata?.spacetime_binding?.temporal_relationship?.start_time || 0;
+        const timeDiff = Math.abs(time1 - time2);
+        const temporalBoost = Math.max(0.3, 1 - timeDiff / 120); // 2-minute window
+
+        // Spatial compatibility - edges from similar locations
         const source1 = edge1.source as any;
         const target1 = edge1.target as any;
         const source2 = edge2.source as any;
         const target2 = edge2.target as any;
 
+        let spatialBoost = 1.0;
         if (source1 && target1 && source2 && target2) {
           const midpoint1x = (source1.x + target1.x) / 2;
           const midpoint1y = (source1.y + target1.y) / 2;
@@ -94,38 +111,44 @@ function showEnhancedEdgeBundling() {
             Math.pow(midpoint1y - midpoint2y, 2)
           );
 
-          // Closer edges have higher compatibility for organic bundling
-          const distanceBoost = Math.max(0.2, 1 - distance / 300);
-
-          return Math.min(baseCompatibility * organicBoost * distanceBoost, 1.0);
+          spatialBoost = Math.max(0.2, 1 - distance / 200);
         }
 
-        return Math.min(baseCompatibility * organicBoost, 1.0);
+        // Combine all compatibility factors using semantic spacetime principles
+        return Math.min(baseCompatibility * semanticBoost * temporalBoost * spatialBoost, 1.0);
       }
     },
-    // Enhanced node styling with clear visual hierarchy
+    // Enhanced node styling with clear visual hierarchy for semantic spacetime entities
     nodeRadius: (node: Node) => {
-      const type = (node.metadata?.type as string) || '';
-      const baseSize = nodeStyles.sizes[type as keyof typeof nodeStyles.sizes] || 5;
+      const semanticNode = node as SemanticSpacetimeNode;
+      const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
+                         semanticNode.metadata?.type as string || '';
+      const baseSize = nodeStyles.sizes[conceptType as keyof typeof nodeStyles.sizes] || 5;
       return baseSize + 2; // Slightly larger for better visibility
     },
     nodeFill: (node: Node) => {
-      const type = (node.metadata?.type as string) || '';
-      return nodeStyles.colors[type as keyof typeof nodeStyles.colors] || '#999';
+      const semanticNode = node as SemanticSpacetimeNode;
+      const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
+                         semanticNode.metadata?.type as string || '';
+      return nodeStyles.colors[conceptType as keyof typeof nodeStyles.colors] || '#999';
     },
     nodeStroke: '#ffffff',      // White border for contrast
     nodeStrokeWidth: 2,         // Clear node boundaries
 
-    // Enhanced edge styling with high-contrast semantic coloring
+    // Enhanced edge styling with γ(3,4) association type coloring
     linkStroke: (edge: Edge) => {
-      const type = (edge.metadata?.type as string) || '';
-      const color = edgeStyles.colors[type as keyof typeof edgeStyles.colors] || '#999';
-      console.log(`Edge ${edge.source}->${edge.target} type:${type} color:${color}`);
+      const semanticEdge = edge as SemanticSpacetimeEdge;
+      const associationType = semanticEdge.metadata?.association_type ||
+                             semanticEdge.metadata?.type as string || '';
+      const color = edgeStyles.colors[associationType as keyof typeof edgeStyles.colors] || '#999';
+      console.log(`Edge ${edge.source}->${edge.target} type:${associationType} color:${color}`);
       return color;
     },
     linkStrokeWidth: (edge: Edge) => {
-      const type = (edge.metadata?.type as string) || '';
-      const baseWidth = edgeStyles.widths[type as keyof typeof edgeStyles.widths] || 1;
+      const semanticEdge = edge as SemanticSpacetimeEdge;
+      const associationType = semanticEdge.metadata?.association_type ||
+                             semanticEdge.metadata?.type as string || '';
+      const baseWidth = edgeStyles.widths[associationType as keyof typeof edgeStyles.widths] || 1;
       return Math.max(baseWidth * 1.8, 2.0); // Thicker edges for bundling visibility
     },
 
@@ -134,7 +157,11 @@ function showEnhancedEdgeBundling() {
 
     // Wait for simulation stability before rendering edges
     waitForStable: true,        // Wait for layout to stabilize
-    stabilityThreshold: 0.005   // Lower threshold for better stability
+    stabilityThreshold: 0.005,   // Lower threshold for better stability
+
+    // Zoom-to-fit functionality for large graphs
+    enableZoomToFit: true,      // Auto-zoom to show entire graph
+    zoomPadding: 50             // Padding around the graph
   };
 
   try {
@@ -174,23 +201,31 @@ function showSimpleEdges() {
     edgeRenderer: 'simple' as const,
 
     nodeRadius: (node: Node) => {
-      const type = (node.metadata?.type as string) || '';
-      return nodeStyles.sizes[type as keyof typeof nodeStyles.sizes] || 5;
+      const semanticNode = node as SemanticSpacetimeNode;
+      const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
+                         semanticNode.metadata?.type as string || '';
+      return nodeStyles.sizes[conceptType as keyof typeof nodeStyles.sizes] || 5;
     },
     nodeFill: (node: Node) => {
-      const type = (node.metadata?.type as string) || '';
-      return nodeStyles.colors[type as keyof typeof nodeStyles.colors] || '#999';
+      const semanticNode = node as SemanticSpacetimeNode;
+      const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
+                         semanticNode.metadata?.type as string || '';
+      return nodeStyles.colors[conceptType as keyof typeof nodeStyles.colors] || '#999';
     },
     nodeStroke: '#ffffff',
     nodeStrokeWidth: 1.5,
 
     linkStroke: (edge: Edge) => {
-      const type = (edge.metadata?.type as string) || '';
-      return edgeStyles.colors[type as keyof typeof edgeStyles.colors] || '#999';
+      const semanticEdge = edge as SemanticSpacetimeEdge;
+      const associationType = semanticEdge.metadata?.association_type ||
+                             semanticEdge.metadata?.type as string || '';
+      return edgeStyles.colors[associationType as keyof typeof edgeStyles.colors] || '#999';
     },
     linkStrokeWidth: (edge: Edge) => {
-      const type = (edge.metadata?.type as string) || '';
-      return edgeStyles.widths[type as keyof typeof edgeStyles.widths] || 1;
+      const semanticEdge = edge as SemanticSpacetimeEdge;
+      const associationType = semanticEdge.metadata?.association_type ||
+                             semanticEdge.metadata?.type as string || '';
+      return edgeStyles.widths[associationType as keyof typeof edgeStyles.widths] || 1;
     },
     linkStrokeOpacity: 0.6,
 
@@ -233,21 +268,24 @@ function createLegend() {
   `;
 
   legendContainer.innerHTML = `
-    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Gaming Session Graph</h4>
+    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Semantic Spacetime Graph</h4>
 
     <div style="margin-bottom: 12px;">
-      <strong style="color: #34495e;">Node Types:</strong><br>
-      <div style="margin: 4px 0;">🔴 <span style="color: #ff6b6b;">Players</span> - Game participants</div>
-      <div style="margin: 4px 0;">🌍 <span style="color: #4ecdc4;">Locations</span> - Map areas</div>
-      <div style="margin: 4px 0;">⚡ <span style="color: #ffd93d;">Events</span> - Game events</div>
-      <div style="margin: 4px 0;">💎 <span style="color: #6bcf7f;">Items</span> - Equipment</div>
+      <strong style="color: #34495e;">Entity Types:</strong><br>
+      <div style="margin: 4px 0;">🔵 <span style="color: #4a90e2;">Players</span> - Autonomous agents</div>
+      <div style="margin: 4px 0;">🔴 <span style="color: #d0021b;">Bosses</span> - Scripted entities</div>
+      <div style="margin: 4px 0;">🟢 <span style="color: #7ed321;">Locations</span> - Spatial regions</div>
+      <div style="margin: 4px 0;">🟣 <span style="color: #bd10e0;">Abilities</span> - Temporal processes</div>
+      <div style="margin: 4px 0;">🟠 <span style="color: #f5a623;">Roles</span> - Abstract concepts</div>
+      <div style="margin: 4px 0;">🟦 <span style="color: #50e3c2;">Groups</span> - Collection entities</div>
     </div>
 
     <div>
-      <strong style="color: #34495e;">Edge Types:</strong><br>
-      <div style="margin: 2px 0;">Movement, Combat, Events</div>
-      <div style="margin: 2px 0;">Item pickups, Sequences</div>
-      <div style="margin: 2px 0; font-style: italic;">Semantic bundling by type</div>
+      <strong style="color: #34495e;">γ(3,4) Association Types:</strong><br>
+      <div style="margin: 2px 0;">🔵 <span style="color: #4a90e2;">Proximity (N)</span> - Similarity</div>
+      <div style="margin: 2px 0;">🔴 <span style="color: #d0021b;">Directional (L)</span> - Causality</div>
+      <div style="margin: 2px 0;">🟢 <span style="color: #7ed321;">Containment (C)</span> - Membership</div>
+      <div style="margin: 2px 0;">🟣 <span style="color: #bd10e0;">Property (E)</span> - Attributes</div>
     </div>
   `;
 
@@ -307,14 +345,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStatus('❌ Error: Failed to render graph. Check console for details.');
   }
 
-  console.log('🎮 Gaming Session Knowledge Graph - Enhanced Edge Bundling Demo');
+  console.log('🎮 Semantic Spacetime Knowledge Graph - Enhanced Edge Bundling Demo');
   console.log('✨ Features showcased:');
-  console.log('  • Adaptive subdivision - longer edges get more control points');
-  console.log('  • Momentum-based force application for smooth movement');
-  console.log('  • Gaussian smoothing for ultra-smooth curves');
-  console.log('  • Cardinal splines with configurable tension');
-  console.log('  • Semantic edge compatibility for intelligent bundling');
-  console.log('  • Rich semantic labels on nodes and edges');
-  console.log('  • Gaming session space-time relationships');
-  console.log('📖 Try switching between "Simple Edges" and "Enhanced Bundling" modes');
+  console.log('  • γ(3,4) Representation System - Four irreducible association types');
+  console.log('  • Promise-theoretic autonomous agents with behavioral commitments');
+  console.log('  • Multi-dimensional spacetime integration (spatial, temporal, semantic)');
+  console.log('  • Enhanced edge compatibility using concept similarity');
+  console.log('  • Temporal and spatial bundling factors for natural grouping');
+  console.log('  • Advanced bilateral smoothing for ultra-smooth curves');
+  console.log('  • Zoom-to-fit functionality for scalable visualization');
+  console.log('📖 Based on Mark Burgess\'s Semantic Spacetime model - try "Enhanced Bundling"');
 });

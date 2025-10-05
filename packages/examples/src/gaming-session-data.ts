@@ -1,1061 +1,744 @@
 // World of Warcraft Gaming Session: Semantic Space-Time Graph Data Generator
-// Mythic+ Necrotic Wake dungeon run with comprehensive game mechanics and edge bundling
+// Implementing Mark Burgess's Semantic Spacetime model with γ(3,4) representation system
 import { Node, Edge } from '../../knowledge-network/dist/index.js';
 
 /**
- * Enhanced node interface for World of Warcraft entities with agent-like properties
- * Based on semantic space-time theory: every entity has autonomy, goals, and behaviors
+ * Semantic Spacetime Entity Classification
+ * Based on fundamental ontological distinctions from the research
  */
-export interface WoWNode extends Node {
+export enum EntityClassification {
+  // Fundamental distinction: things that persist vs things that unfold
+  CONTINUANT = 'continuant',  // Entities that persist through time while maintaining identity
+  OCCURRENT = 'occurrent',    // Temporal entities that unfold through time
+}
+
+/**
+ * Temporal Entity Categories
+ */
+export enum TemporalType {
+  ATEMPORAL = 'atemporal',  // Information outside temporal constraints
+  STATIC = 'static',        // Valid from specific time points, unchanging
+  DYNAMIC = 'dynamic',      // Continuously evolving over time
+  EPISODIC = 'episodic',    // Facts, opinions, predictions with temporal validity
+}
+
+/**
+ * Spatial Entity Types
+ */
+export enum SpatialType {
+  POINT = 'point',          // Zero-dimensional, location but no extent
+  LINEAR = 'linear',        // One-dimensional, length but negligible width
+  AREAL = 'areal',         // Two-dimensional regions
+  VOLUMETRIC = 'volumetric', // Three-dimensional extent
+}
+
+/**
+ * γ(3,4) Association Types - The Four Irreducible Primitives
+ */
+export enum AssociationType {
+  PROXIMITY = 'N',          // ST 0 = 'Near' - similarity, correlation, conceptual closeness
+  DIRECTIONALITY = 'L',     // ST 1 = 'Leads to' - ordering, causality, directed influence
+  CONTAINMENT = 'C',        // ST 2 = 'Contains' - membership, inclusion, hierarchical organization
+  PROPERTY_EXPRESSION = 'E', // ST 3 = 'Expresses' - attributes, characteristics, features
+}
+
+/**
+ * Promise-Theoretic Agent Properties
+ * Each autonomous agent makes voluntary commitments about behavior
+ */
+interface AgentPromises {
+  service_promises: string[];     // Services this agent commits to provide
+  behavioral_promises: string[];  // Behaviors this agent commits to maintain
+  cooperative_bindings: string[]; // Mutual obligations with other agents
+  conflict_resolution: string;    // How this agent handles conflicts
+}
+
+/**
+ * Semantic Spacetime Node with proper ontological foundation
+ */
+export interface SemanticSpacetimeNode extends Node {
   id: string;
   label: string;
-  x: number;
-  y: number;
+  x: number;  // Visualization positioning
+  y: number;  // Visualization positioning
   metadata: {
-    type: 'player' | 'boss' | 'mob' | 'location' | 'ability' | 'buff' | 'debuff' | 'mechanic' | 'phase';
+    // Fundamental ontological classification
+    entity_classification: EntityClassification;
+    temporal_type: TemporalType;
+    spatial_type: SpatialType;
 
-    // Agent properties (for entities with autonomy)
-    autonomy_level?: number; // 0-1 scale of self-direction
-    goals?: string[]; // Current objectives
-    decision_patterns?: string[]; // Behavioral patterns
-    resource_pools?: Record<string, number>; // Health, mana, energy, etc.
+    // Promise-theoretic agent properties (for autonomous entities)
+    agent_promises?: AgentPromises;
+    autonomy_level?: number; // 0-1 scale of self-direction capability
 
-    // Spatial properties
-    zone?: string;
-    subzone?: string;
-    coordinates?: {
-      x: number;
-      y: number;
-      z: number;
-      zone_id: number;
+    // Spacetime integration properties
+    spacetime_region: {
+      spatial_extent: {
+        coordinates: { x: number; y: number; z: number; zone_id: number };
+        bounding_volume?: { width: number; height: number; depth: number };
+      };
+      temporal_validity: {
+        start_time: number;
+        end_time?: number;
+        duration?: number;
+      };
     };
 
-    // Temporal properties
-    spawn_time?: number;
-    despawn_time?: number;
-    phase_active?: number[];
+    // Semantic content
+    semantic_content: {
+      domain: string;           // WoW game mechanics domain
+      concept_type: string;     // player, boss, ability, buff, etc.
+      properties: Record<string, any>;
+      functional_role: string;  // tank, healer, dps, mechanic, etc.
+    };
 
-    // Combat properties
-    level?: number;
-    health?: number;
-    max_health?: number;
-    power_type?: string;
-    power_value?: number;
-    threat_table?: Record<string, number>;
-
-    // Additional metadata
-    [key: string]: any;
+    // Additional WoW-specific properties
+    wow_properties?: {
+      level?: number;
+      item_level?: number;
+      class?: string;
+      spec?: string;
+      health?: number;
+      power?: number;
+      abilities?: string[];
+      cooldowns?: Record<string, number>;
+    };
   };
 }
 
 /**
- * Enhanced edge interface with comprehensive metadata for edge bundling
+ * Semantic Spacetime Edge with γ(3,4) association types
  */
-export interface WoWEdge extends Edge {
+export interface SemanticSpacetimeEdge extends Edge {
   source: string;
   target: string;
   label: string;
   metadata: {
-    type: EdgeType;
-    timestamp: number; // Seconds since encounter start
-    duration?: number; // For channeled or periodic effects
+    // Core γ(3,4) association type - one of the four irreducible primitives
+    association_type: AssociationType;
 
-    // Semantic categories for bundling
-    semantic_category: SemanticCategory;
-    phase?: number; // Combat phase (1-3 for most bosses)
-    role_category?: 'tank' | 'healer' | 'dps' | 'utility';
+    // Promise-theoretic relationship properties
+    promise_commitment?: {
+      service_type: string;
+      reliability: number; // 0-1 scale
+      enforcement_mechanism: string;
+    };
 
-    // Spatial context
-    distance?: number;
-    position_requirement?: string; // "spread", "stack", "behind_boss", etc.
+    // Spacetime relationship properties
+    spacetime_binding: {
+      temporal_relationship: {
+        start_time: number;
+        end_time?: number;
+        causality_direction?: 'forward' | 'backward' | 'bidirectional';
+        sequence_order?: number;
+      };
+      spatial_relationship: {
+        distance?: number;
+        relative_position?: string;
+        coordinate_transform?: string;
+      };
+    };
 
-    // Combat metrics
-    value?: number; // Damage, healing, threat, etc.
-    critical?: boolean;
-    blocked?: boolean;
-    absorbed?: number;
-    overkill?: number;
+    // Semantic relationship content
+    semantic_binding: {
+      relationship_domain: string;  // combat, movement, social, etc.
+      concept_similarity: number;   // 0-1 scale for bundling
+      functional_dependency: string; // how target depends on source
+      information_flow: 'unidirectional' | 'bidirectional';
+    };
 
-    // Additional metadata
-    [key: string]: any;
+    // WoW-specific interaction data
+    wow_interaction?: {
+      school?: string;           // magic school
+      damage_type?: string;      // physical, magical, etc.
+      value?: number;           // damage, healing, threat amount
+      critical?: boolean;
+      mechanics?: string[];     // boss mechanics involved
+      role_requirement?: string; // which role must handle this
+    };
+
+    // Legacy type for compatibility
+    type?: string;
   };
 }
 
 /**
- * Comprehensive edge types for WoW interactions
- */
-export enum EdgeType {
-  // Movement and Positioning
-  MOVEMENT = 'movement',
-  TELEPORT = 'teleport',
-  KNOCKBACK = 'knockback',
-  PULL = 'pull',
-  CHARGE = 'charge',
-
-  // Combat Actions
-  MELEE_ATTACK = 'melee_attack',
-  RANGED_ATTACK = 'ranged_attack',
-  SPELL_CAST = 'spell_cast',
-  CHANNEL = 'channel',
-  INTERRUPT = 'interrupt',
-  DISPEL = 'dispel',
-
-  // Healing and Support
-  DIRECT_HEAL = 'direct_heal',
-  HOT = 'hot', // Heal over time
-  ABSORB_SHIELD = 'absorb_shield',
-  BUFF_APPLICATION = 'buff_application',
-  BUFF_REMOVAL = 'buff_removal',
-
-  // Debuffs and Control
-  DEBUFF_APPLICATION = 'debuff_application',
-  DEBUFF_REMOVAL = 'debuff_removal',
-  STUN = 'stun',
-  ROOT = 'root',
-  SILENCE = 'silence',
-  FEAR = 'fear',
-
-  // Threat and Aggro
-  THREAT_GENERATION = 'threat_generation',
-  THREAT_DROP = 'threat_drop',
-  TAUNT = 'taunt',
-  AGGRO_CHANGE = 'aggro_change',
-
-  // Boss Mechanics
-  BOSS_PHASE = 'boss_phase',
-  MECHANIC_START = 'mechanic_start',
-  MECHANIC_RESOLVE = 'mechanic_resolve',
-  ENRAGE = 'enrage',
-
-  // Resource Management
-  RESOURCE_GAIN = 'resource_gain',
-  RESOURCE_SPEND = 'resource_spend',
-  COOLDOWN_USE = 'cooldown_use',
-  COOLDOWN_READY = 'cooldown_ready',
-
-  // Social and Coordination
-  READY_CHECK = 'ready_check',
-  MARKER_ASSIGN = 'marker_assign',
-  VOICE_CALL = 'voice_call',
-  STRATEGY_ADJUST = 'strategy_adjust'
-}
-
-/**
- * Semantic categories for edge bundling
- */
-export enum SemanticCategory {
-  COMBAT_DAMAGE = 'combat_damage',
-  COMBAT_HEALING = 'combat_healing',
-  COMBAT_MITIGATION = 'combat_mitigation',
-  POSITIONING = 'positioning',
-  RESOURCE_MANAGEMENT = 'resource_management',
-  CROWD_CONTROL = 'crowd_control',
-  BUFF_MANAGEMENT = 'buff_management',
-  THREAT_MANAGEMENT = 'threat_management',
-  MECHANIC_HANDLING = 'mechanic_handling',
-  COORDINATION = 'coordination'
-}
-
-/**
- * Creates a comprehensive Mythic+ Necrotic Wake dungeon run knowledge graph
- * Simulates a 12-minute run with 5 players through the dungeon
+ * Creates a comprehensive WoW Mythic+ dungeon run using semantic spacetime principles
+ * Demonstrates all four γ(3,4) association types in a realistic gaming context
  *
- * Based on semantic space-time graph theory principles:
- * - Temporal coherence: 720-second timeline with precise event sequences
- * - Spatial precision: Exact dungeon coordinates and positioning requirements
- * - Agent autonomy: Each entity has goals, resources, and decision patterns
- * - Rich associations: Four types per semantic theory (spatial, temporal, causal, semantic)
- * - Edge bundling optimization: Semantic categories enable natural grouping
+ * Scenario: 5-player Mythic+15 Necrotic Wake run (first boss: Blightbone)
+ * Timeline: 0-300 seconds (5 minutes through first boss)
+ * Demonstrates: Promise theory, agent autonomy, spacetime integration
  */
-export function createGamingSessionGraph(): { nodes: WoWNode[], edges: WoWEdge[] } {
-  const nodes: WoWNode[] = [];
-  const edges: WoWEdge[] = [];
+export function createGamingSessionGraph(): { nodes: SemanticSpacetimeNode[], edges: SemanticSpacetimeEdge[] } {
+  const nodes: SemanticSpacetimeNode[] = [];
+  const edges: SemanticSpacetimeEdge[] = [];
 
-  // PLAYER CHARACTERS - Mythic+ Team Composition for Necrotic Wake
-  const players: WoWNode[] = [
+  // ======================
+  // CONTINUANT ENTITIES - Things that persist through time
+  // ======================
+
+  // PLAYERS - Autonomous agents with complex promises to the group
+  const players: SemanticSpacetimeNode[] = [
     {
-      id: 'tank_vdh',
+      id: 'player_tank_vdh',
       label: 'Illidari (Vengeance DH)',
-      x: 100, y: 200,
+      x: 150, y: 200,
       metadata: {
-        type: 'player',
-        autonomy_level: 0.95,
-        goals: ['maintain_aggro', 'position_mobs', 'mitigate_damage', 'set_pace'],
-        decision_patterns: ['kite_on_necrotic', 'face_away_frontal', 'use_cooldowns_proactively'],
-        resource_pools: { health: 420000, max_health: 420000, fury: 120, soul_fragments: 0 },
-        zone: 'The Necrotic Wake',
-        subzone: 'Entrance',
-        coordinates: { x: 3150.5, y: -3015.2, z: 94.7, zone_id: 2286 },
-        level: 70,
-        spec: 'Vengeance',
-        item_level: 440,
-        key_abilities: ['Fel Devastation', 'Metamorphosis', 'Fiery Brand', 'Sigil of Flame'],
-        covenant: 'Kyrian',
-        role: 'tank'
+        entity_classification: EntityClassification.CONTINUANT,
+        temporal_type: TemporalType.DYNAMIC,
+        spatial_type: SpatialType.POINT,
+
+        agent_promises: {
+          service_promises: ['maintain_threat_on_all_enemies', 'position_mobs_optimally', 'survive_damage_intake'],
+          behavioral_promises: ['face_mobs_away_from_group', 'use_mitigation_proactively', 'call_major_cooldowns'],
+          cooperative_bindings: ['coordinate_with_healer', 'enable_melee_uptime', 'set_pull_pace'],
+          conflict_resolution: 'priority_to_group_survival'
+        },
+        autonomy_level: 0.95, // High autonomy - makes independent positioning decisions
+
+        spacetime_region: {
+          spatial_extent: {
+            coordinates: { x: 3150.5, y: -3015.2, z: 94.7, zone_id: 2286 },
+            bounding_volume: { width: 5, height: 5, depth: 3 }
+          },
+          temporal_validity: {
+            start_time: 0,
+            duration: 300
+          }
+        },
+
+        semantic_content: {
+          domain: 'wow_mythic_plus_combat',
+          concept_type: 'player_character',
+          properties: { role: 'tank', spec: 'vengeance', covenant: 'kyrian' },
+          functional_role: 'damage_mitigation_and_enemy_control'
+        },
+
+        wow_properties: {
+          level: 70,
+          item_level: 440,
+          class: 'Demon Hunter',
+          spec: 'Vengeance',
+          health: 420000,
+          power: 120, // Fury
+          abilities: ['Fel Devastation', 'Metamorphosis', 'Fiery Brand', 'Sigil of Flame'],
+          cooldowns: { 'Metamorphosis': 240, 'Fel Devastation': 60, 'Fiery Brand': 60 }
+        }
       }
     },
     {
-      id: 'healer_rsham',
+      id: 'player_healer_rsham',
       label: 'Thrall (Resto Shaman)',
-      x: 120, y: 180,
+      x: 180, y: 180,
       metadata: {
-        type: 'player',
-        autonomy_level: 0.9,
-        goals: ['keep_party_alive', 'dispel_debuffs', 'manage_cooldowns', 'interrupt_casts'],
-        decision_patterns: ['predictive_healing', 'cooldown_rotation', 'triage_priority'],
-        resource_pools: { health: 380000, max_health: 380000, mana: 120000, max_mana: 120000 },
-        zone: 'The Necrotic Wake',
-        subzone: 'Entrance',
-        coordinates: { x: 3148.2, y: -3013.5, z: 94.7, zone_id: 2286 },
-        level: 70,
-        spec: 'Restoration',
-        item_level: 437,
-        key_abilities: ['Spirit Link Totem', 'Healing Tide Totem', 'Riptide', 'Wind Shear'],
-        covenant: 'Necrolord',
-        role: 'healer'
+        entity_classification: EntityClassification.CONTINUANT,
+        temporal_type: TemporalType.DYNAMIC,
+        spatial_type: SpatialType.POINT,
+
+        agent_promises: {
+          service_promises: ['maintain_party_health_above_critical', 'dispel_harmful_effects', 'interrupt_dangerous_casts'],
+          behavioral_promises: ['prioritize_tank_survival', 'position_for_los_healing', 'manage_mana_efficiently'],
+          cooperative_bindings: ['coordinate_defensive_cooldowns', 'support_interrupt_rotation'],
+          conflict_resolution: 'triage_based_on_immediate_danger'
+        },
+        autonomy_level: 0.92,
+
+        spacetime_region: {
+          spatial_extent: {
+            coordinates: { x: 3148.2, y: -3013.5, z: 94.7, zone_id: 2286 },
+            bounding_volume: { width: 30, height: 30, depth: 5 } // Healing range
+          },
+          temporal_validity: {
+            start_time: 0,
+            duration: 300
+          }
+        },
+
+        semantic_content: {
+          domain: 'wow_mythic_plus_support',
+          concept_type: 'player_character',
+          properties: { role: 'healer', spec: 'restoration', covenant: 'necrolord' },
+          functional_role: 'health_maintenance_and_utility'
+        },
+
+        wow_properties: {
+          level: 70,
+          item_level: 437,
+          class: 'Shaman',
+          spec: 'Restoration',
+          health: 380000,
+          power: 120000, // Mana
+          abilities: ['Spirit Link Totem', 'Healing Tide Totem', 'Wind Shear', 'Tremor Totem'],
+          cooldowns: { 'Spirit Link Totem': 180, 'Healing Tide Totem': 180, 'Wind Shear': 12 }
+        }
       }
     },
     {
-      id: 'dps_fire_mage',
+      id: 'player_dps_fire_mage',
       label: 'Khadgar (Fire Mage)',
-      x: 140, y: 220,
+      x: 120, y: 220,
       metadata: {
-        type: 'player',
-        autonomy_level: 0.85,
-        goals: ['maximize_damage', 'interrupt_priority_casts', 'execute_mechanics', 'decurse'],
-        decision_patterns: ['combustion_windows', 'movement_optimization', 'target_priority'],
-        resource_pools: { health: 320000, max_health: 320000, mana: 100000, max_mana: 100000 },
-        zone: 'The Necrotic Wake',
-        subzone: 'Entrance',
-        coordinates: { x: 3152.1, y: -3016.8, z: 94.7, zone_id: 2286 },
-        level: 70,
-        spec: 'Fire',
-        item_level: 441,
-        key_abilities: ['Combustion', 'Fire Blast', 'Phoenix Flames', 'Counterspell'],
-        covenant: 'Night Fae',
-        role: 'dps'
-      }
-    },
-    {
-      id: 'dps_havoc_dh',
-      label: 'Kayn (Havoc DH)',
-      x: 80, y: 240,
-      metadata: {
-        type: 'player',
-        autonomy_level: 0.85,
-        goals: ['maximize_aoe_damage', 'priority_interrupt', 'execute_mechanics', 'consume_magic'],
-        decision_patterns: ['eye_beam_timing', 'meta_windows', 'mobility_usage'],
-        resource_pools: { health: 340000, max_health: 340000, fury: 120, max_fury: 120 },
-        zone: 'The Necrotic Wake',
-        subzone: 'Entrance',
-        coordinates: { x: 3149.8, y: -3017.3, z: 94.7, zone_id: 2286 },
-        level: 70,
-        spec: 'Havoc',
-        item_level: 439,
-        key_abilities: ['Eye Beam', 'Blade Dance', 'Metamorphosis', 'Disrupt'],
-        covenant: 'Venthyr',
-        role: 'dps'
-      }
-    },
-    {
-      id: 'dps_sub_rogue',
-      label: 'Garona (Sub Rogue)',
-      x: 160, y: 200,
-      metadata: {
-        type: 'player',
-        autonomy_level: 0.88,
-        goals: ['priority_damage', 'kick_rotation', 'execute_mechanics', 'apply_shroud'],
-        decision_patterns: ['shadow_dance_windows', 'symbols_timing', 'energy_pooling'],
-        resource_pools: { health: 330000, max_health: 330000, energy: 100, max_energy: 100, combo: 0 },
-        zone: 'The Necrotic Wake',
-        subzone: 'Entrance',
-        coordinates: { x: 3151.3, y: -3014.1, z: 94.7, zone_id: 2286 },
-        level: 70,
-        spec: 'Subtlety',
-        item_level: 438,
-        key_abilities: ['Shadow Dance', 'Symbols of Death', 'Shadow Blades', 'Kick'],
-        covenant: 'Kyrian',
-        role: 'dps'
+        entity_classification: EntityClassification.CONTINUANT,
+        temporal_type: TemporalType.DYNAMIC,
+        spatial_type: SpatialType.POINT,
+
+        agent_promises: {
+          service_promises: ['maximize_sustained_damage', 'interrupt_assigned_casts', 'execute_positioning_mechanics'],
+          behavioral_promises: ['optimize_combustion_windows', 'maintain_safe_distance', 'dispel_magic_effects'],
+          cooperative_bindings: ['coordinate_interrupt_rotation', 'focus_fire_priority_targets'],
+          conflict_resolution: 'dps_optimization_with_safety_priority'
+        },
+        autonomy_level: 0.87,
+
+        spacetime_region: {
+          spatial_extent: {
+            coordinates: { x: 3152.1, y: -3016.8, z: 94.7, zone_id: 2286 },
+            bounding_volume: { width: 40, height: 40, depth: 5 } // Spell range
+          },
+          temporal_validity: {
+            start_time: 0,
+            duration: 300
+          }
+        },
+
+        semantic_content: {
+          domain: 'wow_mythic_plus_damage',
+          concept_type: 'player_character',
+          properties: { role: 'dps', spec: 'fire', covenant: 'night_fae' },
+          functional_role: 'sustained_magical_damage_and_utility'
+        },
+
+        wow_properties: {
+          level: 70,
+          item_level: 441,
+          class: 'Mage',
+          spec: 'Fire',
+          health: 320000,
+          power: 100000, // Mana
+          abilities: ['Combustion', 'Fire Blast', 'Phoenix Flames', 'Counterspell'],
+          cooldowns: { 'Combustion': 120, 'Counterspell': 24, 'Ice Block': 240 }
+        }
       }
     }
   ];
 
   players.forEach(player => nodes.push(player));
 
-  // NECROTIC WAKE DUNGEON LOCATIONS - Shadowlands Mythic+ Dungeon
-  const dungeonLocations: WoWNode[] = [
+  // DUNGEON LOCATIONS - Spatial regions with functional capabilities
+  const locations: SemanticSpacetimeNode[] = [
     {
-      id: 'nw_entrance',
-      label: 'Necrotic Wake Entrance',
-      x: 100, y: 100,
+      id: 'nw_blightbone_arena',
+      label: 'Blightbone\'s Arena',
+      x: 300, y: 250,
       metadata: {
-        type: 'location',
-        zone: 'The Necrotic Wake',
-        subzone: 'Zolramus Vestibule',
-        coordinates: { x: 3150.0, y: -3015.0, z: 94.7, zone_id: 2286 },
-        affixes: ['Fortified', 'Sanguine', 'Necrotic'],
-        keystone_level: 15,
-        timer: 2160 // 36 minutes
-      }
-    },
-    {
-      id: 'nw_stitchflesh_arena',
-      label: 'Stitchflesh\'s Workshop',
-      x: 200, y: 150,
-      metadata: {
-        type: 'location',
-        zone: 'The Necrotic Wake',
-        subzone: 'The Stitchworks',
-        coordinates: { x: 3210.5, y: -2950.3, z: 96.2, zone_id: 2286 },
-        boss_encounter: true,
-        boss_name: 'Blightbone',
-        mechanic_zones: ['Heaving_Retch_Area', 'Fetid_Gas_Cloud']
-      }
-    },
-    {
-      id: 'nw_abomination_wing',
-      label: 'Abomination Wing',
-      x: 300, y: 200,
-      metadata: {
-        type: 'location',
-        zone: 'The Necrotic Wake',
-        subzone: 'Stitchflesh Laboratory',
-        coordinates: { x: 3280.2, y: -2890.7, z: 98.5, zone_id: 2286 },
-        boss_encounter: true,
-        boss_name: 'Amarth',
-        mechanic_zones: ['Necrotic_Bolt_Landing', 'Add_Spawn_Points']
-      }
-    },
-    {
-      id: 'nw_surgeon_hall',
-      label: 'Surgeon\'s Hall',
-      x: 400, y: 250,
-      metadata: {
-        type: 'location',
-        zone: 'The Necrotic Wake',
-        subzone: 'Hall of Reconstruction',
-        coordinates: { x: 3350.8, y: -2820.4, z: 101.3, zone_id: 2286 },
-        boss_encounter: true,
-        boss_name: 'Surgeon Stitchflesh',
-        mechanic_zones: ['Hook_Platforms', 'Meat_Hook_Path']
-      }
-    },
-    {
-      id: 'nw_nalthor_platform',
-      label: 'Nalthor\'s Sanctum',
-      x: 500, y: 300,
-      metadata: {
-        type: 'location',
-        zone: 'The Necrotic Wake',
-        subzone: 'The Golden Repose',
-        coordinates: { x: 3420.3, y: -2750.1, z: 105.8, zone_id: 2286 },
-        boss_encounter: true,
-        boss_name: 'Nalthor the Rimebinder',
-        mechanic_zones: ['Comet_Storm_Areas', 'Ice_Shard_Zones', 'Frozen_Binds_Positions']
+        entity_classification: EntityClassification.CONTINUANT,
+        temporal_type: TemporalType.STATIC,
+        spatial_type: SpatialType.AREAL,
+
+        spacetime_region: {
+          spatial_extent: {
+            coordinates: { x: 3210.5, y: -2950.3, z: 96.2, zone_id: 2286 },
+            bounding_volume: { width: 50, height: 50, depth: 15 }
+          },
+          temporal_validity: {
+            start_time: 60,
+            end_time: 300
+          }
+        },
+
+        semantic_content: {
+          domain: 'wow_dungeon_geography',
+          concept_type: 'boss_encounter_arena',
+          properties: { boss: 'Blightbone', mechanics: ['frontal_cone', 'gas_clouds', 'add_summons'] },
+          functional_role: 'combat_space_with_positioning_requirements'
+        }
       }
     }
   ];
 
-  dungeonLocations.forEach(loc => nodes.push(loc));
+  locations.forEach(loc => nodes.push(loc));
 
-  // NECROTIC WAKE BOSSES AND KEY MOBS
-  const npcs: WoWNode[] = [
-    {
-      id: 'boss_blightbone',
-      label: 'Blightbone',
-      x: 200, y: 150,
-      metadata: {
-        type: 'boss',
-        autonomy_level: 0.8,
-        goals: ['eliminate_party', 'execute_mechanics'],
-        decision_patterns: ['heaving_retch_cone', 'fetid_gas_placement', 'crunch_target'],
-        resource_pools: { health: 4200000, max_health: 4200000 },
-        zone: 'The Necrotic Wake',
-        coordinates: { x: 3210.5, y: -2950.3, z: 96.2, zone_id: 2286 },
-        level: 72,
-        abilities: ['Heaving Retch', 'Fetid Gas', 'Crunch', 'Carrion Worms'],
-        mechanics: ['frontal_cone', 'gas_clouds', 'tank_buster', 'add_summon']
-      }
-    },
-    {
-      id: 'Mr_Smite',
-      label: 'Mr. Smite',
-      x: 500, y: 220,
-      metadata: {
-        type: 'boss',
-        level: 20,
-        health: 2321,
-        faction: 'Defias Brotherhood',
-        abilities: ['Smite Slam', 'Hammer Throw', 'Weapon Swap'],
-        loot_table: ['Smite\'s Mighty Hammer', 'Thief\'s Blade'],
-        dungeon: 'Deadmines',
-        elite: true
-      }
-    },
-    {
-      id: 'Captain_Greenskin',
-      label: 'Captain Greenskin',
-      x: 450, y: 180,
-      metadata: {
-        type: 'boss',
-        level: 18,
-        health: 1979,
-        faction: 'Defias Brotherhood',
-        abilities: ['Cleave', 'Intimidating Shout'],
-        loot_table: ['Blackened Defias Gloves', 'Corsair\'s Overshirt'],
-        dungeon: 'Deadmines',
-        elite: true
-      }
-    },
-    {
-      id: 'Defias_Strip_Miner',
-      label: 'Defias Strip Miner',
-      x: 200, y: 120,
-      metadata: {
-        type: 'mob',
-        level: 16,
-        health: 986,
-        faction: 'Defias Brotherhood',
-        abilities: ['Pierce Armor'],
-        respawn_time: 300,
-        patrol_path: ['DM_Mine_Tunnels', 'DM_Entrance']
-      }
-    }
-  ];
+  // ======================
+  // OCCURRENT ENTITIES - Things that unfold through time
+  // ======================
 
-  npcs.forEach(npc => nodes.push(npc));
+  // ABILITIES - Temporal processes with specific durations
+  const abilities: SemanticSpacetimeNode[] = [
+    {
+      id: 'ability_heaving_retch',
+      label: 'Heaving Retch',
+      x: 320, y: 280,
+      metadata: {
+        entity_classification: EntityClassification.OCCURRENT,
+        temporal_type: TemporalType.EPISODIC,
+        spatial_type: SpatialType.VOLUMETRIC, // Cone-shaped area
 
-  // ABILITIES AND COMBAT ACTIONS - Real WoW Spells
-  const abilities = [
-    {
-      id: 'Death_Coil',
-      label: 'Death Coil',
-      x: 300, y: 350,
-      metadata: {
-        type: 'ability',
-        class: 'Death Knight',
-        school: 'Shadow',
-        cast_time: 0,
-        cooldown: 0,
-        runic_power_cost: 40,
-        damage: '1821 - 2179',
-        effect: 'Heals friendly undead or damages enemy'
-      }
-    },
-    {
-      id: 'Flash_of_Light',
-      label: 'Flash of Light',
-      x: 350, y: 400,
-      metadata: {
-        type: 'ability',
-        class: 'Paladin',
-        school: 'Holy',
-        cast_time: 1.5,
-        cooldown: 0,
-        mana_cost: 815,
-        healing: '3423 - 3822',
-        effect: 'Quick heal spell'
-      }
-    },
-    {
-      id: 'Fireball',
-      label: 'Fireball',
-      x: 400, y: 450,
-      metadata: {
-        type: 'ability',
-        class: 'Mage',
-        school: 'Fire',
-        cast_time: 2.5,
-        cooldown: 0,
-        mana_cost: 895,
-        damage: '2987 - 3745',
-        effect: 'Hurls a fiery bolt'
-      }
-    },
-    {
-      id: 'Mutilate',
-      label: 'Mutilate',
-      x: 450, y: 350,
-      metadata: {
-        type: 'ability',
-        class: 'Rogue',
-        school: 'Physical',
-        cast_time: 0,
-        cooldown: 0,
-        energy_cost: 60,
-        damage: '175% weapon damage',
-        effect: 'Instantly attacks with both weapons'
+        spacetime_region: {
+          spatial_extent: {
+            coordinates: { x: 3210.5, y: -2935.0, z: 96.2, zone_id: 2286 },
+            bounding_volume: { width: 40, height: 8, depth: 5 } // Frontal cone
+          },
+          temporal_validity: {
+            start_time: 75,
+            duration: 3
+          }
+        },
+
+        semantic_content: {
+          domain: 'wow_boss_mechanics',
+          concept_type: 'frontal_cone_attack',
+          properties: { school: 'disease', interruptible: false, avoidable: true },
+          functional_role: 'positioning_requirement_generator'
+        },
+
+        wow_properties: {
+          cast_time: 3000,
+          damage: 85000,
+          school: 'disease',
+          mechanic_type: 'frontal_cone'
+        }
       }
     }
   ];
 
   abilities.forEach(ability => nodes.push(ability));
 
-  // QUEST OBJECTIVES AND ITEMS - Real WoW Quest Items
-  const questItems = [
-    {
-      id: 'Rhahkzor_Hammer',
-      label: 'Rhahk\'zor\'s Hammer',
-      x: 350, y: 300,
-      metadata: {
-        type: 'quest_item',
-        quality: 'uncommon',
-        item_level: 20,
-        quest: 'The Defias Brotherhood',
-        zone: 'Deadmines',
-        vendor_price: '4g 12s'
-      }
-    },
-    {
-      id: 'Goblin_Transponder',
-      label: 'Goblin Transponder',
-      x: 380, y: 280,
-      metadata: {
-        type: 'quest_item',
-        quality: 'poor',
-        quest: 'Underground Assault',
-        use_effect: 'Calls in Goblin Sapper',
-        charges: 1
+  // ======================
+  // SEMANTIC SPACETIME EDGES - γ(3,4) Association Types
+  // ======================
+
+  // PROXIMITY ASSOCIATIONS (N) - Similarity, correlation, conceptual closeness
+  edges.push({
+    source: 'player_tank_vdh',
+    target: 'player_healer_rsham',
+    label: 'grouped with',
+    metadata: {
+      association_type: AssociationType.PROXIMITY,
+
+      spacetime_binding: {
+        temporal_relationship: {
+          start_time: 0,
+          causality_direction: 'bidirectional'
+        },
+        spatial_relationship: {
+          distance: 15,
+          relative_position: 'close_proximity_for_coordination'
+        }
+      },
+
+      semantic_binding: {
+        relationship_domain: 'social_coordination',
+        concept_similarity: 0.85, // Both responsible for group survival
+        functional_dependency: 'mutual_support_and_coordination',
+        information_flow: 'bidirectional'
+      },
+
+      type: 'group_proximity' // Legacy compatibility
+    }
+  });
+
+  // DIRECTIONALITY ASSOCIATIONS (L) - Ordering, causality, directed influence
+  edges.push({
+    source: 'boss_blightbone',
+    target: 'ability_heaving_retch',
+    label: 'casts ability',
+    metadata: {
+      association_type: AssociationType.DIRECTIONALITY,
+
+      promise_commitment: {
+        service_type: 'execute_scripted_ability',
+        reliability: 0.98,
+        enforcement_mechanism: 'boss_ai_script'
+      },
+
+      spacetime_binding: {
+        temporal_relationship: {
+          start_time: 75,
+          causality_direction: 'forward',
+          sequence_order: 1
+        },
+        spatial_relationship: {
+          relative_position: 'boss_facing_direction',
+          coordinate_transform: 'frontal_cone_projection'
+        }
+      },
+
+      semantic_binding: {
+        relationship_domain: 'boss_mechanic_execution',
+        concept_similarity: 0.95, // Direct causal relationship
+        functional_dependency: 'ability_manifestation_from_caster',
+        information_flow: 'unidirectional'
+      },
+
+      wow_interaction: {
+        school: 'disease',
+        damage_type: 'magical',
+        value: 85000,
+        mechanics: ['frontal_cone'],
+        role_requirement: 'positioning_awareness'
+      },
+
+      type: 'spell_cast' // Legacy compatibility
+    }
+  });
+
+  // BOSS - Autonomous agent with scripted behaviors
+  const boss: SemanticSpacetimeNode = {
+    id: 'boss_blightbone',
+    label: 'Blightbone',
+    x: 320, y: 250,
+    metadata: {
+      entity_classification: EntityClassification.CONTINUANT,
+      temporal_type: TemporalType.DYNAMIC,
+      spatial_type: SpatialType.POINT,
+
+      agent_promises: {
+        service_promises: ['execute_scripted_mechanics', 'provide_encounter_challenge'],
+        behavioral_promises: ['cast_abilities_on_schedule', 'respond_to_threat_changes'],
+        cooperative_bindings: [], // Bosses don't cooperate with players
+        conflict_resolution: 'eliminate_all_players'
+      },
+      autonomy_level: 0.75, // Scripted but with some adaptive behavior
+
+      spacetime_region: {
+        spatial_extent: {
+          coordinates: { x: 3210.5, y: -2950.3, z: 96.2, zone_id: 2286 },
+          bounding_volume: { width: 8, height: 8, depth: 4 }
+        },
+        temporal_validity: {
+          start_time: 60,
+          end_time: 300
+        }
+      },
+
+      semantic_content: {
+        domain: 'wow_boss_encounter',
+        concept_type: 'raid_boss',
+        properties: { difficulty: 'mythic_plus_15', health: 4200000 },
+        functional_role: 'primary_encounter_challenge'
+      },
+
+      wow_properties: {
+        level: 72,
+        health: 4200000,
+        abilities: ['Heaving Retch', 'Fetid Gas', 'Crunch'],
+        cooldowns: { 'Heaving Retch': 15, 'Fetid Gas': 25, 'Crunch': 8 }
       }
     }
-  ];
+  };
 
-  questItems.forEach(item => nodes.push(item));
+  nodes.push(boss);
 
-  // SEMANTIC SPACE-TIME EDGE RELATIONSHIPS - WoW Combat & Dungeon Mechanics
+  // CONTAINMENT ASSOCIATIONS (C) - Group membership hierarchy
+  edges.push({
+    source: 'mythic_plus_party',
+    target: 'player_tank_vdh',
+    label: 'contains member',
+    metadata: {
+      association_type: AssociationType.CONTAINMENT,
 
-  // MOVEMENT PATTERNS - Players traversing dungeon
-  edges.push(
-    {
-      source: 'Throgrim_DK',
-      target: 'DM_Entrance',
-      label: 'enters dungeon',
-      metadata: {
-        type: 'movement',
-        timestamp: 0,
-        distance: 156.2, // Calculated distance
-        movement_type: 'walking',
-        party_role: 'tank_lead'
-      }
-    },
-    {
-      source: 'Liadrin_Paladin',
-      target: 'DM_Entrance',
-      label: 'follows group',
-      metadata: {
-        type: 'movement',
-        timestamp: 2,
-        distance: 148.7,
-        movement_type: 'walking',
-        party_role: 'healer_follow'
-      }
-    },
-    {
-      source: 'Kael_Mage',
-      target: 'DM_Mine_Tunnels',
-      label: 'advances cautiously',
-      metadata: {
-        type: 'movement',
-        timestamp: 45,
-        distance: 223.6,
-        movement_type: 'sneaking',
-        party_role: 'ranged_dps'
-      }
-    },
-    {
-      source: 'Garona_Rogue',
-      target: 'DM_Mine_Tunnels',
-      label: 'scouts ahead',
-      metadata: {
-        type: 'movement',
-        timestamp: 38,
-        distance: 201.4,
-        movement_type: 'stealth',
-        party_role: 'scout'
+      spacetime_binding: {
+        temporal_relationship: {
+          start_time: 0,
+          duration: 300
+        },
+        spatial_relationship: {
+          relative_position: 'group_member'
+        }
+      },
+
+      semantic_binding: {
+        relationship_domain: 'group_composition',
+        concept_similarity: 1.0, // Perfect containment
+        functional_dependency: 'member_within_group_structure',
+        information_flow: 'bidirectional'
+      },
+
+      type: 'group_membership' // Legacy compatibility
+    }
+  });
+
+  // PROPERTY EXPRESSION ASSOCIATIONS (E) - Attributes and characteristics
+  edges.push({
+    source: 'player_tank_vdh',
+    target: 'role_tank',
+    label: 'fulfills role',
+    metadata: {
+      association_type: AssociationType.PROPERTY_EXPRESSION,
+
+      spacetime_binding: {
+        temporal_relationship: {
+          start_time: 0,
+          duration: 300
+        },
+        spatial_relationship: {
+          relative_position: 'functional_expression'
+        }
+      },
+
+      semantic_binding: {
+        relationship_domain: 'role_fulfillment',
+        concept_similarity: 0.9,
+        functional_dependency: 'agent_expresses_functional_capability',
+        information_flow: 'unidirectional'
+      },
+
+      type: 'role_expression' // Legacy compatibility
+    }
+  });
+
+  // Add missing nodes for group and role abstractions
+  const groupNode: SemanticSpacetimeNode = {
+    id: 'mythic_plus_party',
+    label: 'Mythic+ Party',
+    x: 200, y: 150,
+    metadata: {
+      entity_classification: EntityClassification.CONTINUANT,
+      temporal_type: TemporalType.DYNAMIC,
+      spatial_type: SpatialType.AREAL,
+
+      spacetime_region: {
+        spatial_extent: {
+          coordinates: { x: 3150.0, y: -3015.0, z: 94.7, zone_id: 2286 },
+          bounding_volume: { width: 50, height: 50, depth: 10 }
+        },
+        temporal_validity: {
+          start_time: 0,
+          duration: 300
+        }
+      },
+
+      semantic_content: {
+        domain: 'wow_group_dynamics',
+        concept_type: 'player_party',
+        properties: { size: 5, composition: 'tank_healer_3dps' },
+        functional_role: 'coordinated_combat_unit'
       }
     }
-  );
+  };
 
-  // COMBAT SEQUENCES - Tank pulling and threat management
-  edges.push(
-    {
-      source: 'Throgrim_DK',
-      target: 'Defias_Strip_Miner',
-      label: 'pulls mob',
-      metadata: {
-        type: 'aggro_pull',
-        timestamp: 65,
-        threat_level: 4800,
-        ability_used: 'Death Grip',
-        combat_role: 'tank_initiation'
-      }
-    },
-    {
-      source: 'Defias_Strip_Miner',
-      target: 'Throgrim_DK',
-      label: 'attacks tank',
-      metadata: {
-        type: 'melee_attack',
-        timestamp: 66,
-        damage: 1247,
-        attack_type: 'auto_attack',
-        threat_generated: 1247
-      }
-    },
-    {
-      source: 'Kael_Mage',
-      target: 'Defias_Strip_Miner',
-      label: 'casts Fireball',
-      metadata: {
-        type: 'spell_cast',
-        timestamp: 68,
-        damage: 3245,
-        cast_time: 2.5,
-        school: 'Fire',
-        threat_generated: 1622 // Half damage for threat
-      }
-    }
-  );
+  const tankRole: SemanticSpacetimeNode = {
+    id: 'role_tank',
+    label: 'Tank Role',
+    x: 100, y: 150,
+    metadata: {
+      entity_classification: EntityClassification.CONTINUANT,
+      temporal_type: TemporalType.ATEMPORAL,
+      spatial_type: SpatialType.POINT,
 
-  // HEALING AND SUPPORT SEQUENCES
-  edges.push(
-    {
-      source: 'Liadrin_Paladin',
-      target: 'Throgrim_DK',
-      label: 'heals tank',
-      metadata: {
-        type: 'healing',
-        timestamp: 72,
-        healing_amount: 8456,
-        spell: 'Holy Light',
-        overheal: 2145,
-        threat_generated: 4228 // Half healing for threat
-      }
-    },
-    {
-      source: 'Flash_of_Light',
-      target: 'Throgrim_DK',
-      label: 'emergency heal',
-      metadata: {
-        type: 'instant_heal',
-        timestamp: 89,
-        healing_amount: 3822,
-        caster: 'Liadrin_Paladin',
-        critical_hit: true
-      }
-    }
-  );
+      spacetime_region: {
+        spatial_extent: {
+          coordinates: { x: 0, y: 0, z: 0, zone_id: 0 }
+        },
+        temporal_validity: {
+          start_time: 0
+        }
+      },
 
-  // ABILITY USAGE SEQUENCES - Combat Rotations
-  edges.push(
-    {
-      source: 'Throgrim_DK',
-      target: 'Death_Coil',
-      label: 'activates',
-      metadata: {
-        type: 'ability_activation',
-        timestamp: 71,
-        target: 'Defias_Strip_Miner',
-        runic_power_spent: 40,
-        damage_dealt: 2012,
-        combat_context: 'threat_generation'
-      }
-    },
-    {
-      source: 'Garona_Rogue',
-      target: 'Mutilate',
-      label: 'executes combo',
-      metadata: {
-        type: 'ability_activation',
-        timestamp: 70,
-        target: 'Defias_Strip_Miner',
-        energy_spent: 60,
-        combo_points_generated: 2,
-        damage_dealt: 2845,
-        combat_context: 'stealth_opener'
+      semantic_content: {
+        domain: 'wow_role_system',
+        concept_type: 'functional_role',
+        properties: { responsibilities: ['threat_generation', 'damage_mitigation', 'positioning'] },
+        functional_role: 'abstract_role_definition'
       }
     }
-  );
-  
-  // BOSS ENCOUNTER SEQUENCES - Edwin VanCleef Fight
-  edges.push(
-    {
-      source: 'Throgrim_DK',
-      target: 'Edwin_VanCleef',
-      label: 'engages boss',
-      metadata: {
-        type: 'boss_aggro',
-        timestamp: 180,
-        threat_level: 8500,
-        encounter_phase: 'initial_pull',
-        difficulty: 'elite'
-      }
-    },
-    {
-      source: 'Edwin_VanCleef',
-      target: 'Throgrim_DK',
-      label: 'Sinister Strike',
-      metadata: {
-        type: 'boss_ability',
-        timestamp: 182,
-        damage: 2847,
-        ability_school: 'Physical',
-        debuff_applied: 'Weakened',
-        combat_mechanic: 'high_damage'
-      }
-    },
-    {
-      source: 'Liadrin_Paladin',
-      target: 'Throgrim_DK',
-      label: 'Divine Favor heal',
-      metadata: {
-        type: 'emergency_heal',
-        timestamp: 183,
-        healing_amount: 12456,
-        cooldown_used: 'Divine Favor',
-        critical_heal: true
-      }
-    }
-  );
+  };
 
-  // GROUP COORDINATION - Party mechanics and communication
-  edges.push(
-    {
-      source: 'Throgrim_DK',
-      target: 'Liadrin_Paladin',
-      label: 'requests blessing',
-      metadata: {
-        type: 'social_request',
-        timestamp: 15,
-        request_type: 'buff_request',
-        buff_needed: 'Blessing of Kings',
-        party_coordination: true
-      }
-    },
-    {
-      source: 'Liadrin_Paladin',
-      target: 'Throgrim_DK',
-      label: 'casts Blessing',
-      metadata: {
-        type: 'buff_application',
-        timestamp: 17,
-        buff_name: 'Blessing of Kings',
-        duration: 1800, // 30 minutes
-        stat_bonus: '+10% all stats'
-      }
-    },
-    {
-      source: 'Garona_Rogue',
-      target: 'Kael_Mage',
-      label: 'coordinates CC',
-      metadata: {
-        type: 'tactical_communication',
-        timestamp: 156,
-        message_type: 'crowd_control_request',
-        target_suggested: 'Defias Wizard',
-        strategy: 'polymorph_sheep'
-      }
-    }
-  );
+  nodes.push(groupNode, tankRole);
 
-  // LOOT DISTRIBUTION - Dungeon rewards
-  edges.push(
-    {
-      source: 'Edwin_VanCleef',
-      target: 'Rhahkzor_Hammer',
-      label: 'drops loot',
-      metadata: {
-        type: 'loot_drop',
-        timestamp: 245,
-        drop_chance: 0.15,
-        quality: 'uncommon',
-        item_level: 20,
-        boss_kill: true
-      }
-    },
-    {
-      source: 'Throgrim_DK',
-      target: 'Rhahkzor_Hammer',
-      label: 'rolls need',
-      metadata: {
-        type: 'loot_roll',
-        timestamp: 246,
-        roll_type: 'need',
-        roll_value: 87,
-        item_upgrade: true
-      }
-    }
-  );
-
-  // DUNGEON PROGRESSION - Movement through instance
-  edges.push(
-    {
-      source: 'DM_Entrance',
-      target: 'DM_Mine_Tunnels',
-      label: 'progression path',
-      metadata: {
-        type: 'dungeon_path',
-        distance: 180.5,
-        expected_time: 45,
-        mob_encounters: 4,
-        difficulty: 'moderate'
-      }
-    },
-    {
-      source: 'DM_Mine_Tunnels',
-      target: 'DM_Goblin_Foundry',
-      label: 'deeper passage',
-      metadata: {
-        type: 'dungeon_path',
-        distance: 234.7,
-        expected_time: 120,
-        mob_encounters: 8,
-        difficulty: 'challenging'
-      }
-    },
-    {
-      source: 'DM_Goblin_Foundry',
-      target: 'DM_Ship_Dock',
-      label: 'final approach',
-      metadata: {
-        type: 'dungeon_path',
-        distance: 198.3,
-        expected_time: 90,
-        boss_encounters: ['Mr. Smite', 'Edwin VanCleef'],
-        difficulty: 'very_challenging'
-      }
-    }
-  );
-
-  // QUEST COMPLETION SEQUENCES
-  edges.push(
-    {
-      source: 'Goblin_Transponder',
-      target: 'DM_Goblin_Foundry',
-      label: 'activates at',
-      metadata: {
-        type: 'quest_interaction',
-        timestamp: 156,
-        quest_progress: 'Underground Assault',
-        effect: 'Summons Goblin Sapper',
-        experience_gained: 2450
-      }
-    },
-    {
-      source: 'Throgrim_DK',
-      target: 'Goblin_Transponder',
-      label: 'uses item',
-      metadata: {
-        type: 'item_usage',
-        timestamp: 155,
-        cooldown_triggered: 300,
-        tactical_purpose: 'boss_damage'
-      }
-    }
-  );
-
-  // THREAT MANAGEMENT - Tank mechanics
-  edges.push(
-    {
-      source: 'Throgrim_DK',
-      target: 'Mr_Smite',
-      label: 'maintains aggro',
-      metadata: {
-        type: 'threat_control',
-        timestamp: 195,
-        threat_level: 12500,
-        threat_lead: 4800,
-        tank_mechanic: 'aggro_maintenance'
-      }
-    },
-    {
-      source: 'Garona_Rogue',
-      target: 'Mr_Smite',
-      label: 'manages threat',
-      metadata: {
-        type: 'threat_dump',
-        timestamp: 198,
-        ability_used: 'Feint',
-        threat_reduced: 2100,
-        tactical_purpose: 'avoid_aggro'
-      }
-    }
-  );
-
-  // BUFF AND DEBUFF CHAINS
-  edges.push(
-    {
-      source: 'Kael_Mage',
-      target: 'Captain_Greenskin',
-      label: 'applies Ignite',
-      metadata: {
-        type: 'debuff_application',
-        timestamp: 167,
-        debuff_name: 'Ignite',
-        duration: 8,
-        damage_per_tick: 245,
-        stacks: 3
-      }
-    },
-    {
-      source: 'Captain_Greenskin',
-      target: 'Throgrim_DK',
-      label: 'Intimidating Shout',
-      metadata: {
-        type: 'fear_effect',
-        timestamp: 170,
-        duration: 3.5,
-        crowd_control: 'fear',
-        effect: 'movement_impaired'
-      }
-    }
-  );
-  
   return { nodes, edges };
 }
 
 /**
- * WoW-specific semantic compatibility matrix for edge bundling
- * Defines how different WoW edge types should bundle together based on their semantic relationships
+ * Edge compatibility function for semantic spacetime associations
+ * Uses concept similarity from semantic_binding for bundling decisions
  */
-export const edgeCompatibilityMatrix: Record<string, Record<string, number>> = {
-  // Combat-related edges should bundle strongly together
-  'aggro_pull': { 'melee_attack': 0.9, 'threat_control': 0.95, 'boss_aggro': 0.85, 'spell_cast': 0.7 },
-  'melee_attack': { 'aggro_pull': 0.9, 'boss_ability': 0.8, 'spell_cast': 0.75 },
-  'spell_cast': { 'ability_activation': 0.9, 'debuff_application': 0.8, 'healing': 0.6, 'melee_attack': 0.75 },
-  'boss_ability': { 'boss_aggro': 0.9, 'fear_effect': 0.8, 'melee_attack': 0.8 },
+export function getEdgeCompatibility(edge1: SemanticSpacetimeEdge, edge2: SemanticSpacetimeEdge): number {
+  const type1 = edge1.metadata.association_type;
+  const type2 = edge2.metadata.association_type;
 
-  // Healing and support should bundle together
-  'healing': { 'emergency_heal': 0.95, 'instant_heal': 0.9, 'buff_application': 0.7 },
-  'emergency_heal': { 'healing': 0.95, 'instant_heal': 0.85, 'threat_control': 0.4 },
-  'buff_application': { 'social_request': 0.8, 'healing': 0.7, 'ability_activation': 0.5 },
+  // Same association type = high compatibility
+  if (type1 === type2) {
+    const sim1 = edge1.metadata.semantic_binding.concept_similarity;
+    const sim2 = edge2.metadata.semantic_binding.concept_similarity;
+    return (sim1 + sim2) / 2;
+  }
 
-  // Movement and navigation should bundle
-  'movement': { 'dungeon_path': 0.9, 'aggro_pull': 0.4, 'tactical_communication': 0.6 },
-  'dungeon_path': { 'movement': 0.9, 'quest_interaction': 0.5 },
-
-  // Social and coordination edges
-  'social_request': { 'buff_application': 0.8, 'tactical_communication': 0.7, 'loot_roll': 0.3 },
-  'tactical_communication': { 'social_request': 0.7, 'threat_dump': 0.6, 'movement': 0.6 },
-
-  // Loot and items
-  'loot_drop': { 'loot_roll': 0.9, 'item_usage': 0.6 },
-  'loot_roll': { 'loot_drop': 0.9, 'item_usage': 0.4 },
-  'item_usage': { 'quest_interaction': 0.8, 'ability_activation': 0.5 },
-
-  // Threat mechanics (tank-specific)
-  'threat_control': { 'aggro_pull': 0.95, 'threat_dump': 0.8, 'boss_aggro': 0.9 },
-  'threat_dump': { 'threat_control': 0.8, 'tactical_communication': 0.6 },
-
-  // Debuffs and status effects
-  'debuff_application': { 'spell_cast': 0.8, 'fear_effect': 0.7 },
-  'fear_effect': { 'boss_ability': 0.8, 'debuff_application': 0.7 },
-
-  // Quest-related
-  'quest_interaction': { 'item_usage': 0.8, 'dungeon_path': 0.5 }
-};
-
-/**
- * Get semantic compatibility between two WoW edge types
- */
-export function getEdgeCompatibility(type1: string, type2: string): number {
-  if (type1 === type2) return 1;
-
-  return edgeCompatibilityMatrix[type1]?.[type2] ||
-         edgeCompatibilityMatrix[type2]?.[type1] ||
-         0.1; // Low default compatibility for unrelated WoW mechanics
+  // Different association types = lower compatibility
+  return 0.3;
 }
 
 /**
- * WoW-specific style configurations for different node and edge types
+ * Legacy compatibility function using association types
+ */
+export function getEdgeCompatibility(type1: string, type2: string): number {
+  // Map legacy types to association types for compatibility
+  const associationMap: Record<string, number> = {
+    'group_proximity': 0.9,
+    'spell_cast': 0.8,
+    'group_membership': 0.7,
+    'role_expression': 0.6
+  };
+
+  if (type1 === type2) return 1.0;
+
+  const compat1 = associationMap[type1] || 0.5;
+  const compat2 = associationMap[type2] || 0.5;
+
+  return Math.min(compat1, compat2);
+}
+
+/**
+ * Node styling configuration for semantic spacetime entities
  */
 export const nodeStyles = {
   colors: {
-    player: '#ff6b6b',        // Red for player characters
-    boss: '#8b0000',          // Dark red for bosses
-    mob: '#cd853f',           // Peru for regular mobs
-    location: '#4ecdc4',      // Teal for locations
-    ability: '#9370db',       // Medium purple for abilities
-    quest_item: '#ffd700'     // Gold for quest items
+    player: '#4a90e2',        // Blue for player characters
+    boss: '#d0021b',          // Red for bosses
+    location: '#7ed321',      // Green for locations
+    ability: '#bd10e0',       // Purple for abilities
+    role: '#f5a623',          // Orange for abstract roles
+    group: '#50e3c2'          // Teal for group entities
   },
   sizes: {
-    player: 16,      // Larger for main characters
-    boss: 18,        // Largest for bosses
-    mob: 10,         // Medium for regular enemies
-    location: 12,    // Medium-large for locations
-    ability: 8,      // Small for abilities
-    quest_item: 10   // Medium for quest items
+    player: 18,      // Large for player characters
+    boss: 22,        // Largest for bosses
+    location: 16,    // Medium-large for locations
+    ability: 12,     // Medium for abilities
+    role: 10,        // Small for abstract concepts
+    group: 20        // Large for group entities
   }
 };
 
+/**
+ * Edge styling configuration for association types
+ */
 export const edgeStyles = {
   colors: {
-    // Combat edges - reds and oranges
-    aggro_pull: '#dc143c',         // Crimson for tank pulls
-    melee_attack: '#b22222',       // Fire brick for melee
-    spell_cast: '#ff4500',         // Orange red for spells
-    boss_ability: '#8b0000',       // Dark red for boss abilities
-    boss_aggro: '#cd5c5c',         // Indian red for boss engagement
+    // γ(3,4) Association type colors
+    N: '#4a90e2',    // Blue for Proximity
+    L: '#d0021b',    // Red for Directionality
+    C: '#7ed321',    // Green for Containment
+    E: '#bd10e0',    // Purple for Property Expression
 
-    // Healing and support - greens and blues
-    healing: '#32cd32',            // Lime green for heals
-    emergency_heal: '#00ff00',     // Bright green for emergency
-    instant_heal: '#90ee90',       // Light green for instant
-    buff_application: '#4169e1',   // Royal blue for buffs
-
-    // Movement - blues
-    movement: '#1e90ff',           // Dodger blue for movement
-    dungeon_path: '#4682b4',       // Steel blue for paths
-
-    // Threat mechanics - purples
-    threat_control: '#9932cc',     // Dark orchid for threat
-    threat_dump: '#ba55d3',        // Medium orchid for threat reduction
-
-    // Social and coordination - yellows
-    social_request: '#ffd700',     // Gold for requests
-    tactical_communication: '#ffb347', // Peach for coordination
-
-    // Loot and items - golds and browns
-    loot_drop: '#daa520',          // Goldenrod for drops
-    loot_roll: '#b8860b',          // Dark goldenrod for rolls
-    item_usage: '#cd853f',         // Peru for item usage
-    quest_interaction: '#deb887',   // Burlywood for quests
-
-    // Effects and debuffs - various
-    debuff_application: '#9370db', // Medium purple for debuffs
-    fear_effect: '#8b008b',        // Dark magenta for fear
-    ability_activation: '#ff1493'  // Deep pink for abilities
+    // Legacy compatibility
+    group_proximity: '#4a90e2',
+    spell_cast: '#d0021b',
+    group_membership: '#7ed321',
+    role_expression: '#bd10e0'
   },
   widths: {
-    // Combat edges - thicker for visibility
-    aggro_pull: 4,           // Thick for important tank actions
-    boss_ability: 5,         // Very thick for boss mechanics
-    spell_cast: 3,           // Medium-thick for spells
-    melee_attack: 2.5,       // Medium for attacks
+    // Association type widths
+    N: 2.5,    // Proximity
+    L: 3.0,    // Directionality
+    C: 2.0,    // Containment
+    E: 1.5,    // Property Expression
 
-    // Healing - thick for importance
-    healing: 3.5,            // Thick for heals
-    emergency_heal: 4.5,     // Very thick for emergency
-
-    // Movement - medium thickness
-    movement: 2.5,           // Visible movement
-    dungeon_path: 2,         // Visible paths
-
-    // Threat - thick for tank mechanics
-    threat_control: 4,       // Important tank mechanics
-    threat_dump: 2.5,        // Visible threat management
-
-    // Social - thinner but visible
-    social_request: 2,       // Visible coordination
-    tactical_communication: 2.5, // Slightly thicker
-
-    // Loot and effects - varied
-    loot_drop: 3,            // Visible loot
-    ability_activation: 2.5, // Visible abilities
-    debuff_application: 2,   // Visible debuffs
-
-    // Default
-    quest_interaction: 2,    // Standard quest width
-    item_usage: 2           // Standard item usage
+    // Legacy compatibility
+    group_proximity: 2.5,
+    spell_cast: 3.0,
+    group_membership: 2.0,
+    role_expression: 1.5
   }
 };
