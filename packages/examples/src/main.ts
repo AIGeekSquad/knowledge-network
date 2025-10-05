@@ -17,12 +17,9 @@ function clearGraph() {
   const container = document.getElementById('graph');
   if (container) {
     container.innerHTML = '';
-    // Make container responsive to viewport
-    const viewportWidth = Math.min(window.innerWidth - 100, 1400); // Max 1400px, 50px margin each side
-    const viewportHeight = Math.min(window.innerHeight - 200, 800);  // Max 800px, leave room for header/controls
-    container.style.width = `${viewportWidth}px`;
-    container.style.height = `${viewportHeight}px`;
-    container.style.margin = '0 auto';
+    // Reset container styles
+    container.style.opacity = '1';
+    container.style.transition = '';
   }
   if (currentGraph) {
     currentGraph.destroy();
@@ -30,11 +27,32 @@ function clearGraph() {
   }
 }
 
-function updateStatus(message: string) {
+function updateStatus(message: string, isLoading: boolean = false) {
   console.log('Status:', message);
   const statusElement = document.getElementById('status');
   if (statusElement) {
     statusElement.textContent = message;
+    // Add loading indicator styling
+    if (isLoading) {
+      statusElement.style.backgroundColor = '#fff3cd';
+      statusElement.style.border = '1px solid #ffeaa7';
+      statusElement.style.color = '#856404';
+      statusElement.innerHTML = `<div style="display: flex; align-items: center; justify-content: center;">
+        <div style="width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div>
+        ${message}
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>`;
+    } else {
+      statusElement.style.backgroundColor = '#d4edda';
+      statusElement.style.border = '1px solid #c3e6cb';
+      statusElement.style.color = '#155724';
+      statusElement.innerHTML = message;
+    }
   }
 }
 
@@ -57,9 +75,55 @@ function updateButtonStates() {
   }
 }
 
+// Fit graph to viewport with proper scaling
+function fitGraphToView(container: HTMLElement, g: Element, svg: Element) {
+  const data = createGamingSessionGraph();
+  if (data.nodes.length === 0) return;
+
+  const padding = 50;
+  const containerRect = container.getBoundingClientRect();
+  const nodes = data.nodes as any[];
+
+  // Calculate bounding box of all nodes
+  const xExtent = [
+    Math.min(...nodes.map(d => d.x || 0)),
+    Math.max(...nodes.map(d => d.x || 0))
+  ];
+  const yExtent = [
+    Math.min(...nodes.map(d => d.y || 0)),
+    Math.max(...nodes.map(d => d.y || 0))
+  ];
+
+  const dx = xExtent[1] - xExtent[0];
+  const dy = yExtent[1] - yExtent[0];
+  const x = (xExtent[0] + xExtent[1]) / 2;
+  const y = (yExtent[0] + yExtent[1]) / 2;
+
+  // Calculate scale to fit with padding
+  const scale = Math.min(
+    (containerRect.width - padding * 2) / dx,
+    (containerRect.height - padding * 2) / dy
+  );
+
+  // Calculate translation to center
+  const translateX = containerRect.width / 2 - scale * x;
+  const translateY = containerRect.height / 2 - scale * y;
+
+  // Apply transform using D3's zoom transform
+  if (currentGraph) {
+    const simulation = currentGraph.getSimulation();
+    if (simulation && svg && g) {
+      // Apply the transform directly to the group element
+      g.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+    }
+  }
+}
+
 // Enhanced Edge Bundling Demonstration
 function showEnhancedEdgeBundling() {
   console.log('[Render] Starting enhanced edge bundling render...');
+  updateStatus('🔄 Loading enhanced bundling demo...', true);
+
   clearGraph();
   const container = document.getElementById('graph');
   if (!container) {
@@ -70,6 +134,9 @@ function showEnhancedEdgeBundling() {
   currentMode = 'enhanced';
   const data = createGamingSessionGraph();
   console.log(`[Render] Data ready: ${data.nodes.length} nodes, ${data.edges.length} edges`);
+
+  // Hide graph initially during loading
+  container.style.opacity = '0.1';
 
   // Use responsive container dimensions
   const containerRect = container.getBoundingClientRect();
@@ -210,24 +277,49 @@ function showEnhancedEdgeBundling() {
 
     // Wait for simulation stability before rendering edges
     waitForStable: true,        // Wait for layout to stabilize
-    stabilityThreshold: 0.005,   // Lower threshold for better stability
+    stabilityThreshold: 0.01,   // Threshold for stability detection
 
-    // Zoom and fit functionality for better UX
+    // Zoom and fit functionality - will be applied after edges render
     enableZoom: true,           // Enable zoom/pan interactions
     zoomExtent: [0.1, 4],      // Min/max zoom levels
-    fitToViewport: true,        // Automatically fit graph to viewport
-    padding: 50                 // Padding around the graph when fitting
+    fitToViewport: false,       // We'll handle this manually after edges render
+    padding: 50,                // Padding around the graph when fitting
+
+    // Callback for when edges are rendered and ready
+    onEdgesRendered: () => {
+      updateStatus('🎯 Fitting graph to view...', true);
+      setTimeout(() => {
+        // Fit to viewport after edges are rendered
+        if (currentGraph) {
+          const simulation = currentGraph.getSimulation();
+          if (simulation) {
+            const g = container.querySelector('g');
+            const svg = container.querySelector('svg');
+            if (g && svg) {
+              fitGraphToView(container, g, svg);
+            }
+          }
+        }
+
+        // Show the completed graph
+        container.style.opacity = '1';
+        container.style.transition = 'opacity 0.3s ease-in-out';
+        updateStatus('🌟 ENHANCED BUNDLING ACTIVE: Watch edges flow and bundle by semantic similarity!');
+        updateButtonStates();
+      }, 100);
+    }
   };
 
   try {
+    updateStatus('⚙️ Setting up force simulation...', true);
     console.log('[Render] Creating KnowledgeGraph instance...');
     // Fix: Pass data and config as separate arguments
     currentGraph = new KnowledgeGraph(container, data, config);
     console.log('[Render] KnowledgeGraph created, calling render()...');
+
+    updateStatus('🔄 Running physics simulation...', true);
     currentGraph.render();
-    console.log('[Render] ✅ Enhanced bundling render complete');
-    updateStatus('🌟 ENHANCED BUNDLING ACTIVE: Watch edges flow and bundle by semantic similarity! Curved paths show relationships.');
-    updateButtonStates(); // Update button visual states
+    console.log('[Render] ✅ Enhanced bundling render initiated');
   } catch (error) {
     console.error('[Render] Failed to create or render graph:', error);
     updateStatus(`❌ Render failed: ${error.message}`);
@@ -238,6 +330,8 @@ function showEnhancedEdgeBundling() {
 // Simple comparison mode
 function showSimpleEdges() {
   console.log('[Render] Starting simple edges render...');
+  updateStatus('🔄 Loading simple edges demo...', true);
+
   clearGraph();
   const container = document.getElementById('graph');
   if (!container) {
@@ -248,6 +342,9 @@ function showSimpleEdges() {
   currentMode = 'simple';
   const data = createGamingSessionGraph();
   console.log(`[Render] Data ready: ${data.nodes.length} nodes, ${data.edges.length} edges`);
+
+  // Hide graph initially during loading
+  container.style.opacity = '0.1';
 
   // Use responsive container dimensions
   const containerRect = container.getBoundingClientRect();
@@ -322,20 +419,40 @@ function showSimpleEdges() {
     // Basic zoom and fit for simple mode
     enableZoom: true,           // Enable zoom/pan interactions
     zoomExtent: [0.1, 4],      // Min/max zoom levels
-    fitToViewport: true,        // Automatically fit graph to viewport
+    fitToViewport: false,       // We'll handle this manually
     padding: 50,                // Padding around the graph
-    waitForStable: false
+    waitForStable: false,
+
+    // Callback for when rendering is complete
+    onEdgesRendered: () => {
+      updateStatus('🎯 Fitting graph to view...', true);
+      setTimeout(() => {
+        // Fit to viewport after rendering
+        if (currentGraph) {
+          const g = container.querySelector('g');
+          const svg = container.querySelector('svg');
+          if (g && svg) {
+            fitGraphToView(container, g, svg);
+          }
+        }
+
+        // Show the completed graph
+        container.style.opacity = '1';
+        container.style.transition = 'opacity 0.3s ease-in-out';
+        updateStatus('📏 SIMPLE EDGES: Basic straight lines - compare with Enhanced Bundling!');
+        updateButtonStates();
+      }, 100);
+    }
   };
 
   try {
+    updateStatus('⚙️ Setting up simple layout...', true);
     console.log('[Render] Creating KnowledgeGraph instance...');
     // Fix: Pass data and config as separate arguments
     currentGraph = new KnowledgeGraph(container, data, config);
     console.log('[Render] KnowledgeGraph created, calling render()...');
     currentGraph.render();
-    console.log('[Render] ✅ Simple edges render complete');
-    updateStatus('📏 SIMPLE EDGES: Basic straight lines - compare with Enhanced Bundling to see the difference!');
-    updateButtonStates(); // Update button visual states
+    console.log('[Render] ✅ Simple edges render initiated');
   } catch (error) {
     console.error('[Render] Failed to create or render graph:', error);
     updateStatus(`❌ Render failed: ${error.message}`);

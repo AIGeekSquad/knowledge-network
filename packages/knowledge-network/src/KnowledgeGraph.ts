@@ -359,6 +359,13 @@ export class KnowledgeGraph {
         if (alpha < (this.config.stabilityThreshold ?? 0.01)) {
           edgesRendered = true;
           this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
+
+          // Call onEdgesRendered callback if provided
+          if (this.config.onEdgesRendered) {
+            setTimeout(() => {
+              this.config.onEdgesRendered?.();
+            }, 50); // Small delay to ensure edges are fully rendered
+          }
         }
       }
 
@@ -385,6 +392,13 @@ export class KnowledgeGraph {
     if (!this.config.waitForStable) {
       edgesRendered = true;
       this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
+
+      // Call onEdgesRendered callback if provided
+      if (this.config.onEdgesRendered) {
+        setTimeout(() => {
+          this.config.onEdgesRendered?.();
+        }, 100); // Small delay to ensure edges are fully rendered
+      }
     }
   }
 

@@ -687,4 +687,10 @@ export interface GraphConfig {
    * @default 2
    */
   dimensions?: 2 | 3;
+
+  /**
+   * Callback function called when edges have been rendered and are ready.
+   * Useful for implementing loading states and post-render operations.
+   */
+  onEdgesRendered?: () => void;
 }

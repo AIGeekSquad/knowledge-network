@@ -5,53 +5,138 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Knowledge Network Examples</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       margin: 0;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    h1 {
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
       color: #333;
     }
+
     .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: white;
+      max-width: 100vw;
+      min-height: 100vh;
+      margin: 0;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
-    #graph {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      margin-top: 20px;
+
+    h1 {
+      color: #2c3e50;
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin: 0 0 10px 0;
+      text-align: center;
     }
+
+    .subtitle {
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+
     .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
       margin-bottom: 20px;
     }
+
     button {
-      background-color: #4CAF50;
+      background: linear-gradient(45deg, #3498db, #2980b9);
       color: white;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
-      margin-right: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
     }
+
     button:hover {
-      background-color: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #graph {
+      width: calc(100vw - 40px);
+      height: calc(100vh - 200px);
+      border: 2px solid #ecf0f1;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+      margin: 0 auto;
+    }
+
+    #graph svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #status {
+      text-align: center;
+      margin: 15px 0;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 25px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #2c3e50;
+      border: 2px solid #ecf0f1;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      #graph {
+        width: calc(100vw - 20px);
+        height: calc(100vh - 160px);
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>@aigeeksquad/knowledge-network Examples</h1>
-    <p>Interactive examples demonstrating d3-idiomatic API with accessor functions, collision detection, and similarity-based clustering.</p>
+    <h1>Knowledge Network</h1>
+    <p class="subtitle">Interactive semantic graph visualization with advanced edge bundling</p>
     
     <div class="controls">
-      <button id="simple-edges" style="background-color: #95a5a6;">📏 Simple Edges</button>
-      <button id="edge-bundling" style="background-color: #e74c3c; font-weight: bold; font-size: 16px; padding: 12px 24px;">🌟 ENHANCED BUNDLING ✨</button>
+      <button id="simple-edges">📏 Simple Edges</button>
+      <button id="edge-bundling">🌟 Enhanced Bundling</button>
     </div>
 
     <div id="status" style="
