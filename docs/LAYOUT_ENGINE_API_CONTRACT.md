@@ -1,98 +1,308 @@
 # Knowledge Network Layout Engine API Contract
+## D3.js Idiomatic Implementation Contract
 
 ## Overview
 
-This document defines the complete TypeScript API contract for the Knowledge Network Layout Engine. All interfaces, types, and enums specified here form the binding contract between the layout engine and consuming applications.
+This document defines the precise API contract for the Knowledge Network Layout Engine, specifying all methods, callbacks, data structures, and behaviors. This contract serves as the definitive interface specification for implementation and testing.
 
-## Core Types and Enums
-
-### Engine States
+## Module Export Contract
 
 ```typescript
-/**
- * Enumeration of all possible engine states
- */
-export enum EngineState {
-  IDLE = 'idle',
-  LOADING = 'loading',
-  LAYOUT_CALCULATING = 'layout_calculating',
-  EDGE_GENERATING = 'edge_generating',
-  ZOOM_FITTING = 'zoom_fitting',
-  READY = 'ready',
-  ERROR = 'error',
-  DISPOSED = 'disposed'
-}
+// Main module export
+export function knowledgeNetwork(): KnowledgeNetworkGraph;
 
-/**
- * Edge rendering modes
- */
-export enum EdgeRenderMode {
-  SIMPLE = 'simple',
-  BUNDLED = 'bundled',
-  CURVED = 'curved'
-}
-
-/**
- * Diagnostic event types for monitoring
- */
-export enum DiagnosticEventType {
-  // Performance events
-  RENDER_START = 'render_start',
-  RENDER_PHASE_COMPLETE = 'render_phase_complete',
-  FRAME_DROP = 'frame_drop',
-  MEMORY_WARNING = 'memory_warning',
+// Type definition
+export interface KnowledgeNetworkGraph {
+  // Core render function (D3 selection call pattern)
+  (selection: d3.Selection<any, GraphData, any, any>): void;
   
-  // State events
-  STATE_TRANSITION = 'state_transition',
-  PROGRESS_UPDATE = 'progress_update',
-  
-  // Interaction events
-  USER_INTERACTION = 'user_interaction',
-  SELECTION_CHANGE = 'selection_change',
-  ZOOM_CHANGE = 'zoom_change',
-  PAN_CHANGE = 'pan_change',
-  
-  // Error events
-  ERROR_OCCURRED = 'error_occurred',
-  RECOVERY_ATTEMPTED = 'recovery_attempted',
-  RECOVERY_SUCCESS = 'recovery_success',
-  RECOVERY_FAILED = 'recovery_failed',
-  
-  // Data events
-  DATA_LOADED = 'data_loaded',
-  DATA_VALIDATED = 'data_validated',
-  DATA_PREPROCESSED = 'data_preprocessed'
-}
-
-/**
- * Error severity levels
- */
-export enum ErrorSeverity {
-  WARNING = 'warning',
-  ERROR = 'error',
-  CRITICAL = 'critical'
-}
-
-/**
- * Layout algorithms available
- */
-export enum LayoutAlgorithm {
-  FORCE = 'force',
-  HIERARCHICAL = 'hierarchical',
-  CIRCULAR = 'circular',
-  GRID = 'grid'
+  // All configuration and interaction methods...
 }
 ```
 
-## Data Structures
+## Configuration Methods Contract
 
-### Graph Data
+### Dimension Configuration
 
 ```typescript
-/**
- * Node representation in the graph
- */
-export interface Node {
+interface DimensionMethods {
+  width(): number;
+  width(value: number): KnowledgeNetworkGraph;
+  
+  height(): number;
+  height(value: number): KnowledgeNetworkGraph;
+  
+  padding(): number;
+  padding(value: number): KnowledgeNetworkGraph;
+}
+```
+
+### Node Configuration
+
+```typescript
+interface NodeMethods {
+  nodeRadius(): Accessor<Node, number>;
+  nodeRadius(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
+  
+  nodeFill(): Accessor<Node, string>;
+  nodeFill(value: string | ((d: Node, i: number, nodes: Node[]) => string)): KnowledgeNetworkGraph;
+  
+  nodeStroke(): Accessor<Node, string>;
+  nodeStroke(value: string | ((d: Node, i: number, nodes: Node[]) => string)): KnowledgeNetworkGraph;
+  
+  nodeStrokeWidth(): Accessor<Node, number>;
+  nodeStrokeWidth(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
+  
+  nodeOpacity(): Accessor<Node, number>;
+  nodeOpacity(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
+  
+  nodeLabel(): Accessor<Node, string>;
+  nodeLabel(value: string | ((d: Node, i: number, nodes: Node[]) => string)): KnowledgeNetworkGraph;
+}
+```
+
+### Edge Configuration
+
+```typescript
+interface EdgeMethods {
+  linkDistance(): Accessor<Edge, number>;
+  linkDistance(value: number | ((d: Edge, i: number, edges: Edge[]) => number)): KnowledgeNetworkGraph;
+  
+  linkStrength(): Accessor<Edge, number>;
+  linkStrength(value: number | ((d: Edge, i: number, edges: Edge[]) => number)): KnowledgeNetworkGraph;
+  
+  linkStroke(): Accessor<Edge, string>;
+  linkStroke(value: string | ((d: Edge, i: number, edges: Edge[]) => string)): KnowledgeNetworkGraph;
+  
+  linkStrokeWidth(): Accessor<Edge, number>;
+  linkStrokeWidth(value: number | ((d: Edge, i: number, edges: Edge[]) => number)): KnowledgeNetworkGraph;
+  
+  linkOpacity(): Accessor<Edge, number>;
+  linkOpacity(value: number | ((d: Edge, i: number, edges: Edge[]) => number)): KnowledgeNetworkGraph;
+}
+```
+
+### Force Simulation Configuration
+
+```typescript
+interface ForceMethods {
+  chargeStrength(): Accessor<Node, number>;
+  chargeStrength(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
+  
+  collisionRadius(): Accessor<Node, number>;
+  collisionRadius(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
+  
+  alphaDecay(): number;
+  alphaDecay(value: number): KnowledgeNetworkGraph;
+  
+  velocityDecay(): number;
+  velocityDecay(value: number): KnowledgeNetworkGraph;
+  
+  alphaMin(): number;
+  alphaMin(value: number): KnowledgeNetworkGraph;
+  
+  alphaTarget(): number;
+  alphaTarget(value: number): KnowledgeNetworkGraph;
+}
+```
+
+### Rendering Configuration
+
+```typescript
+interface RenderingMethods {
+  edgeRenderer(): 'simple' | 'bundled' | 'curved';
+  edgeRenderer(value: 'simple' | 'bundled' | 'curved'): KnowledgeNetworkGraph;
+  
+  bundlingStrength(): number;
+  bundlingStrength(value: number): KnowledgeNetworkGraph;
+  
+  bundlingIterations(): number;
+  bundlingIterations(value: number): KnowledgeNetworkGraph;
+  
+  bundlingCompatibility(): number;
+  bundlingCompatibility(value: number): KnowledgeNetworkGraph;
+  
+  renderMode(): 'immediate' | 'progressive' | 'deferred';
+  renderMode(value: 'immediate' | 'progressive' | 'deferred'): KnowledgeNetworkGraph;
+  
+  hideGraphDuringLayout(): boolean;
+  hideGraphDuringLayout(value: boolean): KnowledgeNetworkGraph;
+  
+  waitForStableLayout(): boolean;
+  waitForStableLayout(value: boolean): KnowledgeNetworkGraph;
+  
+  stabilityThreshold(): number;
+  stabilityThreshold(value: number): KnowledgeNetworkGraph;
+  
+  maxLayoutDuration(): number;
+  maxLayoutDuration(value: number): KnowledgeNetworkGraph;
+}
+```
+
+### Interaction Configuration
+
+```typescript
+interface InteractionMethods {
+  enableZoom(): boolean;
+  enableZoom(value: boolean): KnowledgeNetworkGraph;
+  
+  zoomExtent(): [number, number];
+  zoomExtent(value: [number, number]): KnowledgeNetworkGraph;
+  
+  enablePan(): boolean;
+  enablePan(value: boolean): KnowledgeNetworkGraph;
+  
+  enableDrag(): boolean;
+  enableDrag(value: boolean): KnowledgeNetworkGraph;
+  
+  enableSelection(): boolean;
+  enableSelection(value: boolean): KnowledgeNetworkGraph;
+  
+  selectionMode(): 'single' | 'multiple';
+  selectionMode(value: 'single' | 'multiple'): KnowledgeNetworkGraph;
+  
+  neighborHighlightDepth(): number;
+  neighborHighlightDepth(value: number): KnowledgeNetworkGraph;
+}
+```
+
+## Event Callback Contract
+
+### Event Registration
+
+```typescript
+interface EventMethods {
+  on(event: 'stateChange', callback: StateChangeCallback): KnowledgeNetworkGraph;
+  on(event: 'layoutProgress', callback: LayoutProgressCallback): KnowledgeNetworkGraph;
+  on(event: 'edgeRenderStart', callback: EdgeRenderStartCallback): KnowledgeNetworkGraph;
+  on(event: 'edgeRenderProgress', callback: EdgeRenderProgressCallback): KnowledgeNetworkGraph;
+  on(event: 'edgeRenderComplete', callback: EdgeRenderCompleteCallback): KnowledgeNetworkGraph;
+  on(event: 'zoomFit', callback: ZoomFitCallback): KnowledgeNetworkGraph;
+  on(event: 'ready', callback: ReadyCallback): KnowledgeNetworkGraph;
+  on(event: 'error', callback: ErrorCallback): KnowledgeNetworkGraph;
+  on(event: 'nodeClick', callback: NodeEventCallback): KnowledgeNetworkGraph;
+  on(event: 'nodeMouseover', callback: NodeEventCallback): KnowledgeNetworkGraph;
+  on(event: 'nodeMouseout', callback: NodeEventCallback): KnowledgeNetworkGraph;
+  on(event: 'edgeClick', callback: EdgeEventCallback): KnowledgeNetworkGraph;
+  on(event: 'edgeMouseover', callback: EdgeEventCallback): KnowledgeNetworkGraph;
+  on(event: 'edgeMouseout', callback: EdgeEventCallback): KnowledgeNetworkGraph;
+  on(event: 'zoom', callback: ZoomCallback): KnowledgeNetworkGraph;
+  on(event: 'dragStart', callback: DragCallback): KnowledgeNetworkGraph;
+  on(event: 'drag', callback: DragCallback): KnowledgeNetworkGraph;
+  on(event: 'dragEnd', callback: DragCallback): KnowledgeNetworkGraph;
+  on(event: 'selectionChange', callback: SelectionChangeCallback): KnowledgeNetworkGraph;
+  on(event: 'performanceUpdate', callback: PerformanceCallback): KnowledgeNetworkGraph;
+  on(event: 'frameDrop', callback: FrameDropCallback): KnowledgeNetworkGraph;
+  on(event: 'validationError', callback: ValidationErrorCallback): KnowledgeNetworkGraph;
+  
+  // Get current callback
+  on(event: string): Function | undefined;
+  
+  // Remove callback
+  on(event: string, null): KnowledgeNetworkGraph;
+}
+```
+
+### Callback Type Definitions
+
+```typescript
+// State management callbacks
+type StateChangeCallback = (
+  state: LayoutState,
+  progress: number,
+  metadata: StateMetadata
+) => void;
+
+type LayoutProgressCallback = (
+  progress: number,
+  alpha: number,
+  metadata: LayoutMetadata
+) => void;
+
+// Edge rendering callbacks
+type EdgeRenderStartCallback = (
+  totalEdges: number,
+  renderMode: 'simple' | 'bundled' | 'curved'
+) => void;
+
+type EdgeRenderProgressCallback = (
+  rendered: number,
+  total: number,
+  batchInfo: BatchInfo
+) => void;
+
+type EdgeRenderCompleteCallback = (
+  renderStats: RenderStats
+) => void;
+
+// Viewport callbacks
+type ZoomFitCallback = (
+  transform: d3.ZoomTransform
+) => void;
+
+// Lifecycle callbacks
+type ReadyCallback = (
+  stats: GraphStats
+) => void;
+
+type ErrorCallback = (
+  error: Error,
+  context: ErrorContext
+) => void;
+
+// Interaction callbacks
+type NodeEventCallback = (
+  event: MouseEvent,
+  d: Node,
+  element: SVGElement
+) => void;
+
+type EdgeEventCallback = (
+  event: MouseEvent,
+  d: Edge,
+  element: SVGElement
+) => void;
+
+type ZoomCallback = (
+  transform: d3.ZoomTransform
+) => void;
+
+type DragCallback = (
+  event: d3.D3DragEvent<SVGElement, Node, Node>,
+  d: Node
+) => void;
+
+type SelectionChangeCallback = (
+  selected: string[],
+  highlighted: Set<string>
+) => void;
+
+// Performance callbacks
+type PerformanceCallback = (
+  metrics: PerformanceMetrics
+) => void;
+
+type FrameDropCallback = (
+  info: FrameDropInfo
+) => void;
+
+// Validation callbacks
+type ValidationErrorCallback = (
+  errors: ValidationError[]
+) => void;
+```
+
+## Data Structure Contract
+
+### Input Data Structures
+
+```typescript
+interface GraphData {
+  nodes: Node[];
+  edges: Edge[];
+}
+
+interface Node {
   id: string;
   label?: string;
   type?: string;
@@ -101,15 +311,15 @@ export interface Node {
   z?: number;
   fx?: number;  // Fixed x position
   fy?: number;  // Fixed y position
-  fz?: number;  // Fixed z position
   vector?: number[];
   metadata?: Record<string, unknown>;
+  // Runtime properties added by D3
+  index?: number;
+  vx?: number;
+  vy?: number;
 }
 
-/**
- * Edge representation in the graph
- */
-export interface Edge {
+interface Edge {
   id?: string;
   source: string | Node;
   target: string | Node;
@@ -118,696 +328,515 @@ export interface Edge {
   weight?: number;
   strength?: number;
   metadata?: Record<string, unknown>;
-}
-
-/**
- * Complete graph data structure
- */
-export interface GraphData {
-  nodes: Node[];
-  edges: Edge[];
-  metadata?: {
-    title?: string;
-    description?: string;
-    version?: string;
-    [key: string]: unknown;
-  };
+  // Runtime properties added by D3
+  index?: number;
 }
 ```
 
-### State Metadata
+### State and Metadata Structures
 
 ```typescript
-/**
- * Base metadata for all states
- */
-export interface StateMetadata {
-  timestamp: number;
-  previousState?: EngineState;
-  [key: string]: unknown;
+enum LayoutState {
+  IDLE = 'idle',
+  LOADING = 'loading',
+  LAYOUT_CALCULATING = 'layout_calculating',
+  EDGE_RENDERING = 'edge_rendering',
+  ZOOM_FITTING = 'zoom_fitting',
+  READY = 'ready',
+  ERROR = 'error',
+  DISPOSED = 'disposed'
 }
 
-/**
- * Loading state metadata
- */
-export interface LoadingMetadata extends StateMetadata {
-  nodesLoaded: number;
-  edgesLoaded: number;
-  totalNodes: number;
-  totalEdges: number;
-  validationStatus: 'pending' | 'validating' | 'valid' | 'invalid';
-  validationErrors?: string[];
+interface StateMetadata {
+  phase?: string;
+  nodesLoaded?: number;
+  edgesLoaded?: number;
+  validationStatus?: 'success' | 'warning' | 'error';
+  errors?: ValidationError[];
+  timestamp?: number;
 }
 
-/**
- * Layout calculation metadata
- */
-export interface LayoutMetadata extends StateMetadata {
+interface LayoutMetadata {
+  iterations: number;
+  stability: number;
+  converging: boolean;
+  estimatedCompletion?: number;
   alpha: number;
   alphaTarget: number;
-  iterations: number;
-  stabilityMetric: number;
-  nodePositions?: Map<string, { x: number; y: number; z?: number }>;
-  layoutAlgorithm: LayoutAlgorithm;
+  alphaMin: number;
 }
 
-/**
- * Edge rendering metadata
- */
-export interface EdgeRenderingMetadata extends StateMetadata {
-  edgesProcessed: number;
+interface BatchInfo {
+  batchSize: number;
+  currentBatch: number;
+  totalBatches: number;
+  estimatedTimeRemaining?: number;
+}
+
+interface RenderStats {
   totalEdges: number;
-  renderMode: EdgeRenderMode;
-  bundlingProgress?: number;
+  renderTime: number;
+  mode: 'simple' | 'bundled' | 'curved';
   bundlingIterations?: number;
-  renderBatches?: number;
+  bundlingTime?: number;
 }
 
-/**
- * Zoom fitting metadata
- */
-export interface ZoomFitMetadata extends StateMetadata {
-  scale: number;
-  translateX: number;
-  translateY: number;
-  boundingBox: BoundingBox;
-  animationDuration: number;
-}
-
-/**
- * Error state metadata
- */
-export interface ErrorMetadata extends StateMetadata {
-  error: EngineError;
-  phase: EngineState;
-  recoverable: boolean;
-  recoveryActions: string[];
-  attemptedRecoveries: number;
-}
-```
-
-### Geometric Types
-
-```typescript
-/**
- * 2D/3D point
- */
-export interface Point {
-  x: number;
-  y: number;
-  z?: number;
-}
-
-/**
- * Bounding box for viewport calculations
- */
-export interface BoundingBox {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  width: number;
-  height: number;
-  centerX: number;
-  centerY: number;
-}
-
-/**
- * Transform for zoom/pan operations
- */
-export interface Transform {
-  scale: number;
-  translateX: number;
-  translateY: number;
-}
-```
-
-### Error Types
-
-```typescript
-/**
- * Engine error structure
- */
-export interface EngineError {
-  code: string;
-  message: string;
-  severity: ErrorSeverity;
-  details?: Record<string, unknown>;
-  stack?: string;
-  timestamp: number;
-}
-
-/**
- * Validation result for data
- */
-export interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-  warnings: ValidationWarning[];
-}
-
-/**
- * Validation error
- */
-export interface ValidationError {
-  field: string;
-  message: string;
-  value?: unknown;
-}
-
-/**
- * Validation warning
- */
-export interface ValidationWarning {
-  field: string;
-  message: string;
-  suggestion?: string;
-}
-```
-
-## Configuration Interfaces
-
-### Main Configuration
-
-```typescript
-/**
- * Complete engine configuration
- */
-export interface EngineConfig {
-  // Container
-  container?: HTMLElement;
-  
-  // Rendering
-  renderMode?: 'canvas' | 'svg' | 'webgl';
-  width?: number;
-  height?: number;
-  progressiveRendering?: boolean;
-  hideDuringLayout?: boolean;
-  showGraphAfterPhase?: EngineState;
-  
-  // Performance
-  maxNodes?: number;
-  maxEdges?: number;
-  targetFrameRate?: number;
-  renderBatchSize?: number;
-  
-  // Layout
-  layoutAlgorithm?: LayoutAlgorithm;
-  layoutConfig?: LayoutConfig;
-  
-  // Edges
-  edgeMode?: EdgeRenderMode;
-  edgeConfig?: EdgeConfig;
-  
-  // Interaction
-  interactionConfig?: InteractionConfig;
-  
-  // Diagnostics
-  diagnosticsConfig?: DiagnosticsConfig;
-  
-  // Callbacks
-  callbacks?: Partial<LayoutEngineCallbacks>;
-}
-
-/**
- * Layout-specific configuration
- */
-export interface LayoutConfig {
-  // Force layout
-  chargeStrength?: number | ((node: Node) => number);
-  linkDistance?: number | ((edge: Edge) => number);
-  linkStrength?: number | ((edge: Edge) => number);
-  centerForce?: number;
-  collisionRadius?: number | ((node: Node) => number);
-  
-  // Stability
-  stabilityThreshold?: number;
-  maxIterations?: number;
-  timeout?: number;
-  alphaMin?: number;
-  alphaDecay?: number;
-  velocityDecay?: number;
-  
-  // Hierarchical layout
-  levelSeparation?: number;
-  nodeSeparation?: number;
-  treeSpacing?: number;
-  direction?: 'TB' | 'BT' | 'LR' | 'RL';
-  
-  // Circular layout
-  radius?: number;
-  startAngle?: number;
-  endAngle?: number;
-}
-
-/**
- * Edge rendering configuration
- */
-export interface EdgeConfig {
-  // Bundling
-  bundlingStrength?: number;
-  bundlingIterations?: number;
-  compatibilityThreshold?: number;
-  stepSize?: number;
-  
-  // Styling
-  strokeWidth?: number | ((edge: Edge) => number);
-  strokeColor?: string | ((edge: Edge) => string);
-  strokeOpacity?: number | ((edge: Edge) => number);
-  
-  // Curves
-  curveType?: 'linear' | 'basis' | 'cardinal' | 'catmullRom';
-  curveTension?: number;
-  
-  // Performance
-  simplifyThreshold?: number;
-  useWebGL?: boolean;
-}
-
-/**
- * Interaction configuration
- */
-export interface InteractionConfig {
-  enableSelection?: boolean;
-  enableHover?: boolean;
-  enableZoom?: boolean;
-  enablePan?: boolean;
-  enableDrag?: boolean;
-  
-  // Selection
-  selectionMode?: 'single' | 'multiple';
-  selectionDepth?: number;
-  highlightNeighbors?: boolean;
-  
-  // Zoom/Pan
-  zoomExtent?: [number, number];
-  panBounds?: BoundingBox;
-  zoomSpeed?: number;
-  panSpeed?: number;
-  
-  // Drag
-  dragThreshold?: number;
-  snapToGrid?: boolean;
-  gridSize?: number;
-}
-
-/**
- * Diagnostics configuration
- */
-export interface DiagnosticsConfig {
-  enabled?: boolean;
-  level?: 'error' | 'warning' | 'info' | 'debug';
-  performanceMonitoring?: boolean;
-  eventLogging?: boolean;
-  consoleOutput?: boolean;
-  bufferSize?: number;
-}
-```
-
-## Callback Interfaces
-
-```typescript
-/**
- * Complete callback interface for the layout engine
- */
-export interface LayoutEngineCallbacks {
-  // State management callbacks
-  onStateChange?: (state: EngineState, progress: number, metadata: StateMetadata) => void;
-  onStateEnter?: (state: EngineState, metadata: StateMetadata) => void;
-  onStateExit?: (state: EngineState, metadata: StateMetadata) => void;
-  
-  // Progress callbacks for specific phases
-  onLoadingProgress?: (progress: number, metadata: LoadingMetadata) => void;
-  onLayoutProgress?: (progress: number, alpha: number, stabilityMetric: number) => void;
-  onEdgeRenderingProgress?: (progress: number, edgesRendered: number, totalEdges: number) => void;
-  onZoomFitProgress?: (progress: number, currentScale: number, targetScale: number) => void;
-  
-  // Completion callbacks
-  onLoadComplete?: (data: GraphData, validationResult: ValidationResult) => void;
-  onLayoutComplete?: (nodePositions: Map<string, Point>) => void;
-  onEdgesRendered?: (edgeCount: number, renderTime: number) => void;
-  onZoomFitComplete?: (scale: number, translate: [number, number]) => void;
-  onRenderComplete?: (metrics: PerformanceMetrics) => void;
-  
-  // Interaction callbacks
-  onNodeSelected?: (nodeId: string, neighbors: string[], edges: string[]) => void;
-  onNodeDeselected?: (nodeId: string) => void;
-  onNodeHovered?: (nodeId: string | null, position?: Point) => void;
-  onNodeDragStart?: (nodeId: string, position: Point) => void;
-  onNodeDragging?: (nodeId: string, position: Point) => void;
-  onNodeDragEnd?: (nodeId: string, position: Point) => void;
-  
-  // View callbacks
-  onZoomChange?: (scale: number, translate: [number, number]) => void;
-  onPanChange?: (translate: [number, number]) => void;
-  onViewportChange?: (viewport: BoundingBox, transform: Transform) => void;
-  
-  // Error callbacks
-  onError?: (error: EngineError, stage: EngineState, recoverable: boolean) => void;
-  onWarning?: (warning: string, details?: Record<string, unknown>) => void;
-  onRecoveryAttempt?: (error: EngineError, strategy: string) => void;
-  onRecoverySuccess?: (error: EngineError, strategy: string) => void;
-  onRecoveryFailed?: (error: EngineError, strategies: string[]) => void;
-  
-  // Diagnostic callbacks
-  onDiagnosticEvent?: (event: DiagnosticEvent, data: any, timestamp: number) => void;
-  onPerformanceMetrics?: (metrics: PerformanceMetrics) => void;
-  onMemoryWarning?: (usage: number, limit: number) => void;
-}
-```
-
-## Main API Interface
-
-```typescript
-/**
- * Main Layout Engine API
- */
-export interface ILayoutEngine {
-  // Lifecycle methods
-  initialize(config?: EngineConfig): Promise<void>;
-  loadData(data: GraphData): Promise<ValidationResult>;
-  render(options?: RenderOptions): Promise<void>;
-  update(data: Partial<GraphData>): Promise<void>;
-  dispose(): void;
-  
-  // State management
-  getState(): EngineState;
-  getProgress(): number;
-  getStateMetadata(): StateMetadata;
-  waitForState(state: EngineState, timeout?: number): Promise<void>;
-  
-  // Rendering control
-  startRendering(): Promise<void>;
-  pauseRendering(): void;
-  resumeRendering(): void;
-  cancelRendering(): void;
-  setRenderMode(mode: EdgeRenderMode): void;
-  
-  // Layout control
-  runLayout(algorithm?: LayoutAlgorithm): Promise<void>;
-  stopLayout(): void;
-  setLayoutConfig(config: Partial<LayoutConfig>): void;
-  getNodePositions(): Map<string, Point>;
-  setNodePosition(nodeId: string, position: Point): void;
-  fixNodePosition(nodeId: string, fixed: boolean): void;
-  
-  // Edge control
-  setEdgeMode(mode: EdgeRenderMode): void;
-  setEdgeConfig(config: Partial<EdgeConfig>): void;
-  bundleEdges(options?: BundlingOptions): Promise<void>;
-  showEdges(visible: boolean): void;
-  
-  // Interaction methods
-  selectNode(nodeId: string): void;
-  deselectNode(nodeId?: string): void;
-  selectNodes(nodeIds: string[]): void;
-  getSelectedNodes(): string[];
-  highlightNeighbors(nodeId: string, depth?: number): void;
-  clearHighlights(): void;
-  
-  // View control
-  zoomTo(scale: number, center?: Point, duration?: number): Promise<void>;
-  panTo(position: Point, duration?: number): Promise<void>;
-  fitToViewport(padding?: number, duration?: number): Promise<void>;
-  resetView(duration?: number): Promise<void>;
-  getTransform(): Transform;
-  setTransform(transform: Transform, duration?: number): Promise<void>;
-  
-  // Data access
-  getData(): GraphData;
-  getNode(nodeId: string): Node | undefined;
-  getEdge(edgeId: string): Edge | undefined;
-  getNeighbors(nodeId: string, depth?: number): string[];
-  getConnectedEdges(nodeId: string): string[];
-  
-  // Configuration
-  setConfig(config: Partial<EngineConfig>): void;
-  getConfig(): EngineConfig;
-  
-  // Callbacks
-  on<K extends keyof LayoutEngineCallbacks>(
-    event: K,
-    callback: LayoutEngineCallbacks[K]
-  ): void;
-  off<K extends keyof LayoutEngineCallbacks>(
-    event: K,
-    callback?: LayoutEngineCallbacks[K]
-  ): void;
-  once<K extends keyof LayoutEngineCallbacks>(
-    event: K,
-    callback: LayoutEngineCallbacks[K]
-  ): void;
-  
-  // Diagnostics
-  getDiagnostics(): DiagnosticData;
-  getPerformanceMetrics(): PerformanceMetrics;
-  clearDiagnostics(): void;
-  exportDiagnostics(): string;
-  
-  // Error recovery
-  attemptRecovery(): Promise<boolean>;
-  resetToSafeState(): void;
-  getLastError(): EngineError | null;
-}
-```
-
-## Supporting Interfaces
-
-### Rendering Options
-
-```typescript
-/**
- * Options for rendering operations
- */
-export interface RenderOptions {
-  progressive?: boolean;
-  batchSize?: number;
-  hideGraphDuringLayout?: boolean;
-  skipLayout?: boolean;
-  skipEdges?: boolean;
-  skipViewportFit?: boolean;
-}
-
-/**
- * Edge bundling options
- */
-export interface BundlingOptions {
-  strength?: number;
-  iterations?: number;
-  compatibilityThreshold?: number;
-  stepSize?: number;
-  smoothing?: boolean;
-}
-```
-
-### Performance Metrics
-
-```typescript
-/**
- * Performance metrics for monitoring
- */
-export interface PerformanceMetrics {
-  // Timing
-  totalRenderTime: number;
-  dataLoadTime: number;
+interface GraphStats {
+  renderTime: number;
   layoutTime: number;
   edgeRenderTime: number;
-  viewportFitTime: number;
-  
-  // Counts
+  nodeCount: number;
+  edgeCount: number;
+  layoutIterations: number;
+  finalAlpha: number;
+}
+
+interface ErrorContext {
+  phase: LayoutState;
+  operation: string;
+  recoverable: boolean;
+  fallback?: string;
+  data?: Record<string, unknown>;
+}
+
+interface PerformanceMetrics {
+  fps: number;
+  renderTime: number;
+  layoutTime: number;
+  edgeRenderTime: number;
+  memoryUsage?: number;
   nodeCount: number;
   edgeCount: number;
   visibleNodes: number;
   visibleEdges: number;
-  
-  // Performance
-  frameRate: number;
-  averageFrameTime: number;
-  droppedFrames: number;
-  
-  // Memory
-  memoryUsage: number;
-  peakMemoryUsage: number;
-  
-  // Interactions
-  interactionLatency: number;
-  selectionTime: number;
-  zoomPanLatency: number;
 }
 
-/**
- * Diagnostic data structure
- */
-export interface DiagnosticData {
-  events: DiagnosticEvent[];
-  metrics: PerformanceMetrics;
-  errors: EngineError[];
-  warnings: string[];
-  stateHistory: StateTransition[];
-}
-
-/**
- * Diagnostic event
- */
-export interface DiagnosticEvent {
-  type: DiagnosticEventType;
-  timestamp: number;
-  data: any;
-  level: 'error' | 'warning' | 'info' | 'debug';
-}
-
-/**
- * State transition record
- */
-export interface StateTransition {
-  from: EngineState;
-  to: EngineState;
-  timestamp: number;
+interface FrameDropInfo {
+  targetFPS: number;
+  actualFPS: number;
   duration: number;
-  trigger: string;
+  cause?: string;
+}
+
+interface ValidationError {
+  type: 'missing_node' | 'missing_edge' | 'invalid_data' | 'circular_reference';
+  message: string;
+  nodeId?: string;
+  edgeId?: string;
+  data?: unknown;
 }
 ```
 
-## Factory and Builder
+## Operational Methods Contract
+
+### Data Management
 
 ```typescript
-/**
- * Factory for creating layout engine instances
- */
-export interface LayoutEngineFactory {
-  create(container: HTMLElement, config?: EngineConfig): ILayoutEngine;
-  createWithCallbacks(
-    container: HTMLElement,
-    callbacks: Partial<LayoutEngineCallbacks>,
-    config?: EngineConfig
-  ): ILayoutEngine;
+interface DataMethods {
+  data(): GraphData | null;
+  data(value: GraphData): KnowledgeNetworkGraph;
+  
+  addNodes(nodes: Node[]): KnowledgeNetworkGraph;
+  addEdges(edges: Edge[]): KnowledgeNetworkGraph;
+  removeNodes(nodeIds: string[]): KnowledgeNetworkGraph;
+  removeEdges(edgeIds: string[]): KnowledgeNetworkGraph;
+  
+  updateData(data: Partial<GraphData>, options?: UpdateOptions): KnowledgeNetworkGraph;
+  
+  startBatch(): KnowledgeNetworkGraph;
+  endBatch(): KnowledgeNetworkGraph;
 }
 
-/**
- * Builder pattern for complex configurations
- */
-export interface LayoutEngineBuilder {
-  withContainer(container: HTMLElement): LayoutEngineBuilder;
-  withConfig(config: Partial<EngineConfig>): LayoutEngineBuilder;
-  withCallbacks(callbacks: Partial<LayoutEngineCallbacks>): LayoutEngineBuilder;
-  withRenderMode(mode: 'canvas' | 'svg' | 'webgl'): LayoutEngineBuilder;
-  withLayoutAlgorithm(algorithm: LayoutAlgorithm): LayoutEngineBuilder;
-  withEdgeMode(mode: EdgeRenderMode): LayoutEngineBuilder;
-  withDiagnostics(enabled: boolean): LayoutEngineBuilder;
-  build(): ILayoutEngine;
+interface UpdateOptions {
+  merge?: boolean;
+  key?: (d: Node | Edge) => string;
+  updateOnly?: boolean;
+  transition?: boolean;
+  duration?: number;
 }
 ```
 
-## Usage Examples
+### Selection Management
+
+```typescript
+interface SelectionMethods {
+  selectNode(nodeId: string, options?: SelectionOptions): KnowledgeNetworkGraph;
+  selectNodes(nodeIds: string[]): KnowledgeNetworkGraph;
+  deselectAll(): KnowledgeNetworkGraph;
+  
+  selectedNodes(): string[];
+  highlightedNodes(): Set<string>;
+  highlightedEdges(): Set<string>;
+  
+  highlightNodes(nodeIds: string[]): KnowledgeNetworkGraph;
+  highlightEdges(edgeIds: string[]): KnowledgeNetworkGraph;
+  clearHighlights(): KnowledgeNetworkGraph;
+  
+  neighbors(nodeId: string, depth?: number): string[];
+  adjacentEdges(nodeId: string): string[];
+}
+
+interface SelectionOptions {
+  highlightNeighbors?: boolean;
+  depth?: number;
+  includeEdges?: boolean;
+  exclusive?: boolean;
+}
+```
+
+### Zoom and Pan Control
+
+```typescript
+interface ZoomPanMethods {
+  zoom(): d3.ZoomBehavior<SVGSVGElement, unknown>;
+  
+  zoomTo(scale: number, center?: [number, number]): KnowledgeNetworkGraph;
+  zoomToFit(padding?: number): KnowledgeNetworkGraph;
+  zoomToSelection(padding?: number): KnowledgeNetworkGraph;
+  resetZoom(): KnowledgeNetworkGraph;
+  
+  panTo(x: number, y: number): KnowledgeNetworkGraph;
+  centerOn(nodeId: string): KnowledgeNetworkGraph;
+  
+  getTransform(): d3.ZoomTransform;
+  setTransform(transform: d3.ZoomTransform): KnowledgeNetworkGraph;
+}
+```
+
+### Force Simulation Access
+
+```typescript
+interface SimulationMethods {
+  simulation(): d3.Simulation<Node, Edge> | null;
+  
+  force(name: string): d3.Force<Node, Edge> | undefined;
+  force(name: string, force: d3.Force<Node, Edge> | null): KnowledgeNetworkGraph;
+  
+  reheat(alpha?: number): KnowledgeNetworkGraph;
+  stop(): KnowledgeNetworkGraph;
+  restart(): KnowledgeNetworkGraph;
+  
+  tick(iterations?: number): KnowledgeNetworkGraph;
+}
+```
+
+### DOM Selection Access
+
+```typescript
+interface DOMSelectionMethods {
+  nodes(): d3.Selection<SVGElement, Node, any, any>;
+  edges(): d3.Selection<SVGElement, Edge, any, any>;
+  labels(): d3.Selection<SVGTextElement, Node, any, any>;
+  
+  container(): d3.Selection<SVGGElement, unknown, null, undefined>;
+  svg(): d3.Selection<SVGSVGElement, unknown, null, undefined>;
+}
+```
+
+### Lifecycle Management
+
+```typescript
+interface LifecycleMethods {
+  init(container: HTMLElement | d3.Selection<HTMLElement, any, any, any>): KnowledgeNetworkGraph;
+  render(): KnowledgeNetworkGraph;
+  dispose(): KnowledgeNetworkGraph;
+  
+  isReady(): boolean;
+  getState(): LayoutState;
+  getProgress(): number;
+}
+```
+
+## Behavior Contracts
+
+### State Transition Rules
+
+```typescript
+const StateTransitions: Record<LayoutState, LayoutState[]> = {
+  IDLE: [LayoutState.LOADING, LayoutState.DISPOSED],
+  LOADING: [LayoutState.LAYOUT_CALCULATING, LayoutState.ERROR],
+  LAYOUT_CALCULATING: [LayoutState.EDGE_RENDERING, LayoutState.ERROR],
+  EDGE_RENDERING: [LayoutState.ZOOM_FITTING, LayoutState.ERROR],
+  ZOOM_FITTING: [LayoutState.READY, LayoutState.ERROR],
+  READY: [LayoutState.LOADING, LayoutState.DISPOSED],
+  ERROR: [LayoutState.IDLE, LayoutState.LOADING, LayoutState.DISPOSED],
+  DISPOSED: []
+};
+```
+
+### Callback Execution Order
+
+1. **Initialization Phase**
+   - `init` event
+   - `stateChange` (IDLE)
+
+2. **Loading Phase**
+   - `stateChange` (LOADING)
+   - `validationError` (if validation fails)
+   - Data preprocessing
+
+3. **Layout Phase**
+   - `stateChange` (LAYOUT_CALCULATING)
+   - `layoutProgress` (multiple times during simulation)
+   - Force simulation ticks
+
+4. **Edge Rendering Phase**
+   - `stateChange` (EDGE_RENDERING)
+   - `edgeRenderStart`
+   - `edgeRenderProgress` (per batch)
+   - `edgeRenderComplete`
+
+5. **Zoom Fitting Phase**
+   - `stateChange` (ZOOM_FITTING)
+   - `zoomFit`
+
+6. **Ready Phase**
+   - `stateChange` (READY)
+   - `ready`
+
+7. **Error Handling**
+   - `error` (at any phase)
+   - `stateChange` (ERROR)
+
+### Progress Calculation Contract
+
+```typescript
+interface ProgressCalculation {
+  // Overall progress (0-1)
+  overall(): number;
+  
+  // Phase-specific progress (0-1)
+  loading(): number;
+  layout(): number;
+  edgeRendering(): number;
+  zoomFitting(): number;
+  
+  // Progress calculation formulas
+  calculateLayoutProgress(alpha: number, alphaMin: number): number;
+  calculateEdgeProgress(rendered: number, total: number): number;
+  calculateZoomProgress(elapsed: number, duration: number): number;
+}
+
+// Layout progress formula
+const layoutProgress = (alpha: number, alphaMin: number, alphaTarget: number): number => {
+  return 1 - Math.max(0, Math.min(1, (alpha - alphaMin) / (alphaTarget - alphaMin)));
+};
+
+// Edge rendering progress formula  
+const edgeProgress = (rendered: number, total: number): number => {
+  return total > 0 ? rendered / total : 0;
+};
+```
+
+### Error Recovery Contract
+
+```typescript
+interface ErrorRecovery {
+  // Automatic recovery strategies
+  automaticRecovery: {
+    bundlingFallback: () => void;  // Fall back to simple edges
+    memoryReduction: () => void;   // Reduce visual complexity
+    dataValidation: () => void;    // Fix data issues
+  };
+  
+  // Manual recovery methods
+  recover(strategy: 'fallback' | 'retry' | 'reset'): KnowledgeNetworkGraph;
+  retryLastOperation(): KnowledgeNetworkGraph;
+  resetToSafeState(): KnowledgeNetworkGraph;
+}
+```
+
+## Performance Guarantees
+
+### Rendering Performance
+
+```typescript
+interface PerformanceGuarantees {
+  // Maximum time for operations
+  maxLayoutTime: 5000;      // 5 seconds
+  maxEdgeRenderTime: 3000;  // 3 seconds
+  maxZoomFitTime: 750;      // 750ms
+  
+  // Batch sizes
+  defaultEdgeBatchSize: 100;
+  minBatchSize: 10;
+  maxBatchSize: 1000;
+  
+  // Frame rate targets
+  targetFPS: 60;
+  minAcceptableFPS: 30;
+  
+  // Memory limits
+  maxNodes: 10000;
+  maxEdges: 50000;
+}
+```
+
+### Throttling and Debouncing
+
+```typescript
+interface ThrottleSettings {
+  progressUpdateInterval: 16;    // ~60 FPS
+  performanceUpdateInterval: 100; // 10 updates/second
+  resizeDebounce: 250;
+  selectionDebounce: 50;
+}
+```
+
+## Compatibility Contract
+
+### Browser Support
+
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+### D3.js Version
+
+- D3.js v7.x required
+- Uses d3-selection, d3-force, d3-zoom, d3-drag, d3-transition
+
+### TypeScript Support
+
+- Full TypeScript definitions included
+- Supports strict mode
+- Generic type parameters for custom node/edge data
+
+## Testing Contract
+
+### Required Test Coverage
+
+```typescript
+interface TestRequirements {
+  unitTests: {
+    configuration: ['chaining', 'accessors', 'defaults'];
+    events: ['registration', 'removal', 'triggering', 'order'];
+    state: ['transitions', 'progress', 'metadata'];
+    selection: ['single', 'multiple', 'neighbors', 'highlights'];
+    zoom: ['programmatic', 'constraints', 'transforms'];
+    data: ['updates', 'batching', 'validation'];
+  };
+  
+  integrationTests: {
+    rendering: ['immediate', 'progressive', 'deferred'];
+    interaction: ['click', 'hover', 'drag', 'zoom'];
+    performance: ['large-datasets', 'memory-usage', 'frame-rate'];
+    errorHandling: ['recovery', 'fallback', 'validation'];
+  };
+  
+  e2eTests: {
+    workflows: ['load-render-interact', 'update-transition', 'error-recovery'];
+  };
+}
+```
+
+### Test Utilities
+
+```typescript
+// Test helper functions
+function createMockGraph(nodeCount: number, edgeCount: number): GraphData;
+function simulateInteraction(graph: KnowledgeNetworkGraph, type: string, target: string): void;
+function waitForState(graph: KnowledgeNetworkGraph, state: LayoutState): Promise<void>;
+function measurePerformance(graph: KnowledgeNetworkGraph, data: GraphData): PerformanceMetrics;
+```
+
+## Version and Deprecation
+
+### Semantic Versioning
+
+- MAJOR: Breaking changes to API contract
+- MINOR: New methods or events (backward compatible)
+- PATCH: Bug fixes and performance improvements
+
+### Deprecation Policy
+
+- Deprecated features marked with `@deprecated` JSDoc
+- Minimum 2 minor versions before removal
+- Migration guide provided for breaking changes
+
+## Contract Validation
+
+### Runtime Validation
+
+```typescript
+interface ContractValidation {
+  validateData(data: GraphData): ValidationResult;
+  validateConfiguration(config: any): ValidationResult;
+  validateCallback(event: string, callback: Function): ValidationResult;
+  validateState(from: LayoutState, to: LayoutState): boolean;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: string[];
+}
+```
+
+### Development Mode Checks
+
+- Type checking for all inputs
+- State transition validation
+- Callback parameter validation
+- Performance threshold warnings
+
+## Examples
 
 ### Basic Usage
 
 ```typescript
-import { LayoutEngineFactory, EngineState } from '@knowledge-network/layout-engine';
+import { knowledgeNetwork } from '@knowledge-network/layout-engine';
 
-const factory = new LayoutEngineFactory();
-const engine = factory.create(document.getElementById('graph-container')!, {
-  renderMode: 'canvas',
-  layoutAlgorithm: LayoutAlgorithm.FORCE,
-  edgeMode: EdgeRenderMode.BUNDLED
-});
+const graph = knowledgeNetwork()
+  .width(800)
+  .height(600)
+  .on('ready', () => console.log('Graph ready'));
 
-// Register callbacks
-engine.on('stateChange', (state, progress, metadata) => {
-  console.log(`State: ${state}, Progress: ${progress}%`);
-});
-
-engine.on('nodeSelected', (nodeId, neighbors, edges) => {
-  console.log(`Selected: ${nodeId}, Neighbors: ${neighbors.length}`);
-});
-
-// Load and render
-await engine.initialize();
-await engine.loadData(graphData);
-await engine.render();
+d3.select('#container')
+  .datum(graphData)
+  .call(graph);
 ```
 
-### Advanced Usage with Builder
+### Advanced Configuration
 
 ```typescript
-import { LayoutEngineBuilder } from '@knowledge-network/layout-engine';
-
-const engine = new LayoutEngineBuilder()
-  .withContainer(container)
-  .withRenderMode('webgl')
-  .withLayoutAlgorithm(LayoutAlgorithm.HIERARCHICAL)
-  .withEdgeMode(EdgeRenderMode.BUNDLED)
-  .withCallbacks({
-    onStateChange: handleStateChange,
-    onNodeSelected: handleNodeSelection,
-    onError: handleError,
-    onPerformanceMetrics: updateMetricsDisplay
-  })
-  .withDiagnostics(true)
-  .build();
-
-// Complex rendering with options
-await engine.render({
-  progressive: true,
-  batchSize: 100,
-  hideGraphDuringLayout: true
-});
-
-// Interaction
-engine.selectNode('node-1');
-engine.highlightNeighbors('node-1', 2);
-await engine.fitToViewport(20, 750);
-```
-
-### Error Recovery
-
-```typescript
-engine.on('error', async (error, stage, recoverable) => {
-  console.error(`Error in ${stage}: ${error.message}`);
+const graph = knowledgeNetwork()
+  // Configuration
+  .nodeRadius(d => Math.sqrt(d.value) * 3)
+  .edgeRenderer('bundled')
+  .bundlingStrength(0.85)
   
-  if (recoverable) {
-    const recovered = await engine.attemptRecovery();
-    if (!recovered) {
-      engine.resetToSafeState();
+  // State callbacks
+  .on('stateChange', (state, progress) => {
+    updateUI(state, progress);
+  })
+  
+  // Interaction callbacks
+  .on('nodeClick', (event, d) => {
+    graph.selectNode(d.id, { highlightNeighbors: true });
+  })
+  
+  // Performance monitoring
+  .on('performanceUpdate', metrics => {
+    if (metrics.fps < 30) {
+      graph.edgeRenderer('simple');  // Fallback to simpler rendering
     }
-  } else {
-    // Non-recoverable error
-    showErrorDialog(error);
-    engine.dispose();
-  }
-});
+  });
 ```
 
-## Contract Guarantees
+## Contract Compliance
 
-### Invariants
+Implementation MUST:
+1. Support all specified methods with exact signatures
+2. Trigger callbacks in specified order
+3. Maintain state transition rules
+4. Meet performance guarantees
+5. Provide complete TypeScript definitions
+6. Pass all contract validation tests
 
-1. **State Consistency**: The engine is always in exactly one state
-2. **Progress Monotonicity**: Progress within a state only increases (0-100)
-3. **Callback Order**: Callbacks are invoked in the documented order
-4. **Error Safety**: All errors transition to ERROR state with context
-5. **Resource Cleanup**: Dispose() releases all resources
+## References
 
-### Performance Guarantees
-
-1. **Callback Latency**: < 5ms per callback invocation
-2. **State Transitions**: < 10ms for state changes
-3. **Progress Updates**: Throttled to 60 Hz maximum
-4. **Memory Growth**: O(n) with node count, O(m) with edge count
-
-### Compatibility
-
-- **TypeScript**: 4.5+
-- **ECMAScript**: ES2020+
-- **Browsers**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Node.js**: 16+ (for SSR/testing)
-
-## Version
-
-**Contract Version**: 2.0.0
-**Last Updated**: 2024-01-20
-**Status**: Stable
-
-## Migration Guide
-
-For migration from v1.x to v2.0, see [MIGRATION.md](./MIGRATION.md)
+- [D3.js v7 API](https://github.com/d3/d3/blob/main/API.md)
+- [Web Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance_API)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
