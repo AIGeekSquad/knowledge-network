@@ -17,8 +17,11 @@ function clearGraph() {
   const container = document.getElementById('graph');
   if (container) {
     container.innerHTML = '';
-    container.style.height = '700px';
-    container.style.width = '1200px';
+    // Make container responsive to viewport
+    const viewportWidth = Math.min(window.innerWidth - 100, 1400); // Max 1400px, 50px margin each side
+    const viewportHeight = Math.min(window.innerHeight - 200, 800);  // Max 800px, leave room for header/controls
+    container.style.width = `${viewportWidth}px`;
+    container.style.height = `${viewportHeight}px`;
     container.style.margin = '0 auto';
   }
   if (currentGraph) {
@@ -32,6 +35,25 @@ function updateStatus(message: string) {
   const statusElement = document.getElementById('status');
   if (statusElement) {
     statusElement.textContent = message;
+  }
+}
+
+function updateButtonStates() {
+  const simpleButton = document.getElementById('simple-edges') as HTMLButtonElement;
+  const bundlingButton = document.getElementById('edge-bundling') as HTMLButtonElement;
+
+  if (simpleButton && bundlingButton) {
+    if (currentMode === 'simple') {
+      simpleButton.style.backgroundColor = '#e74c3c';
+      simpleButton.style.fontWeight = 'bold';
+      bundlingButton.style.backgroundColor = '#95a5a6';
+      bundlingButton.style.fontWeight = 'normal';
+    } else {
+      bundlingButton.style.backgroundColor = '#e74c3c';
+      bundlingButton.style.fontWeight = 'bold';
+      simpleButton.style.backgroundColor = '#95a5a6';
+      simpleButton.style.fontWeight = 'normal';
+    }
   }
 }
 
@@ -49,9 +71,11 @@ function showEnhancedEdgeBundling() {
   const data = createGamingSessionGraph();
   console.log(`[Render] Data ready: ${data.nodes.length} nodes, ${data.edges.length} edges`);
 
+  // Use responsive container dimensions
+  const containerRect = container.getBoundingClientRect();
   const config = {
-    width: 1200,
-    height: 700,
+    width: containerRect.width,
+    height: containerRect.height,
     chargeStrength: -3000,      // Stronger charge for better node separation
     linkDistance: 400,          // Longer distance creates more bundling opportunities
     edgeRenderer: 'bundled' as const,
@@ -123,14 +147,36 @@ function showEnhancedEdgeBundling() {
       const semanticNode = node as SemanticSpacetimeNode;
       const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
                          semanticNode.metadata?.type as string || '';
-      const baseSize = nodeStyles.sizes[conceptType as keyof typeof nodeStyles.sizes] || 5;
+
+      // Map full concept types to simplified keys for styling
+      const typeMap: Record<string, string> = {
+        'player_character': 'player',
+        'raid_boss': 'boss',
+        'boss_encounter_arena': 'location',
+        'frontal_cone_attack': 'ability',
+        'player_party': 'group',
+        'functional_role': 'role'
+      };
+      const mappedType = typeMap[conceptType] || conceptType;
+      const baseSize = nodeStyles.sizes[mappedType as keyof typeof nodeStyles.sizes] || 8;
       return baseSize + 2; // Slightly larger for better visibility
     },
     nodeFill: (node: Node) => {
       const semanticNode = node as SemanticSpacetimeNode;
       const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
                          semanticNode.metadata?.type as string || '';
-      return nodeStyles.colors[conceptType as keyof typeof nodeStyles.colors] || '#999';
+
+      // Map full concept types to simplified keys for styling
+      const typeMap: Record<string, string> = {
+        'player_character': 'player',
+        'raid_boss': 'boss',
+        'boss_encounter_arena': 'location',
+        'frontal_cone_attack': 'ability',
+        'player_party': 'group',
+        'functional_role': 'role'
+      };
+      const mappedType = typeMap[conceptType] || conceptType;
+      return nodeStyles.colors[mappedType as keyof typeof nodeStyles.colors] || '#666';
     },
     nodeStroke: '#ffffff',      // White border for contrast
     nodeStrokeWidth: 2,         // Clear node boundaries
@@ -154,14 +200,23 @@ function showEnhancedEdgeBundling() {
 
     // Enhanced labeling for clear understanding
     showEdgeLabels: true,       // Enable edge labels along paths
+    edgeLabelStyle: {
+      fontSize: 10,
+      fontFamily: 'Arial, sans-serif',
+      fill: '#333',
+      textAnchor: 'middle',
+      dominantBaseline: 'middle'
+    },
 
     // Wait for simulation stability before rendering edges
     waitForStable: true,        // Wait for layout to stabilize
     stabilityThreshold: 0.005,   // Lower threshold for better stability
 
-    // Zoom-to-fit functionality for large graphs
-    enableZoomToFit: true,      // Auto-zoom to show entire graph
-    zoomPadding: 50             // Padding around the graph
+    // Zoom and fit functionality for better UX
+    enableZoom: true,           // Enable zoom/pan interactions
+    zoomExtent: [0.1, 4],      // Min/max zoom levels
+    fitToViewport: true,        // Automatically fit graph to viewport
+    padding: 50                 // Padding around the graph when fitting
   };
 
   try {
@@ -172,6 +227,7 @@ function showEnhancedEdgeBundling() {
     currentGraph.render();
     console.log('[Render] ✅ Enhanced bundling render complete');
     updateStatus('🌟 ENHANCED BUNDLING ACTIVE: Watch edges flow and bundle by semantic similarity! Curved paths show relationships.');
+    updateButtonStates(); // Update button visual states
   } catch (error) {
     console.error('[Render] Failed to create or render graph:', error);
     updateStatus(`❌ Render failed: ${error.message}`);
@@ -193,9 +249,11 @@ function showSimpleEdges() {
   const data = createGamingSessionGraph();
   console.log(`[Render] Data ready: ${data.nodes.length} nodes, ${data.edges.length} edges`);
 
+  // Use responsive container dimensions
+  const containerRect = container.getBoundingClientRect();
   const config = {
-    width: 1200,
-    height: 700,
+    width: containerRect.width,
+    height: containerRect.height,
     chargeStrength: -1800,
     linkDistance: 250,
     edgeRenderer: 'simple' as const,
@@ -204,13 +262,35 @@ function showSimpleEdges() {
       const semanticNode = node as SemanticSpacetimeNode;
       const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
                          semanticNode.metadata?.type as string || '';
-      return nodeStyles.sizes[conceptType as keyof typeof nodeStyles.sizes] || 5;
+
+      // Map full concept types to simplified keys for styling
+      const typeMap: Record<string, string> = {
+        'player_character': 'player',
+        'raid_boss': 'boss',
+        'boss_encounter_arena': 'location',
+        'frontal_cone_attack': 'ability',
+        'player_party': 'group',
+        'functional_role': 'role'
+      };
+      const mappedType = typeMap[conceptType] || conceptType;
+      return nodeStyles.sizes[mappedType as keyof typeof nodeStyles.sizes] || 8;
     },
     nodeFill: (node: Node) => {
       const semanticNode = node as SemanticSpacetimeNode;
       const conceptType = semanticNode.metadata?.semantic_content?.concept_type ||
                          semanticNode.metadata?.type as string || '';
-      return nodeStyles.colors[conceptType as keyof typeof nodeStyles.colors] || '#999';
+
+      // Map full concept types to simplified keys for styling
+      const typeMap: Record<string, string> = {
+        'player_character': 'player',
+        'raid_boss': 'boss',
+        'boss_encounter_arena': 'location',
+        'frontal_cone_attack': 'ability',
+        'player_party': 'group',
+        'functional_role': 'role'
+      };
+      const mappedType = typeMap[conceptType] || conceptType;
+      return nodeStyles.colors[mappedType as keyof typeof nodeStyles.colors] || '#666';
     },
     nodeStroke: '#ffffff',
     nodeStrokeWidth: 1.5,
@@ -229,7 +309,21 @@ function showSimpleEdges() {
     },
     linkStrokeOpacity: 0.6,
 
+    // Enhanced labeling for comparison
     showEdgeLabels: true,       // Show edge labels for comparison
+    edgeLabelStyle: {
+      fontSize: 10,
+      fontFamily: 'Arial, sans-serif',
+      fill: '#333',
+      textAnchor: 'middle',
+      dominantBaseline: 'middle'
+    },
+
+    // Basic zoom and fit for simple mode
+    enableZoom: true,           // Enable zoom/pan interactions
+    zoomExtent: [0.1, 4],      // Min/max zoom levels
+    fitToViewport: true,        // Automatically fit graph to viewport
+    padding: 50,                // Padding around the graph
     waitForStable: false
   };
 
@@ -241,6 +335,7 @@ function showSimpleEdges() {
     currentGraph.render();
     console.log('[Render] ✅ Simple edges render complete');
     updateStatus('📏 SIMPLE EDGES: Basic straight lines - compare with Enhanced Bundling to see the difference!');
+    updateButtonStates(); // Update button visual states
   } catch (error) {
     console.error('[Render] Failed to create or render graph:', error);
     updateStatus(`❌ Render failed: ${error.message}`);
@@ -269,23 +364,29 @@ function createLegend() {
 
   legendContainer.innerHTML = `
     <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Semantic Spacetime Graph</h4>
+    <p style="margin: 0 0 8px 0; color: #7f8c8d; font-size: 11px;">${data.nodes.length} nodes, ${data.edges.length} edges</p>
 
     <div style="margin-bottom: 12px;">
       <strong style="color: #34495e;">Entity Types:</strong><br>
-      <div style="margin: 4px 0;">🔵 <span style="color: #4a90e2;">Players</span> - Autonomous agents</div>
-      <div style="margin: 4px 0;">🔴 <span style="color: #d0021b;">Bosses</span> - Scripted entities</div>
-      <div style="margin: 4px 0;">🟢 <span style="color: #7ed321;">Locations</span> - Spatial regions</div>
-      <div style="margin: 4px 0;">🟣 <span style="color: #bd10e0;">Abilities</span> - Temporal processes</div>
-      <div style="margin: 4px 0;">🟠 <span style="color: #f5a623;">Roles</span> - Abstract concepts</div>
-      <div style="margin: 4px 0;">🟦 <span style="color: #50e3c2;">Groups</span> - Collection entities</div>
+      <div style="margin: 2px 0; font-size: 11px;">🔵 <span style="color: #4a90e2;">Players</span> - Tank, Healer, DPS</div>
+      <div style="margin: 2px 0; font-size: 11px;">🔴 <span style="color: #d0021b;">Boss/NPCs</span> - Blightbone & adds</div>
+      <div style="margin: 2px 0; font-size: 11px;">🟢 <span style="color: #7ed321;">Locations</span> - Dungeon areas</div>
+      <div style="margin: 2px 0; font-size: 11px;">🟣 <span style="color: #bd10e0;">Abilities</span> - Spells & attacks</div>
+      <div style="margin: 2px 0; font-size: 11px;">🟠 <span style="color: #f5a623;">Roles</span> - Tank/Healer/DPS</div>
+      <div style="margin: 2px 0; font-size: 11px;">🟦 <span style="color: #50e3c2;">Group</span> - Mythic+ party</div>
     </div>
 
-    <div>
+    <div style="margin-bottom: 8px;">
       <strong style="color: #34495e;">γ(3,4) Association Types:</strong><br>
-      <div style="margin: 2px 0;">🔵 <span style="color: #4a90e2;">Proximity (N)</span> - Similarity</div>
-      <div style="margin: 2px 0;">🔴 <span style="color: #d0021b;">Directional (L)</span> - Causality</div>
-      <div style="margin: 2px 0;">🟢 <span style="color: #7ed321;">Containment (C)</span> - Membership</div>
-      <div style="margin: 2px 0;">🟣 <span style="color: #bd10e0;">Property (E)</span> - Attributes</div>
+      <div style="margin: 1px 0; font-size: 11px;">🔵 <span style="color: #4a90e2;">Proximity (N)</span> - Group coordination</div>
+      <div style="margin: 1px 0; font-size: 11px;">🔴 <span style="color: #d0021b;">Directional (L)</span> - Movement, combat</div>
+      <div style="margin: 1px 0; font-size: 11px;">🟢 <span style="color: #7ed321;">Containment (C)</span> - Party membership</div>
+      <div style="margin: 1px 0; font-size: 11px;">🟣 <span style="color: #bd10e0;">Property (E)</span> - Role fulfillment, buffs</div>
+    </div>
+
+    <div style="font-size: 10px; color: #95a5a6; border-top: 1px solid #ecf0f1; padding-top: 6px;">
+      <div>💡 <strong>Edge Bundling:</strong> Similar edges bundle together</div>
+      <div>⚡ <strong>Zoom:</strong> Mouse wheel to zoom, drag to pan</div>
     </div>
   `;
 
@@ -340,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Start with the enhanced edge bundling demonstration
   try {
     showEnhancedEdgeBundling();
+    updateButtonStates(); // Ensure buttons show correct initial state
   } catch (error) {
     console.error('[Render Error] Failed to render graph:', error);
     updateStatus('❌ Error: Failed to render graph. Check console for details.');
