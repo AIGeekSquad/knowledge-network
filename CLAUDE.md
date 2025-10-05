@@ -56,6 +56,9 @@ pnpm test:watch
 # Run a specific test file
 pnpm test EdgeBundling.test.ts
 
+# Open interactive test UI
+pnpm exec vitest --ui
+
 # Lint TypeScript files
 pnpm lint
 
@@ -88,6 +91,7 @@ The main library follows a modular architecture:
 - **Edge Renderers**: Pluggable edge rendering system
   - `SimpleEdge`: Basic straight line edges
   - `EdgeBundling`: Advanced force-directed edge bundling for complex graphs
+  - **Edge Smoothing**: Multiple smoothing strategies (Laplacian, Gaussian, Bilateral)
 - **Types**: Comprehensive TypeScript definitions for nodes, edges, and configurations
 
 ### Key Design Patterns

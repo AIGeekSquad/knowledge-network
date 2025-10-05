@@ -97,6 +97,26 @@ Edge bundling is the crown jewel of Knowledge Network, transforming tangled webs
 
 📖 **[Read the Complete Edge Bundling Guide →](./docs/EDGE_BUNDLING.md)**
 
+## 📖 Research & Theory
+
+This library is built on solid theoretical foundations. Explore our comprehensive research documentation to understand the algorithms and concepts behind the implementation:
+
+### [📊 Edge Bundling Research](./docs/EDGE_BUNDLING_RESEARCH.md)
+Comprehensive analysis of edge bundling techniques and approaches in graph visualization, covering:
+- Theoretical foundations and algorithmic approaches
+- AI-driven semantic approaches for knowledge networks
+- Performance optimization and quality assessment methods
+- Implementation recommendations and future research directions
+
+### [🧠 Semantic Spacetime Research](./docs/SEMANTIC_SPACETIME_RESEARCH.md)
+Deep dive into semantic spacetime approaches for knowledge graph generation and visualization:
+- Mark Burgess's Semantic Spacetime model and Promise Theory foundations
+- Agent-based architecture and temporal reasoning capabilities
+- Applications in mind mapping and collaborative knowledge systems
+- Integration strategies and performance considerations
+
+These research documents provide the theoretical backing for the library's advanced features and can guide developers in implementing sophisticated knowledge visualization systems.
+
 ## 🎮 Live Examples
 
 Explore interactive examples demonstrating the library's capabilities:
@@ -358,8 +378,10 @@ knowledge-network/
 │           ├── basic/       # Basic usage examples
 │           ├── advanced/    # Advanced features
 │           └── showcase/    # Feature showcases
-├── docs/                    # Documentation
-│   └── EDGE_BUNDLING.md    # Edge bundling deep dive
+├── docs/                          # Documentation & Research
+│   ├── EDGE_BUNDLING.md           # Edge bundling user guide
+│   ├── EDGE_BUNDLING_RESEARCH.md  # Edge bundling research & theory
+│   └── SEMANTIC_SPACETIME_RESEARCH.md # Semantic spacetime research
 └── scripts/                # Build and utility scripts
 ```
 
@@ -411,5 +433,6 @@ MIT © AIGeekSquad
   <a href="https://github.com/aigeeksquad/knowledge-network">GitHub</a> •
   <a href="https://www.npmjs.com/package/@aigeeksquad/knowledge-network">npm</a> •
   <a href="./docs/EDGE_BUNDLING.md">Documentation</a> •
+  <a href="./docs/EDGE_BUNDLING_RESEARCH.md">Research</a> •
   <a href="https://knowledge-network-demo.vercel.app">Demo</a>
 </p>
