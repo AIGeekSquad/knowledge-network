@@ -245,13 +245,21 @@ export class KnowledgeGraph {
 
     // Setup zoom if enabled
     if (this.config.enableZoom) {
+      const zoomExtent = this.config.zoomExtent || [0.1, 10];
       const zoom = d3.zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.1, 10])
+        .scaleExtent(zoomExtent)
         .on('zoom', (event) => {
           g.attr('transform', event.transform);
         });
 
       this.svg.call(zoom);
+
+      // Add fit-to-viewport functionality if enabled
+      if (this.config.fitToViewport) {
+        setTimeout(() => {
+          this.fitToViewport(g, zoom);
+        }, 1000); // Wait for initial layout to settle
+      }
     }
 
     // Create accessors
@@ -442,16 +450,20 @@ export class KnowledgeGraph {
         .style('stroke', 'none');
 
       // Create text element that follows the path
+      const labelStyle = this.config.edgeLabelStyle || {};
       labelGroup.append('text')
         .attr('class', 'edge-label')
         .append('textPath')
         .attr('href', `#${pathId}`)
         .attr('startOffset', '50%')
-        .style('text-anchor', 'middle')
-        .style('font-size', '10px')
-        .style('fill', '#666')
-        .style('font-family', 'Arial, sans-serif')
+        .style('text-anchor', labelStyle.textAnchor || 'middle')
+        .style('font-size', `${labelStyle.fontSize || 11}px`)
+        .style('fill', labelStyle.fill || '#333')
+        .style('font-family', labelStyle.fontFamily || 'Arial, sans-serif')
+        .style('dominant-baseline', labelStyle.dominantBaseline || 'middle')
         .style('pointer-events', 'none')
+        .style('font-weight', '500')
+        .style('text-shadow', '1px 1px 2px rgba(255,255,255,0.8)')
         .text(edge.label);
     });
   }
@@ -472,6 +484,49 @@ export class KnowledgeGraph {
           d3.select(this).attr('d', d3.select(pathElement).attr('d'));
         }
       });
+  }
+
+  /**
+   * Fit the graph to the viewport with optional padding
+   */
+  private fitToViewport(_g: d3.Selection<SVGGElement, unknown, null, undefined>, zoom: d3.ZoomBehavior<SVGSVGElement, unknown>): void {
+    if (!this.svg) return;
+
+    const padding = this.config.padding || 20;
+    const nodes = this.data.nodes as any[];
+
+    if (nodes.length === 0) return;
+
+    // Calculate bounding box of all nodes
+    const xExtent = d3.extent(nodes, d => d.x) as [number, number];
+    const yExtent = d3.extent(nodes, d => d.y) as [number, number];
+
+    const width = this.config.width || 800;
+    const height = this.config.height || 600;
+
+    const dx = xExtent[1] - xExtent[0];
+    const dy = yExtent[1] - yExtent[0];
+    const x = (xExtent[0] + xExtent[1]) / 2;
+    const y = (yExtent[0] + yExtent[1]) / 2;
+
+    // Calculate scale to fit with padding
+    const scale = Math.min(
+      (width - padding * 2) / dx,
+      (height - padding * 2) / dy
+    );
+
+    // Calculate translation to center
+    const translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+    // Apply transform
+    const transform = d3.zoomIdentity
+      .translate(translate[0], translate[1])
+      .scale(scale);
+
+    this.svg.transition().duration(750).call(
+      zoom.transform as any,
+      transform
+    );
   }
 
   /**

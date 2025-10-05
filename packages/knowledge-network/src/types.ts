@@ -636,6 +636,17 @@ export interface GraphConfig {
    */
   showEdgeLabels?: boolean;
 
+  /**
+   * Styling options for edge labels when showEdgeLabels is true.
+   */
+  edgeLabelStyle?: {
+    fontSize?: number;
+    fontFamily?: string;
+    fill?: string;
+    textAnchor?: 'start' | 'middle' | 'end';
+    dominantBaseline?: 'auto' | 'text-before-edge' | 'text-after-edge' | 'central' | 'middle' | 'hanging';
+  };
+
   // Interaction
 
   /**
@@ -643,6 +654,24 @@ export interface GraphConfig {
    * @default true
    */
   enableZoom?: boolean;
+
+  /**
+   * Zoom extent range [min, max] for zoom controls.
+   * @default [0.1, 10]
+   */
+  zoomExtent?: [number, number];
+
+  /**
+   * Whether to automatically fit the graph to the viewport.
+   * @default false
+   */
+  fitToViewport?: boolean;
+
+  /**
+   * Padding around the graph when fitting to viewport.
+   * @default 20
+   */
+  padding?: number;
 
   /**
    * Enable dragging nodes to reposition them.

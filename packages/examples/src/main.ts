@@ -362,9 +362,12 @@ function createLegend() {
     border: 1px solid #e0e0e0;
   `;
 
+  // Get current data for accurate counts
+  const currentData = createGamingSessionGraph();
+
   legendContainer.innerHTML = `
     <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Semantic Spacetime Graph</h4>
-    <p style="margin: 0 0 8px 0; color: #7f8c8d; font-size: 11px;">${data.nodes.length} nodes, ${data.edges.length} edges</p>
+    <p style="margin: 0 0 8px 0; color: #7f8c8d; font-size: 11px;">${currentData.nodes.length} nodes, ${currentData.edges.length} edges</p>
 
     <div style="margin-bottom: 12px;">
       <strong style="color: #34495e;">Entity Types:</strong><br>
@@ -387,6 +390,7 @@ function createLegend() {
     <div style="font-size: 10px; color: #95a5a6; border-top: 1px solid #ecf0f1; padding-top: 6px;">
       <div>💡 <strong>Edge Bundling:</strong> Similar edges bundle together</div>
       <div>⚡ <strong>Zoom:</strong> Mouse wheel to zoom, drag to pan</div>
+      <div>🎯 <strong>Auto-Fit:</strong> Graph fits to viewport automatically</div>
     </div>
   `;
 
