@@ -35,12 +35,17 @@ function updateStatus(message: string) {
 
 // Enhanced Edge Bundling Demonstration
 function showEnhancedEdgeBundling() {
+  console.log('[Render] Starting enhanced edge bundling render...');
   clearGraph();
   const container = document.getElementById('graph');
-  if (!container) return;
+  if (!container) {
+    console.error('[Render] Graph container not found');
+    return;
+  }
 
   currentMode = 'enhanced';
   const data = createGamingSessionGraph();
+  console.log(`[Render] Data ready: ${data.nodes.length} nodes, ${data.edges.length} edges`);
 
   const config = {
     width: 1200,
@@ -132,21 +137,34 @@ function showEnhancedEdgeBundling() {
     stabilityThreshold: 0.005   // Lower threshold for better stability
   };
 
-  // Fix: Pass data and config as separate arguments
-  currentGraph = new KnowledgeGraph(container, data, config);
-  currentGraph.render();
-
-  updateStatus('🌟 ENHANCED BUNDLING ACTIVE: Watch edges flow and bundle by semantic similarity! Curved paths show relationships.');
+  try {
+    console.log('[Render] Creating KnowledgeGraph instance...');
+    // Fix: Pass data and config as separate arguments
+    currentGraph = new KnowledgeGraph(container, data, config);
+    console.log('[Render] KnowledgeGraph created, calling render()...');
+    currentGraph.render();
+    console.log('[Render] ✅ Enhanced bundling render complete');
+    updateStatus('🌟 ENHANCED BUNDLING ACTIVE: Watch edges flow and bundle by semantic similarity! Curved paths show relationships.');
+  } catch (error) {
+    console.error('[Render] Failed to create or render graph:', error);
+    updateStatus(`❌ Render failed: ${error.message}`);
+    throw error; // Re-throw to be caught by outer handler
+  }
 }
 
 // Simple comparison mode
 function showSimpleEdges() {
+  console.log('[Render] Starting simple edges render...');
   clearGraph();
   const container = document.getElementById('graph');
-  if (!container) return;
+  if (!container) {
+    console.error('[Render] Graph container not found');
+    return;
+  }
 
   currentMode = 'simple';
   const data = createGamingSessionGraph();
+  console.log(`[Render] Data ready: ${data.nodes.length} nodes, ${data.edges.length} edges`);
 
   const config = {
     width: 1200,
@@ -180,11 +198,18 @@ function showSimpleEdges() {
     waitForStable: false
   };
 
-  // Fix: Pass data and config as separate arguments
-  currentGraph = new KnowledgeGraph(container, data, config);
-  currentGraph.render();
-
-  updateStatus('📏 SIMPLE EDGES: Basic straight lines - compare with Enhanced Bundling to see the difference!');
+  try {
+    console.log('[Render] Creating KnowledgeGraph instance...');
+    // Fix: Pass data and config as separate arguments
+    currentGraph = new KnowledgeGraph(container, data, config);
+    console.log('[Render] KnowledgeGraph created, calling render()...');
+    currentGraph.render();
+    console.log('[Render] ✅ Simple edges render complete');
+    updateStatus('📏 SIMPLE EDGES: Basic straight lines - compare with Enhanced Bundling to see the difference!');
+  } catch (error) {
+    console.error('[Render] Failed to create or render graph:', error);
+    updateStatus(`❌ Render failed: ${error.message}`);
+  }
 }
 
 // Add legend for understanding the semantic graph
@@ -231,6 +256,32 @@ function createLegend() {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('[Main] DOM loaded, initializing Knowledge Graph visualization...');
+
+  // Verify data generation first
+  try {
+    const testData = createGamingSessionGraph();
+    console.log(`[Data Check] Generated ${testData.nodes.length} nodes and ${testData.edges.length} edges`);
+
+    // Check for any invalid edge references
+    const nodeIds = new Set(testData.nodes.map(n => n.id));
+    const invalidEdges = testData.edges.filter(e =>
+      !nodeIds.has(e.source as string) || !nodeIds.has(e.target as string)
+    );
+
+    if (invalidEdges.length > 0) {
+      console.error('[Data Error] Found edges with invalid node references:', invalidEdges);
+      updateStatus('❌ Error: Invalid edge references detected. Check console for details.');
+      return;
+    }
+
+    console.log('[Data Check] ✅ All edge references are valid');
+  } catch (error) {
+    console.error('[Data Error] Failed to generate graph data:', error);
+    updateStatus('❌ Error: Failed to generate graph data. Check console for details.');
+    return;
+  }
+
   // Hook up buttons if they exist, otherwise show enhanced by default
   const simpleButton = document.getElementById('simple-edges');
   const bundlingButton = document.getElementById('edge-bundling');
@@ -249,7 +300,12 @@ document.addEventListener('DOMContentLoaded', () => {
   createLegend();
 
   // Start with the enhanced edge bundling demonstration
-  showEnhancedEdgeBundling();
+  try {
+    showEnhancedEdgeBundling();
+  } catch (error) {
+    console.error('[Render Error] Failed to render graph:', error);
+    updateStatus('❌ Error: Failed to render graph. Check console for details.');
+  }
 
   console.log('🎮 Gaming Session Knowledge Graph - Enhanced Edge Bundling Demo');
   console.log('✨ Features showcased:');
