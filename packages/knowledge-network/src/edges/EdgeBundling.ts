@@ -616,10 +616,10 @@ export class EdgeBundling implements EdgeRenderer {
       }
 
       // Create subdivision points with dramatic initial organic curves
-      const dx = target.x - source.x;
-      const dy = target.y - source.y;
-      const perpX = -dy;
-      const perpY = dx;
+      const deltaX = target.x - source.x;
+      const deltaY = target.y - source.y;
+      const perpX = -deltaY;
+      const perpY = deltaX;
       const perpLength = Math.sqrt(perpX * perpX + perpY * perpY);
 
       for (let i = 0; i <= subdivisions; i++) {
