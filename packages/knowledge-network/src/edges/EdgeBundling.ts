@@ -625,41 +625,58 @@ export class EdgeBundling implements EdgeRenderer {
       for (let i = 0; i <= subdivisions; i++) {
         const t = i / subdivisions;
 
-        // Base linear interpolation
-        const baseX = source.x * (1 - t) + target.x * t;
-        const baseY = source.y * (1 - t) + target.y * t;
-
-        // Dramatic initial organic curvature for visual impact
-        if (perpLength > 0) {
-          // Multi-frequency organic initial curve
-          const freq1 = Math.sin(t * Math.PI);
-          const freq2 = Math.sin(t * Math.PI * 2 + Math.PI/4) * 0.3;
-          const freq3 = Math.sin(t * Math.PI * 4 + Math.PI/8) * 0.15;
-          const organicCurve = freq1 + freq2 + freq3;
-
-          // Large initial amplitude for dramatic visual effect
-          const initialAmplitude = Math.min(200, length * 0.3); // Scale with edge length
-
-          // Add edge-specific variation using edge ID for uniqueness
-          const edgeVariation = Math.sin((source.x + target.x + source.y + target.y) * 0.01) * 0.5 + 0.5;
-          const curveStrength = initialAmplitude * (0.8 + edgeVariation * 0.4);
-
-          // Apply dramatic initial organic curve
-          const curveOffset = organicCurve * curveStrength;
-
+        // Keep endpoints fixed at exact source/target positions
+        if (i === 0) {
           points.push({
-            x: baseX + (perpX / perpLength) * curveOffset,
-            y: baseY + (perpY / perpLength) * curveOffset,
-            vx: 0, // Initialize velocity for momentum
-            vy: 0,
-          });
-        } else {
-          points.push({
-            x: baseX,
-            y: baseY,
+            x: source.x,
+            y: source.y,
             vx: 0,
             vy: 0,
           });
+        } else if (i === subdivisions) {
+          points.push({
+            x: target.x,
+            y: target.y,
+            vx: 0,
+            vy: 0,
+          });
+        } else {
+          // Base linear interpolation for interior points
+          const baseX = source.x * (1 - t) + target.x * t;
+          const baseY = source.y * (1 - t) + target.y * t;
+
+          // Dramatic initial organic curvature for visual impact (interior points only)
+          if (perpLength > 0) {
+            // Multi-frequency organic initial curve
+            const freq1 = Math.sin(t * Math.PI);
+            const freq2 = Math.sin(t * Math.PI * 2 + Math.PI/4) * 0.3;
+            const freq3 = Math.sin(t * Math.PI * 4 + Math.PI/8) * 0.15;
+            const organicCurve = freq1 + freq2 + freq3;
+
+            // Large initial amplitude for dramatic visual effect
+            const initialAmplitude = Math.min(200, length * 0.3); // Scale with edge length
+
+            // Add edge-specific variation using edge ID for uniqueness
+            const edgeVariation = Math.sin((source.x + target.x + source.y + target.y) * 0.01) * 0.5 + 0.5;
+            const curveStrength = initialAmplitude * (0.8 + edgeVariation * 0.4);
+
+            // Apply dramatic initial organic curve
+            const curveOffset = organicCurve * curveStrength;
+
+            points.push({
+              x: baseX + (perpX / perpLength) * curveOffset,
+              y: baseY + (perpY / perpLength) * curveOffset,
+              vx: 0, // Initialize velocity for momentum
+              vy: 0,
+            });
+          } else {
+            points.push({
+              x: baseX,
+              y: baseY,
+              vx: 0,
+              vy: 0,
+            });
+          }
         }
       }
 

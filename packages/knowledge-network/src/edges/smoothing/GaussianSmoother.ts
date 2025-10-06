@@ -119,8 +119,8 @@ export class GaussianSmoother extends BaseSmoothingStrategy {
         }
       }
 
-      // Update original points with smoothed values
-      for (let i = 0; i < numPoints; i++) {
+      // Update only interior points with smoothed values (skip endpoints)
+      for (let i = 1; i < numPoints - 1; i++) {
         points[i].x = smoothed[i].x;
         points[i].y = smoothed[i].y;
         // Preserve velocity if it exists

@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import type { GraphData, GraphConfig, Node, Accessor } from './types';
+import { LayoutEngineState } from './types';
 import { EdgeRenderer, EdgeRenderResult, SimpleEdge, EdgeBundling } from './edges';
 
 /**
@@ -84,6 +85,11 @@ export class KnowledgeGraph {
   private edgeRenderer: EdgeRenderer;
   private edgeRenderResult: EdgeRenderResult | null = null;
   private linkGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
+  private zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null;
+  private currentState: LayoutEngineState = LayoutEngineState.INITIAL;
+  private selectedNodeId: string | null = null;
+  private nodeGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
+  private initialAlpha: number = 1;
 
   /**
    * Creates a new KnowledgeGraph instance.
@@ -147,6 +153,7 @@ export class KnowledgeGraph {
       waitForStable: config.waitForStable ?? false,
       stabilityThreshold: config.stabilityThreshold ?? 0.01,
       enableZoom: config.enableZoom ?? true,
+      zoomExtent: config.zoomExtent,
       enableDrag: config.enableDrag ?? true,
       dimensions: config.dimensions ?? 2,
     };
@@ -163,6 +170,35 @@ export class KnowledgeGraph {
       return new EdgeBundling(this.config.edgeBundling);
     }
     return new SimpleEdge();
+  }
+
+  /**
+   * Update the state and call the callback if provided
+   */
+  private updateState(state: LayoutEngineState, progress: number = 0): void {
+    this.currentState = state;
+    if (this.config.onStateChange) {
+      try {
+        this.config.onStateChange(state, progress);
+      } catch (error) {
+        console.error('Error in onStateChange callback:', error);
+      }
+    }
+  }
+
+  /**
+   * Handle errors with callback
+   */
+  private handleError(error: Error, stage: string): void {
+    this.updateState(LayoutEngineState.ERROR, 0);
+    if (this.config.onError) {
+      try {
+        this.config.onError(error, stage);
+      } catch (callbackError) {
+        console.error('Error in onError callback:', callbackError);
+      }
+    }
+    console.error(`Error in ${stage}:`, error);
   }
 
   /**
@@ -232,27 +268,38 @@ export class KnowledgeGraph {
    * @throws {Error} May throw if the container element is invalid or if D3 operations fail
    */
   render(): void {
-    const width = this.config.width ?? 800;
-    const height = this.config.height ?? 600;
+    try {
+      // Update state to loading
+      this.updateState(LayoutEngineState.LOADING, 10);
+
+      const width = this.config.width ?? 800;
+      const height = this.config.height ?? 600;
 
     this.svg = d3.select(this.container)
       .append('svg')
       .attr('width', width)
       .attr('height', height)
-      .attr('viewBox', [0, 0, width, height]);
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .on('click', () => {
+        // Clear selection when clicking on empty space
+        this.clearSelection();
+      });
 
     const g = this.svg.append('g');
 
     // Setup zoom if enabled
     if (this.config.enableZoom) {
       const zoomExtent = this.config.zoomExtent || [0.1, 10];
-      const zoom = d3.zoom<SVGSVGElement, unknown>()
+      this.zoomBehavior = d3.zoom<SVGSVGElement, unknown>()
         .scaleExtent(zoomExtent)
         .on('zoom', (event) => {
           g.attr('transform', event.transform);
         });
 
-      this.svg.call(zoom);
+      this.svg.call(this.zoomBehavior);
+
+      // Store zoom behavior reference on the SVG element for testing
+      (this.svg.node() as any).__zoomBehavior = this.zoomBehavior;
 
       // Add fit-to-viewport functionality if enabled
       if (this.config.fitToViewport) {
@@ -274,22 +321,43 @@ export class KnowledgeGraph {
     const linkStrokeWidthAccessor = this.accessor(this.config.linkStrokeWidth, 1.5);
 
     // Create force simulation
+    const linkForce = d3.forceLink(this.data.edges)
+      .id((d: any) => d.id);
+
+    // Set link distance - handle constant vs function
+    if (typeof this.config.linkDistance === 'function') {
+      linkForce.distance((d: any, i) => linkDistanceAccessor(d, i, this.data.edges));
+    } else {
+      linkForce.distance(this.config.linkDistance ?? 100);
+    }
+
+    // Set link strength if provided
+    if (this.config.linkStrength !== undefined) {
+      linkForce.strength(this.config.linkStrength);
+    } else {
+      linkForce.strength(this.createLinkStrengthFunction());
+    }
+
+    const chargeForce = d3.forceManyBody();
+
+    // Set charge strength - handle constant vs function
+    if (typeof this.config.chargeStrength === 'function') {
+      chargeForce.strength((d: any, i) => chargeAccessor(d, i, this.data.nodes));
+    } else {
+      chargeForce.strength(this.config.chargeStrength ?? -300);
+    }
+
     this.simulation = d3.forceSimulation(this.data.nodes as d3.SimulationNodeDatum[])
-      .force('link', d3.forceLink(this.data.edges)
-        .id((d: any) => d.id)
-        .distance((d: any, i) => linkDistanceAccessor(d, i, this.data.edges))
-        .strength(this.config.linkStrength ?? this.createLinkStrengthFunction()))
-      .force('charge', d3.forceManyBody()
-        .strength((d: any, i) => chargeAccessor(d, i, this.data.nodes)))
+      .force('link', linkForce)
+      .force('charge', chargeForce)
       .force('center', d3.forceCenter(width / 2, height / 2));
 
     // Add collision detection if configured
-    const collisionRadiusAccessor = this.config.collisionRadius 
-      ? this.accessor(this.config.collisionRadius, 10)
-      : radiusAccessor;
-    
-    this.simulation.force('collision', d3.forceCollide()
-      .radius((d: any, i) => collisionRadiusAccessor(d, i, this.data.nodes) + 2));
+    if (this.config.collisionRadius) {
+      const collisionRadiusAccessor = this.accessor(this.config.collisionRadius, 10);
+      this.simulation.force('collision', d3.forceCollide()
+        .radius((d: any, i) => collisionRadiusAccessor(d, i, this.data.nodes) + 2));
+    }
 
     // Add similarity-based attraction if configured
     if (this.config.similarityFunction) {
@@ -299,16 +367,24 @@ export class KnowledgeGraph {
     // Create link group (edges will be rendered later)
     this.linkGroup = g.append('g').attr('class', 'links');
 
+    // Update state to layout calculating
+    this.updateState(LayoutEngineState.LAYOUT_CALCULATING, 30);
+
     // Draw nodes
-    const node = g.append('g')
-      .attr('class', 'nodes')
+    this.nodeGroup = g.append('g').attr('class', 'nodes');
+    const node = this.nodeGroup
       .selectAll('circle')
       .data(this.data.nodes)
       .join('circle')
       .attr('r', (d, i) => radiusAccessor(d, i, this.data.nodes))
       .attr('fill', (d, i) => fillAccessor(d, i, this.data.nodes))
       .attr('stroke', (d, i) => strokeAccessor(d, i, this.data.nodes))
-      .attr('stroke-width', (d, i) => strokeWidthAccessor(d, i, this.data.nodes));
+      .attr('stroke-width', (d, i) => strokeWidthAccessor(d, i, this.data.nodes))
+      .attr('cursor', 'pointer')
+      .on('click', (event, d: any) => {
+        event.stopPropagation();
+        this.selectNode(d.id);
+      });
 
     // Setup drag if enabled
     if (this.config.enableDrag) {
@@ -357,32 +433,62 @@ export class KnowledgeGraph {
         if (!edgesRendered) {
           console.log('Force rendering edges after timeout');
           edgesRendered = true;
+          this.updateState(LayoutEngineState.EDGE_GENERATING, 70);
           this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
 
           // Call onEdgesRendered callback if provided
           if (this.config.onEdgesRendered) {
             setTimeout(() => {
               this.config.onEdgesRendered?.();
+              this.updateState(LayoutEngineState.READY, 100);
             }, 50); // Small delay to ensure edges are fully rendered
+          } else {
+            this.updateState(LayoutEngineState.READY, 100);
           }
         }
       }, 5000); // 5 second maximum wait
     }
 
+    // Store initial alpha for progress calculation
+    this.initialAlpha = this.simulation.alpha();
+
     // Update positions on simulation tick
     this.simulation.on('tick', () => {
+      const alpha = this.simulation?.alpha() ?? 1;
+
+      // Calculate layout progress (alpha goes from 1 to near 0)
+      const layoutProgress = Math.min(99, Math.round((1 - alpha / this.initialAlpha) * 100));
+
+      // Call layout progress callback
+      if (this.config.onLayoutProgress && this.currentState === LayoutEngineState.LAYOUT_CALCULATING) {
+        try {
+          this.config.onLayoutProgress(alpha, layoutProgress);
+        } catch (error) {
+          console.error('Error in onLayoutProgress callback:', error);
+        }
+      }
+
+      // Update overall progress during layout calculation
+      if (this.currentState === LayoutEngineState.LAYOUT_CALCULATING) {
+        const overallProgress = 30 + Math.round(layoutProgress * 0.4); // 30-70% range
+        this.updateState(LayoutEngineState.LAYOUT_CALCULATING, overallProgress);
+      }
+
       // Check if simulation has stabilized and render edges
       if (!edgesRendered && this.config.waitForStable) {
-        const alpha = this.simulation?.alpha() ?? 1;
         if (alpha < (this.config.stabilityThreshold ?? 0.01)) {
           edgesRendered = true;
+          this.updateState(LayoutEngineState.EDGE_GENERATING, 70);
           this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
 
           // Call onEdgesRendered callback if provided
           if (this.config.onEdgesRendered) {
             setTimeout(() => {
               this.config.onEdgesRendered?.();
+              this.updateState(LayoutEngineState.READY, 100);
             }, 50); // Small delay to ensure edges are fully rendered
+          } else {
+            this.updateState(LayoutEngineState.READY, 100);
           }
         }
       }
@@ -409,14 +515,22 @@ export class KnowledgeGraph {
     // If not waiting for stable, render edges immediately
     if (!this.config.waitForStable) {
       edgesRendered = true;
+      this.updateState(LayoutEngineState.EDGE_GENERATING, 70);
       this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
 
       // Call onEdgesRendered callback if provided
       if (this.config.onEdgesRendered) {
         setTimeout(() => {
           this.config.onEdgesRendered?.();
+          this.updateState(LayoutEngineState.READY, 100);
         }, 100); // Small delay to ensure edges are fully rendered
+      } else {
+        this.updateState(LayoutEngineState.READY, 100);
       }
+    }
+    } catch (error) {
+      this.handleError(error as Error, 'render');
+      throw error; // Re-throw to maintain existing behavior
     }
   }
 
@@ -429,20 +543,43 @@ export class KnowledgeGraph {
   ): void {
     if (!this.linkGroup) return;
 
-    this.edgeRenderResult = this.edgeRenderer.render(
-      this.linkGroup,
-      this.data.edges,
-      this.data.nodes,
-      {
-        stroke: (d, i) => linkStrokeAccessor(d, i, this.data.edges),
-        strokeWidth: (d, i) => linkStrokeWidthAccessor(d, i, this.data.edges),
-        strokeOpacity: 0.6,
+    try {
+      // Call edge rendering progress callback for start
+      if (this.config.onEdgeRenderingProgress) {
+        try {
+          this.config.onEdgeRenderingProgress(0, this.data.edges.length);
+        } catch (error) {
+          console.error('Error in onEdgeRenderingProgress callback:', error);
+        }
       }
-    );
 
-    // Render edge labels if enabled
-    if (this.config.showEdgeLabels) {
-      this.renderEdgeLabels();
+      this.edgeRenderResult = this.edgeRenderer.render(
+        this.linkGroup,
+        this.data.edges,
+        this.data.nodes,
+        {
+          stroke: (d, i) => linkStrokeAccessor(d, i, this.data.edges),
+          strokeWidth: (d, i) => linkStrokeWidthAccessor(d, i, this.data.edges),
+          strokeOpacity: 0.6,
+        }
+      );
+
+      // Call edge rendering progress callback for completion
+      if (this.config.onEdgeRenderingProgress) {
+        try {
+          this.config.onEdgeRenderingProgress(this.data.edges.length, this.data.edges.length);
+        } catch (error) {
+          console.error('Error in onEdgeRenderingProgress callback:', error);
+        }
+      }
+
+      // Render edge labels if enabled
+      if (this.config.showEdgeLabels) {
+        this.renderEdgeLabels();
+      }
+    } catch (error) {
+      this.handleError(error as Error, 'renderEdges');
+      throw error;
     }
   }
 
@@ -763,6 +900,142 @@ export class KnowledgeGraph {
    */
   getSimulation(): d3.Simulation<d3.SimulationNodeDatum, undefined> | null {
     return this.simulation;
+  }
+
+  /**
+   * Selects a node and highlights it along with its neighbors.
+   *
+   * @param nodeId - The ID of the node to select
+   *
+   * @remarks
+   * This method selects a node, highlights it and its connected neighbors,
+   * and calls the onNodeSelected callback if provided. The selection state
+   * is visually indicated by changing node appearance.
+   *
+   * @example
+   * ```typescript
+   * graph.selectNode('node1');
+   * // Node and its neighbors are highlighted
+   * ```
+   */
+  selectNode(nodeId: string): void {
+    if (!this.nodeGroup) return;
+
+    this.selectedNodeId = nodeId;
+
+    // Get neighbors and connected edges
+    const neighbors = this.getNeighbors(nodeId);
+    const connectedEdges: string[] = [];
+
+    // Find connected edges
+    this.data.edges.forEach((edge, index) => {
+      const sourceId = typeof edge.source === 'string' ? edge.source : (edge.source as Node).id;
+      const targetId = typeof edge.target === 'string' ? edge.target : (edge.target as Node).id;
+
+      if (sourceId === nodeId || targetId === nodeId) {
+        connectedEdges.push(edge.id || `edge-${index}`);
+      }
+    });
+
+    // Update node styles
+    this.nodeGroup.selectAll('circle')
+      .attr('opacity', (d: any) => {
+        if (d.id === nodeId) return 1;
+        if (neighbors.includes(d.id)) return 0.8;
+        return 0.3;
+      })
+      .attr('stroke-width', (d: any) => {
+        if (d.id === nodeId) return 3;
+        if (neighbors.includes(d.id)) return 2;
+        return 1.5;
+      });
+
+    // Update edge styles if edges are rendered
+    if (this.linkGroup) {
+      this.linkGroup.selectAll('path')
+        .attr('opacity', (_d: any, i: number) => {
+          const edge = this.data.edges[i];
+          const sourceId = typeof edge.source === 'string' ? edge.source : (edge.source as Node).id;
+          const targetId = typeof edge.target === 'string' ? edge.target : (edge.target as Node).id;
+
+          if (sourceId === nodeId || targetId === nodeId) {
+            return 0.8;
+          }
+          return 0.2;
+        });
+    }
+
+    // Call the callback if provided
+    if (this.config.onNodeSelected) {
+      try {
+        this.config.onNodeSelected(nodeId, neighbors, connectedEdges);
+      } catch (error) {
+        console.error('Error in onNodeSelected callback:', error);
+      }
+    }
+  }
+
+  /**
+   * Clears the current node selection.
+   *
+   * @remarks
+   * This method removes any node selection and returns all nodes and edges
+   * to their default appearance.
+   *
+   * @example
+   * ```typescript
+   * graph.clearSelection();
+   * // All nodes and edges return to normal appearance
+   * ```
+   */
+  clearSelection(): void {
+    if (!this.nodeGroup) return;
+
+    this.selectedNodeId = null;
+
+    // Reset node styles
+    this.nodeGroup.selectAll('circle')
+      .attr('opacity', 1)
+      .attr('stroke-width', 1.5);
+
+    // Reset edge styles
+    if (this.linkGroup) {
+      this.linkGroup.selectAll('path')
+        .attr('opacity', 0.6);
+    }
+  }
+
+  /**
+   * Gets the neighbor node IDs for a given node.
+   *
+   * @param nodeId - The ID of the node to find neighbors for
+   * @returns Array of neighbor node IDs
+   *
+   * @remarks
+   * This method returns all nodes that are directly connected to the
+   * specified node via edges (both incoming and outgoing).
+   *
+   * @example
+   * ```typescript
+   * const neighbors = graph.getNeighbors('node1');
+   * console.log(`Node1 has ${neighbors.length} neighbors`);
+   * ```
+   */
+  getNeighbors(nodeId: string): string[] {
+    const neighbors: Set<string> = new Set();
+
+    this.data.edges.forEach(edge => {
+      const sourceId = typeof edge.source === 'string' ? edge.source : (edge.source as Node).id;
+      const targetId = typeof edge.target === 'string' ? edge.target : (edge.target as Node).id;
+
+      if (sourceId === nodeId && targetId !== nodeId) {
+        neighbors.add(targetId);
+      } else if (targetId === nodeId && sourceId !== nodeId) {
+        neighbors.add(sourceId);
+      }
+    });
+
+    return Array.from(neighbors);
   }
 
   /**

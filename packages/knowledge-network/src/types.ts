@@ -311,6 +311,59 @@ export type SimilarityFunction = (a: Node, b: Node) => number;
 export type LinkStrengthFunction = (edge: Edge, i: number, edges: Edge[]) => number;
 
 /**
+ * Layout engine state for progress tracking.
+ *
+ * @remarks
+ * Represents the different stages of graph rendering and layout calculation.
+ * Used with the onStateChange callback to provide detailed progress information.
+ *
+ * @example
+ * ```typescript
+ * const config: GraphConfig = {
+ *   onStateChange: (state, progress) => {
+ *     console.log(`State: ${state}, Progress: ${progress}%`);
+ *   }
+ * };
+ * ```
+ */
+export enum LayoutEngineState {
+  /**
+   * Initial state before rendering starts.
+   */
+  INITIAL = 'initial',
+
+  /**
+   * Loading and preparing graph data.
+   */
+  LOADING = 'loading',
+
+  /**
+   * Force simulation is calculating node positions.
+   */
+  LAYOUT_CALCULATING = 'layout_calculating',
+
+  /**
+   * Edges are being generated and rendered.
+   */
+  EDGE_GENERATING = 'edge_generating',
+
+  /**
+   * Viewport is being adjusted to fit the graph.
+   */
+  ZOOM_FITTING = 'zoom_fitting',
+
+  /**
+   * Graph is fully rendered and ready for interaction.
+   */
+  READY = 'ready',
+
+  /**
+   * An error occurred during rendering.
+   */
+  ERROR = 'error'
+}
+
+/**
  * Configuration options for the knowledge graph visualization.
  *
  * @remarks
@@ -693,4 +746,81 @@ export interface GraphConfig {
    * Useful for implementing loading states and post-render operations.
    */
   onEdgesRendered?: () => void;
+
+  // Progress and state callbacks
+
+  /**
+   * Callback when the layout engine state changes.
+   * Provides current state and overall progress percentage.
+   * @param state - Current state of the layout engine
+   * @param progress - Progress percentage (0-100)
+   * @example
+   * ```typescript
+   * onStateChange: (state, progress) => {
+   *   console.log(`State: ${state}, Progress: ${progress}%`);
+   *   if (state === LayoutEngineState.READY) {
+   *     console.log('Graph fully rendered!');
+   *   }
+   * }
+   * ```
+   */
+  onStateChange?: (state: LayoutEngineState, progress: number) => void;
+
+  /**
+   * Callback for layout calculation progress.
+   * Called during force simulation ticks.
+   * @param alpha - Current alpha value of the simulation (0-1)
+   * @param progress - Progress percentage (0-100)
+   * @example
+   * ```typescript
+   * onLayoutProgress: (alpha, progress) => {
+   *   console.log(`Layout ${progress}% complete (alpha: ${alpha})`);
+   * }
+   * ```
+   */
+  onLayoutProgress?: (alpha: number, progress: number) => void;
+
+  /**
+   * Callback for edge rendering progress.
+   * Useful for showing progress during edge bundling calculations.
+   * @param rendered - Number of edges rendered
+   * @param total - Total number of edges
+   * @example
+   * ```typescript
+   * onEdgeRenderingProgress: (rendered, total) => {
+   *   console.log(`Rendered ${rendered}/${total} edges`);
+   * }
+   * ```
+   */
+  onEdgeRenderingProgress?: (rendered: number, total: number) => void;
+
+  /**
+   * Callback when a node is selected.
+   * Provides the selected node ID and its neighbors.
+   * @param nodeId - ID of the selected node
+   * @param neighbors - Array of neighbor node IDs
+   * @param edges - Array of connected edge IDs
+   * @example
+   * ```typescript
+   * onNodeSelected: (nodeId, neighbors, edges) => {
+   *   console.log(`Selected ${nodeId} with ${neighbors.length} neighbors`);
+   *   highlightNodes([nodeId, ...neighbors]);
+   * }
+   * ```
+   */
+  onNodeSelected?: (nodeId: string, neighbors: string[], edges: string[]) => void;
+
+  /**
+   * Callback when an error occurs during rendering.
+   * @param error - The error that occurred
+   * @param stage - The stage where the error occurred
+   * @example
+   * ```typescript
+   * onError: (error, stage) => {
+   *   console.error(`Error in ${stage}:`, error);
+   *   showErrorNotification(error.message);
+   * }
+   * ```
+   */
+  onError?: (error: Error, stage: string) => void;
 }

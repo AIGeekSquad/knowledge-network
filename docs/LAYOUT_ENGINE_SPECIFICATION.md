@@ -1,761 +1,403 @@
 # Knowledge Network Layout Engine Specification
-## Pure D3.js Idiomatic API Design
 
-## Executive Summary
+Version: 1.0.0
+Status: Implementation Complete
+Last Updated: 2025-01-06
 
-The Knowledge Network Layout Engine is reimagined as a pure D3.js idiomatic visualization system that embraces D3's selection-based, data-driven paradigm. This specification defines a fluent, chainable API with comprehensive callback support for state management, progressive rendering, and interactive capabilities.
+## 1. Executive Summary
 
-## Core Philosophy
+The Knowledge Network Layout Engine is implemented as the `KnowledgeGraph` TypeScript class, providing a D3.js-based graph visualization system for knowledge graphs. It follows D3.js idiomatic patterns with TypeScript type safety, emphasizing simplicity, performance, and rich interactive capabilities.
 
-### D3.js Idiomatic Principles
+## 2. Current Implementation Architecture
 
-1. **Selection-Based Operations**: All operations work on D3 selections
-2. **Method Chaining**: Fluent interface for configuration and rendering
-3. **Data Binding**: Direct data-to-DOM binding following D3 patterns
-4. **Accessor Functions**: `(d, i, nodes) => value` pattern throughout
-5. **Event-Driven**: D3-style `.on('event', handler)` for all interactions
-6. **Transitions**: Native D3 transitions for animations
+### 2.1 Design Principles
 
-### Architectural Alignment
+- **TypeScript First**: Complete type safety with comprehensive interfaces
+- **D3.js Idiomatic**: Pure D3 patterns with modern ES6+ features
+- **Callback-Driven**: Event system using simple callbacks rather than complex state machines
+- **Edge Renderer Abstraction**: Pluggable rendering system (SimpleEdge, EdgeBundling)
+- **Progressive Enhancement**: Core features working, advanced features optional
 
-```javascript
-// Pure D3.js idiomatic usage
-const graph = knowledgeNetwork()
-  .width(800)
-  .height(600)
-  .nodeRadius(d => d.importance * 10)
-  .on('stateChange', (state, progress) => console.log(state, progress))
-  .on('nodeClick', (event, d) => showDetails(d));
+### 2.2 System Components
 
-d3.select('#container')
-  .datum(graphData)
-  .call(graph);
+```
+┌─────────────────────────────────────────────────┐
+│           KnowledgeGraph Class                   │
+├─────────────────────────────────────────────────┤
+│  D3 Simulation │  Edge Renderer │  SVG Controls  │
+├─────────────────────────────────────────────────┤
+│         Configuration & Callbacks               │
+├─────────────────────────────────────────────────┤
+│              D3.js + TypeScript                  │
+└─────────────────────────────────────────────────┘
 ```
 
-## API Architecture
+### 2.3 File Structure (Current)
 
-### Core API Structure
+```
+packages/knowledge-network/src/
+├── KnowledgeGraph.ts     # Main class implementation
+├── types.ts              # TypeScript type definitions
+└── edges/
+    ├── index.ts          # Edge renderer exports
+    ├── SimpleEdge.ts     # Basic line rendering
+    └── EdgeBundling.ts   # Hierarchical edge bundling
+```
 
-```javascript
-// Factory function following D3 convention
-function knowledgeNetwork() {
-  // Private state
-  let width = 800;
-  let height = 600;
-  let nodeRadius = 5;
-  let simulation = null;
-  let callbacks = d3.dispatch(
-    'stateChange',
-    'layoutProgress', 
-    'edgeRenderStart',
-    'edgeRenderProgress',
-    'edgeRenderComplete',
-    'zoomFit',
-    'ready',
-    'error',
-    'nodeClick',
-    'nodeMouseover',
-    'nodeMouseout',
-    'edgeClick',
-    'edgeMouseover',
-    'edgeMouseout',
-    'zoom',
-    'dragStart',
-    'drag',
-    'dragEnd'
-  );
+## 3. Current Implementation Details
 
-  // The main render function
-  function graph(selection) {
-    selection.each(function(data) {
-      // D3 idiomatic rendering
-    });
-  }
+### 3.1 KnowledgeGraph Class Structure
 
-  // Chainable configuration methods
-  graph.width = function(value) {
-    if (!arguments.length) return width;
-    width = value;
-    return graph;
-  };
+The main class follows a straightforward instantiation and configuration pattern:
 
-  graph.nodeRadius = function(value) {
-    if (!arguments.length) return nodeRadius;
-    nodeRadius = typeof value === 'function' ? value : () => value;
-    return graph;
-  };
+```typescript
+export class KnowledgeGraph {
+  private container: HTMLElement;
+  private data: GraphData;
+  private config: GraphConfig;
+  private svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null = null;
+  private simulation: d3.Simulation<d3.SimulationNodeDatum, undefined> | null = null;
+  private edgeRenderer: EdgeRenderer;
+  private edgeRenderResult: EdgeRenderResult | null = null;
+  private linkGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
 
-  // Event handling
-  graph.on = function() {
-    const value = callbacks.on.apply(callbacks, arguments);
-    return value === callbacks ? graph : value;
-  };
-
-  return graph;
+  constructor(container: HTMLElement, data: GraphData, config: GraphConfig = {})
+  render(): void
+  updateData(data: GraphData): void
+  getSimulation(): d3.Simulation<d3.SimulationNodeDatum, undefined> | null
+  destroy(): void
 }
 ```
 
-## State Management API
+### 3.2 Lifecycle Management
 
-### State Machine with D3 Callbacks
+Instead of a complex state machine, the implementation uses a simple lifecycle:
 
-```javascript
-// State enumeration
-const LayoutState = {
-  IDLE: 'idle',
-  LOADING: 'loading',
-  LAYOUT_CALCULATING: 'layout_calculating',
-  EDGE_RENDERING: 'edge_rendering',
-  ZOOM_FITTING: 'zoom_fitting',
-  READY: 'ready',
-  ERROR: 'error',
-  DISPOSED: 'disposed'
-};
+1. **Construction**: `new KnowledgeGraph(container, data, config)`
+2. **Rendering**: `.render()` creates SVG, simulation, and visual elements
+3. **Updates**: `.updateData(newData)` destroys and re-renders
+4. **Cleanup**: `.destroy()` stops simulation and removes DOM elements
 
-// State management integration
-graph.on('stateChange', function(state, progress, metadata) {
-  // State object structure
-  // {
-  //   current: LayoutState.LOADING,
-  //   previous: LayoutState.IDLE,
-  //   progress: 0.45,  // 0-1 normalized
-  //   metadata: {
-  //     phase: 'validation',
-  //     nodesLoaded: 150,
-  //     edgesLoaded: 450,
-  //     errors: []
-  //   }
-  // }
-});
+### 3.3 Callback System
+
+The implementation uses callback functions in configuration for lifecycle events:
+
+```typescript
+interface GraphConfig {
+  onEdgesRendered?: () => void;  // Called when edges complete rendering
+  // ... other config options
+}
 ```
 
-### Progress Callbacks
+This provides a simpler alternative to complex event systems while maintaining observability.
 
-```javascript
-// Layout calculation progress
-graph.on('layoutProgress', function(progress, alpha, metadata) {
-  // progress: 0-1 normalized progress
-  // alpha: current simulation alpha value
-  // metadata: {
-  //   iterations: 150,
-  //   stability: 0.85,
-  //   converging: true,
-  //   estimatedCompletion: 2500  // ms
-  // }
-});
+## 4. D3.js Integration Details
 
-// Edge rendering progress
-graph.on('edgeRenderStart', function(totalEdges, renderMode) {
-  console.log(`Starting to render ${totalEdges} edges in ${renderMode} mode`);
-});
+### 4.1 Force Simulation Setup (Actual Implementation)
 
-graph.on('edgeRenderProgress', function(rendered, total, batchInfo) {
-  // batchInfo: {
-  //   batchSize: 100,
-  //   currentBatch: 5,
-  //   totalBatches: 10,
-  //   estimatedTimeRemaining: 1500  // ms
-  // }
-});
-
-graph.on('edgeRenderComplete', function(renderStats) {
-  // renderStats: {
-  //   totalEdges: 500,
-  //   renderTime: 2500,  // ms
-  //   mode: 'bundled',
-  //   bundlingIterations: 90
-  // }
-});
+```typescript
+// From KnowledgeGraph.render() method
+this.simulation = d3.forceSimulation(this.data.nodes as d3.SimulationNodeDatum[])
+  .force('link', d3.forceLink(this.data.edges)
+    .id((d: any) => d.id)
+    .distance((d: any, i) => linkDistanceAccessor(d, i, this.data.edges))
+    .strength(this.config.linkStrength ?? this.createLinkStrengthFunction()))
+  .force('charge', d3.forceManyBody()
+    .strength((d: any, i) => chargeAccessor(d, i, this.data.nodes)))
+  .force('center', d3.forceCenter(width / 2, height / 2))
+  .force('collision', d3.forceCollide()
+    .radius((d: any, i) => collisionRadiusAccessor(d, i, this.data.nodes) + 2));
 ```
 
-## Configuration API
+### 4.2 Accessor Pattern Usage
 
-### Fluent Configuration Interface
+The implementation uses a flexible accessor pattern that converts configuration values to functions:
 
-```javascript
-const graph = knowledgeNetwork()
-  // Dimensions
-  .width(1200)
-  .height(800)
-  .padding(20)
-  
-  // Node configuration with accessors
-  .nodeRadius(d => d.importance * 5 + 3)
-  .nodeFill(d => colorScale(d.category))
-  .nodeStroke(d => d.selected ? '#ff0000' : '#333')
-  .nodeStrokeWidth(d => d.selected ? 2 : 1)
-  .nodeOpacity(d => d.highlighted ? 1 : 0.6)
-  
-  // Edge configuration with accessors  
-  .linkDistance(d => d.weight ? 50 / d.weight : 100)
-  .linkStrength(d => d.type === 'strong' ? 1 : 0.5)
-  .linkStroke(d => d.highlighted ? '#ff0000' : '#999')
-  .linkStrokeWidth(d => d.highlighted ? 2 : 1)
-  .linkOpacity(d => d.highlighted ? 1 : 0.3)
-  
-  // Force simulation
-  .chargeStrength(d => -300 * (d.importance || 1))
-  .collisionRadius(d => graph.nodeRadius()(d) + 2)
-  .alphaDecay(0.02)
-  .velocityDecay(0.4)
-  
-  // Edge rendering
-  .edgeRenderer('bundled')  // 'simple' | 'bundled' | 'curved'
-  .bundlingStrength(0.85)
-  .bundlingIterations(90)
-  .bundlingCompatibility(0.6)
-  
-  // Interaction
-  .enableZoom(true)
-  .zoomExtent([0.1, 10])
-  .enablePan(true)
-  .enableDrag(true)
-  .enableSelection(true)
-  .selectionMode('single')  // 'single' | 'multiple'
-  .neighborHighlightDepth(1)
-  
-  // Rendering behavior
-  .renderMode('progressive')  // 'immediate' | 'progressive' | 'deferred'
-  .hideGraphDuringLayout(true)
-  .waitForStableLayout(true)
-  .stabilityThreshold(0.001)
-  .maxLayoutDuration(5000)  // ms
-  
-  // Performance
-  .enableWebGL(false)
-  .batchSize(100)  // for edge rendering
-  .throttleProgress(16);  // ms between progress updates
+```typescript
+private accessor<T, R>(accessor: Accessor<T, R> | undefined, defaultValue: R): (d: T, i: number, nodes: T[]) => R {
+  if (accessor === undefined) return () => defaultValue;
+  if (typeof accessor === 'function') return accessor as (d: T, i: number, nodes: T[]) => R;
+  return () => accessor;
+}
+
+// Usage example
+const radiusAccessor = this.accessor(this.config.nodeRadius, 10);
+const fillAccessor = this.accessor(this.config.nodeFill, '#69b3a2');
 ```
 
-## Selection and Data Binding API
+### 4.3 SVG Structure Creation
 
-### D3 Selection Integration
+```typescript
+// SVG setup with zoom capabilities
+this.svg = d3.select(this.container)
+  .append('svg')
+  .attr('width', width)
+  .attr('height', height)
+  .attr('viewBox', [0, 0, width, height]);
 
-```javascript
-// Standard D3 selection pattern
-const container = d3.select('#graph-container');
+const g = this.svg.append('g');
 
-// Bind data and call graph
-container
-  .datum(graphData)
-  .call(graph);
-
-// Or with explicit data binding
-graph
-  .data(graphData)
-  .render(container);
-
-// Updating data with transition
-container
-  .datum(newData)
-  .transition()
-  .duration(750)
-  .call(graph);
+// Zoom behavior
+const zoom = d3.zoom<SVGSVGElement, unknown>()
+  .scaleExtent(this.config.zoomExtent || [0.1, 10])
+  .on('zoom', (event) => {
+    g.attr('transform', event.transform);
+  });
 ```
 
-### Node and Edge Selections
+## 5. Edge Rendering System
 
-```javascript
-// Access internal selections
-const nodes = graph.nodes();  // Returns D3 selection of nodes
-const edges = graph.edges();  // Returns D3 selection of edges
+### 5.1 Pluggable Edge Renderer Architecture
 
-// Direct manipulation
-nodes
-  .filter(d => d.category === 'important')
-  .classed('highlighted', true)
-  .transition()
-  .duration(500)
-  .attr('r', d => graph.nodeRadius()(d) * 1.5);
+The implementation uses an abstract `EdgeRenderer` interface with concrete implementations:
 
-// Custom styling
-edges
-  .filter(d => d.weight > 0.8)
-  .style('stroke', '#ff6b6b')
-  .style('stroke-width', 2);
+```typescript
+// Edge renderer abstraction
+interface EdgeRenderer {
+  render(linkGroup: d3.Selection, edges: Edge[], nodes: Node[], style: EdgeStyle): EdgeRenderResult;
+  update(result: EdgeRenderResult): void;
+  destroy(result: EdgeRenderResult): void;
+}
+
+// Current implementations
+class SimpleEdge implements EdgeRenderer { /* Basic straight lines */ }
+class EdgeBundling implements EdgeRenderer { /* Hierarchical edge bundling */ }
 ```
 
-## Interaction API
+### 5.2 Edge Rendering Configuration
 
-### Node Interaction Events
-
-```javascript
-// Node click with D3 event pattern
-graph.on('nodeClick', function(event, d) {
-  // event: D3 event object
-  // d: node data
-  // this: DOM element
-  
-  const neighbors = graph.neighbors(d.id);
-  const edges = graph.adjacentEdges(d.id);
-  
-  // Highlight neighbors
-  graph.highlightNodes(neighbors);
-  graph.highlightEdges(edges);
-});
-
-// Node hover
-graph.on('nodeMouseover', function(event, d) {
-  // Show tooltip
-  d3.select(this)
-    .transition()
-    .duration(200)
-    .attr('r', graph.nodeRadius()(d) * 1.2);
-});
-
-graph.on('nodeMouseout', function(event, d) {
-  d3.select(this)
-    .transition()
-    .duration(200)
-    .attr('r', graph.nodeRadius()(d));
-});
+```typescript
+interface GraphConfig {
+  edgeRenderer?: 'simple' | 'bundled';  // Renderer selection
+  edgeBundling?: {  // Bundling parameters
+    subdivisions?: number;
+    adaptiveSubdivision?: boolean;
+    compatibilityThreshold?: number;
+    iterations?: number;
+    stepSize?: number;
+    stiffness?: number;
+    momentum?: number;
+    curveType?: 'basis' | 'cardinal' | 'catmullRom' | 'bundle';
+    curveTension?: number;
+    smoothingType?: 'laplacian' | 'gaussian' | 'bilateral';
+    smoothingIterations?: number;
+    smoothingFrequency?: number;
+    compatibilityFunction?: (edge1: Edge, edge2: Edge) => number;
+  };
+}
 ```
 
-### Selection API
+### 5.3 Stabilization-Based Edge Rendering
 
-```javascript
-// Programmatic selection
-graph.selectNode('node-id-1');
-graph.selectNodes(['node-1', 'node-2', 'node-3']);
-graph.deselectAll();
+The implementation includes an optional stabilization phase before edge rendering:
 
-// Get selection state
-const selected = graph.selectedNodes();  // Returns array of node IDs
-const highlighted = graph.highlightedNodes();  // Returns Set of node IDs
-
-// Selection with neighbor highlighting
-graph.selectNode('node-1', {
-  highlightNeighbors: true,
-  depth: 2,  // Highlight 2 levels of neighbors
-  includeEdges: true
-});
-
-// Selection events
-graph.on('selectionChange', function(selected, highlighted) {
-  console.log('Selected:', selected);
-  console.log('Highlighted:', highlighted);
-});
-```
-
-### Zoom and Pan API
-
-```javascript
-// Zoom behavior following D3 patterns
-const zoom = graph.zoom();  // Returns D3 zoom behavior
-
-// Programmatic zoom
-graph.zoomTo(2.0);  // Zoom to scale 2.0
-graph.zoomTo(2.0, [400, 300]);  // Zoom to scale 2.0 centered at [400, 300]
-graph.zoomToFit();  // Fit entire graph in viewport
-graph.zoomToFit(50);  // Fit with 50px padding
-graph.zoomToSelection();  // Zoom to selected nodes
-graph.resetZoom();  // Reset to identity transform
-
-// Pan control
-graph.panTo(100, 200);  // Pan to position
-graph.centerOn('node-id');  // Center view on specific node
-
-// Zoom events
-graph.on('zoom', function(transform) {
-  // transform: D3 zoom transform
-  // { k: scale, x: translateX, y: translateY }
-  console.log('Zoom level:', transform.k);
-});
-```
-
-### Drag Behavior
-
-```javascript
-// Drag behavior following D3 patterns
-graph.on('dragStart', function(event, d) {
-  // Fix node position during drag
-  d.fx = d.x;
-  d.fy = d.y;
-  
-  // Restart simulation with higher alpha
-  graph.simulation()
-    .alphaTarget(0.3)
-    .restart();
-});
-
-graph.on('drag', function(event, d) {
-  // Update fixed position
-  d.fx = event.x;
-  d.fy = event.y;
-});
-
-graph.on('dragEnd', function(event, d) {
-  // Release fixed position
-  d.fx = null;
-  d.fy = null;
-  
-  // Cool down simulation
-  graph.simulation()
-    .alphaTarget(0);
-});
-```
-
-## Force Simulation API
-
-### Direct Simulation Access
-
-```javascript
-// Get D3 force simulation
-const simulation = graph.simulation();
-
-// Modify forces
-simulation.force('charge')
-  .strength(d => -500 * d.importance);
-
-simulation.force('link')
-  .distance(d => d.weight ? 50 / d.weight : 100);
-
-// Add custom force
-simulation.force('clustering', clusteringForce()
-  .strength(0.5)
-  .centers(clusterCenters));
-
-// Control simulation
-simulation
-  .alpha(0.5)
-  .restart();
-
-// Simulation events
-simulation.on('tick', function() {
-  // Custom tick handling
-});
-
-simulation.on('end', function() {
-  // Simulation stabilized
-  graph.trigger('simulationEnd');
-});
-```
-
-### Custom Forces
-
-```javascript
-// Add custom forces using D3 patterns
-graph.force('radial', d3.forceRadial()
-  .radius(d => d.level * 100)
-  .strength(0.8));
-
-graph.force('boundary', boundaryForce()
-  .bounds({ x: [0, width], y: [0, height] })
-  .strength(0.1));
-
-// Remove force
-graph.force('radial', null);
-```
-
-## Transition API
-
-### D3 Transition Support
-
-```javascript
-// Configure default transition
-graph
-  .defaultTransition(d3.transition()
-    .duration(750)
-    .ease(d3.easeCubicInOut));
-
-// Animated updates
-graph.updateNodes(newNodeData, {
-  transition: true,
-  duration: 1000,
-  delay: (d, i) => i * 10
-});
-
-graph.updateEdges(newEdgeData, {
-  transition: true,
-  duration: 500
-});
-
-// Animated layout changes
-graph
-  .transition()
-  .duration(2000)
-  .call(graph.layoutAlgorithm, 'radial');
-```
-
-## Error Handling API
-
-### Error Events
-
-```javascript
-graph.on('error', function(error, context) {
-  // error: Error object with details
-  // context: {
-  //   phase: 'edge_rendering',
-  //   operation: 'bundling',
-  //   recoverable: true,
-  //   fallback: 'simple',
-  //   data: { edgeCount: 5000 }
-  // }
-  
-  if (context.recoverable) {
-    // Attempt recovery
-    graph.recover(context.fallback);
-  } else {
-    // Show error UI
-    showError(error.message);
+```typescript
+// Wait for simulation to stabilize before rendering edges
+if (this.config.waitForStable) {
+  const alpha = this.simulation?.alpha() ?? 1;
+  if (alpha < (this.config.stabilityThreshold ?? 0.01)) {
+    edgesRendered = true;
+    this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
   }
-});
-
-// Validation errors
-graph.on('validationError', function(errors) {
-  // errors: Array of validation issues
-  // [{
-  //   type: 'missing_node',
-  //   edge: 'edge-1',
-  //   node: 'node-99',
-  //   message: 'Edge references non-existent node'
-  // }]
-});
+}
 ```
 
-## Lifecycle API
+## 6. Interaction System
 
-### Component Lifecycle
+### 6.1 Zoom and Pan Implementation
 
-```javascript
-// Initialization
-graph.on('init', function(config) {
-  console.log('Graph initialized with config:', config);
-});
-
-// Ready state
-graph.on('ready', function(stats) {
-  // stats: {
-  //   renderTime: 2500,
-  //   nodeCount: 150,
-  //   edgeCount: 450,
-  //   layoutIterations: 300
-  // }
-  console.log('Graph ready:', stats);
-});
-
-// Disposal
-graph.on('dispose', function() {
-  console.log('Graph disposed');
-});
-
-// Manual lifecycle control
-graph.init(container);
-graph.render();
-graph.dispose();
-```
-
-## Data Update API
-
-### Live Data Updates
-
-```javascript
-// Update entire dataset
-graph.data(newData);
-graph.render();
-
-// Incremental updates
-graph.addNodes(newNodes);
-graph.addEdges(newEdges);
-graph.removeNodes(nodeIds);
-graph.removeEdges(edgeIds);
-
-// Update with merge strategy
-graph.updateData(partialData, {
-  merge: true,
-  key: d => d.id,
-  updateOnly: false
-});
-
-// Batch updates
-graph.startBatch();
-graph.addNodes(nodes1);
-graph.addEdges(edges1);
-graph.removeNodes(oldNodeIds);
-graph.endBatch();  // Triggers single re-render
-```
-
-## Performance Monitoring API
-
-### Performance Events
-
-```javascript
-graph.on('performanceUpdate', function(metrics) {
-  // metrics: {
-  //   fps: 45,
-  //   renderTime: 16.7,  // ms per frame
-  //   layoutTime: 2500,  // total layout time
-  //   edgeRenderTime: 1500,  // total edge render time
-  //   memoryUsage: 45.2,  // MB
-  //   nodeCount: 500,
-  //   edgeCount: 1500,
-  //   visibleNodes: 450,
-  //   visibleEdges: 1200
-  // }
-});
-
-// Frame drops
-graph.on('frameDrop', function(info) {
-  // info: {
-  //   targetFPS: 60,
-  //   actualFPS: 15,
-  //   duration: 250,  // ms of low FPS
-  //   cause: 'edge_rendering'
-  // }
-});
-```
-
-## Method Chaining Examples
-
-### Complete Configuration Chain
-
-```javascript
-const graph = knowledgeNetwork()
-  // Dimensions
-  .width(1200)
-  .height(800)
-  
-  // Data
-  .data(graphData)
-  
-  // Visual encoding
-  .nodeRadius(d => Math.sqrt(d.value) * 2)
-  .nodeFill(d => colorScale(d.category))
-  .linkStroke(d => d.type === 'strong' ? '#333' : '#999')
-  
-  // Forces
-  .chargeStrength(-300)
-  .linkDistance(50)
-  
-  // Rendering
-  .edgeRenderer('bundled')
-  .bundlingStrength(0.85)
-  
-  // Behavior
-  .enableZoom(true)
-  .enableDrag(true)
-  
-  // Events
-  .on('stateChange', handleStateChange)
-  .on('nodeClick', handleNodeClick)
-  .on('error', handleError)
-  .on('ready', handleReady);
-
-// Render to container
-d3.select('#container').call(graph);
-```
-
-### Progressive Enhancement
-
-```javascript
-// Start with basic graph
-const graph = knowledgeNetwork()
-  .data(graphData);
-
-// Progressively add features
-graph
-  .nodeRadius(d => d.importance * 5)
-  .nodeFill(d => d.color);
-
-// Add interactions later
-graph
-  .enableZoom(true)
-  .on('nodeClick', showDetails);
-
-// Add performance monitoring
-graph
-  .on('performanceUpdate', updateMetrics)
-  .on('frameDrop', handlePerformanceIssue);
-
-// Render when ready
-d3.select('#container').call(graph);
-```
-
-## Testing Requirements
-
-### Unit Test Coverage
-
-```javascript
-describe('KnowledgeNetwork D3 API', () => {
-  describe('Configuration API', () => {
-    it('should support method chaining', () => {
-      const graph = knowledgeNetwork()
-        .width(800)
-        .height(600)
-        .nodeRadius(10);
-      
-      expect(graph.width()).toBe(800);
-      expect(graph.height()).toBe(600);
-      expect(graph.nodeRadius()()).toBe(10);
+```typescript
+// Zoom behavior setup
+if (this.config.enableZoom) {
+  const zoomExtent = this.config.zoomExtent || [0.1, 10];
+  const zoom = d3.zoom<SVGSVGElement, unknown>()
+    .scaleExtent(zoomExtent)
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform);
     });
-    
-    it('should accept accessor functions', () => {
-      const accessor = d => d.value * 2;
-      const graph = knowledgeNetwork()
-        .nodeRadius(accessor);
-      
-      const result = graph.nodeRadius()({ value: 5 }, 0, []);
-      expect(result).toBe(10);
-    });
-  });
-  
-  describe('Event System', () => {
-    it('should trigger callbacks in correct order', (done) => {
-      const events = [];
-      const graph = knowledgeNetwork()
-        .on('stateChange', () => events.push('state'))
-        .on('layoutProgress', () => events.push('layout'))
-        .on('ready', () => {
-          expect(events).toEqual(['state', 'layout', 'state']);
-          done();
-        });
-      
-      d3.select(container).datum(data).call(graph);
-    });
-  });
-  
-  describe('Selection API', () => {
-    it('should highlight neighbors on selection', () => {
-      const graph = knowledgeNetwork();
-      graph.selectNode('node-1', { highlightNeighbors: true });
-      
-      const highlighted = graph.highlightedNodes();
-      expect(highlighted.size).toBeGreaterThan(1);
-    });
-  });
-});
+  this.svg.call(zoom);
+
+  // Auto-fit functionality
+  if (this.config.fitToViewport) {
+    setTimeout(() => {
+      this.fitToViewport(g, zoom);
+    }, 1000);
+  }
+}
 ```
 
-## Migration Guide
+### 6.2 Drag Behavior
 
-### From Current Implementation to D3 Idiomatic
-
-```javascript
-// Current approach
-const graph = new KnowledgeGraph(container, data, config);
-graph.render();
-
-// New D3 idiomatic approach  
-const graph = knowledgeNetwork()
-  .width(config.width)
-  .height(config.height)
-  .nodeRadius(config.nodeRadius);
-
-d3.select(container)
-  .datum(data)
-  .call(graph);
+```typescript
+// Node dragging with simulation integration
+if (this.config.enableDrag) {
+  const drag = d3.drag<SVGCircleElement, Node>()
+    .on('start', (event, d: any) => {
+      if (!event.active) this.simulation?.alphaTarget(0.3).restart();
+      d.fx = d.x; d.fy = d.y;
+    })
+    .on('drag', (event, d: any) => {
+      d.fx = event.x; d.fy = event.y;
+    })
+    .on('end', (event, d: any) => {
+      if (!event.active) this.simulation?.alphaTarget(0);
+      d.fx = null; d.fy = null;
+      // Recalculate bundling after drag if needed
+      if (this.config.edgeRenderer === 'bundled' && this.edgeRenderResult) {
+        setTimeout(() => this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor), 100);
+      }
+    });
+  node.call(drag as any);
+}
 ```
 
-## Version History
+## 7. TypeScript Type System
 
-- **v3.0.0**: Complete D3.js idiomatic redesign
-- **v2.0.0**: Previous class-based implementation
-- **v1.0.0**: Initial release
+### 7.1 Core Data Types
 
-## References
+From `types.ts`, the implementation defines comprehensive interfaces:
 
-- [D3.js API Reference](https://github.com/d3/d3/blob/main/API.md)
-- [D3 Force Layout](https://github.com/d3/d3-force)
-- [D3 Selection](https://github.com/d3/d3-selection)
-- [D3 Transition](https://github.com/d3/d3-transition)
-- [Reusable Charts Pattern](https://bost.ocks.org/mike/chart/)
+```typescript
+interface Node {
+  id: string;
+  label?: string;
+  type?: string;
+  x?: number; y?: number; z?: number;
+  vector?: number[];  // For similarity calculations
+  metadata?: Record<string, unknown>;
+}
+
+interface Edge {
+  id?: string;
+  source: string | Node;
+  target: string | Node;
+  label?: string;
+  type?: string;
+  weight?: number;
+  strength?: number;
+  metadata?: Record<string, unknown>;
+}
+
+interface GraphData {
+  nodes: Node[];
+  edges: Edge[];
+}
+```
+
+### 7.2 Accessor Type System
+
+The flexible accessor pattern allows both constants and functions:
+
+```typescript
+export type Accessor<T, R> = R | ((d: T, i: number, nodes: T[]) => R);
+
+// Usage examples in GraphConfig
+interface GraphConfig {
+  nodeRadius?: Accessor<Node, number>;
+  nodeFill?: Accessor<Node, string>;
+  linkDistance?: Accessor<Edge, number>;
+  chargeStrength?: Accessor<Node, number>;
+  // ... other configuration options
+}
+```
+
+## 8. Advanced Features
+
+### 8.1 Similarity-Based Forces
+
+The implementation supports custom similarity functions for node clustering:
+
+```typescript
+interface GraphConfig {
+  similarityFunction?: SimilarityFunction;
+}
+
+export type SimilarityFunction = (a: Node, b: Node) => number;
+
+// Implementation creates custom force
+if (this.config.similarityFunction) {
+  this.simulation.force('similarity', this.createSimilarityForce(this.config.similarityFunction));
+}
+```
+
+### 8.2 Edge Labels
+
+Support for rendering labels along edge paths:
+
+```typescript
+interface GraphConfig {
+  showEdgeLabels?: boolean;
+  edgeLabelStyle?: {
+    fontSize?: number;
+    fontFamily?: string;
+    fill?: string;
+    textAnchor?: 'start' | 'middle' | 'end';
+    dominantBaseline?: string;
+  };
+}
+```
+
+### 8.3 Configuration Defaults (Actual Implementation)
+
+```typescript
+// From KnowledgeGraph constructor
+this.config = {
+  width: config.width ?? 800,
+  height: config.height ?? 600,
+  nodeRadius: config.nodeRadius ?? 10,
+  nodeFill: config.nodeFill ?? '#69b3a2',
+  nodeStroke: config.nodeStroke ?? '#fff',
+  nodeStrokeWidth: config.nodeStrokeWidth ?? 1.5,
+  linkDistance: config.linkDistance ?? 100,
+  linkStroke: config.linkStroke ?? '#999',
+  linkStrokeWidth: config.linkStrokeWidth ?? 1.5,
+  chargeStrength: config.chargeStrength ?? -300,
+  edgeRenderer: config.edgeRenderer ?? 'simple',
+  waitForStable: config.waitForStable ?? false,
+  stabilityThreshold: config.stabilityThreshold ?? 0.01,
+  enableZoom: config.enableZoom ?? true,
+  enableDrag: config.enableDrag ?? true,
+  dimensions: config.dimensions ?? 2,
+  // ... merged with provided config
+};
+```
+
+## 9. Future Enhancement Requirements
+
+Based on demo requirements, these callback enhancements would support needed functionality:
+
+### 9.1 Enhanced Callback System
+
+```typescript
+interface GraphConfig {
+  // State management callbacks
+  onStateChange?: (state: LayoutEngineState, progress: number) => void;
+  onLayoutProgress?: (alpha: number, stability: number) => void;
+
+  // Edge rendering callbacks
+  onEdgeRenderingStart?: (totalEdges: number) => void;
+  onEdgeRenderingProgress?: (rendered: number, total: number) => void;
+  onEdgeRenderingComplete?: () => void;
+
+  // Selection callbacks
+  onNodeSelection?: (nodeId: string, neighbors: Node[], edges: Edge[]) => void;
+
+  // Error handling
+  onError?: (error: Error, stage: string, recoverable: boolean) => void;
+}
+```
+
+### 9.2 Status and Diagnostics
+
+```typescript
+enum LayoutEngineState {
+  INITIAL = 'INITIAL',
+  LOADING = 'LOADING',
+  LAYOUT_CALCULATING = 'LAYOUT_CALCULATING',
+  EDGES_RENDERING = 'EDGES_RENDERING',
+  READY = 'READY',
+  ERROR = 'ERROR'
+}
+```
+
+This represents the minimal enhancements needed to support the demo requirements while building on the existing solid implementation.

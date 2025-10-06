@@ -4,14 +4,15 @@
  */
 
 export { KnowledgeGraph } from './KnowledgeGraph';
-export { 
-  Node, 
-  Edge, 
-  GraphData, 
+export {
+  Node,
+  Edge,
+  GraphData,
   GraphConfig,
   Accessor,
   SimilarityFunction,
-  LinkStrengthFunction
+  LinkStrengthFunction,
+  LayoutEngineState
 } from './types';
 export { ForceLayoutEngine } from './layout/ForceLayoutEngine';
 export {

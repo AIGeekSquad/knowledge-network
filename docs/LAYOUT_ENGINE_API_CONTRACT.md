@@ -1,842 +1,529 @@
 # Knowledge Network Layout Engine API Contract
-## D3.js Idiomatic Implementation Contract
 
-## Overview
+Version: 1.0.0
+Status: Current Implementation
+Last Updated: 2025-01-06
 
-This document defines the precise API contract for the Knowledge Network Layout Engine, specifying all methods, callbacks, data structures, and behaviors. This contract serves as the definitive interface specification for implementation and testing.
+## 1. Overview
 
-## Module Export Contract
+This document defines the complete API contract for the Knowledge Network Layout Engine as implemented in the `KnowledgeGraph` TypeScript class. The API follows object-oriented patterns with TypeScript type safety and D3.js integration.
+
+## 2. Class Constructor
+
+### 2.1 KnowledgeGraph Constructor
 
 ```typescript
-// Main module export
-export function knowledgeNetwork(): KnowledgeNetworkGraph;
-
-// Type definition
-export interface KnowledgeNetworkGraph {
-  // Core render function (D3 selection call pattern)
-  (selection: d3.Selection<any, GraphData, any, any>): void;
-  
-  // All configuration and interaction methods...
+class KnowledgeGraph {
+  constructor(
+    container: HTMLElement,
+    data: GraphData,
+    config: GraphConfig = {}
+  )
 }
 ```
 
-## Configuration Methods Contract
+**Parameters**:
+- `container` (HTMLElement) - The HTML element that will contain the SVG visualization
+- `data` (GraphData) - The graph data containing nodes and edges to visualize
+- `config` (GraphConfig, optional) - Configuration object with default values
 
-### Dimension Configuration
+**Example Usage**:
+```typescript
+const container = document.getElementById('graph-container') as HTMLElement;
+const data: GraphData = {
+  nodes: [
+    { id: 'node1', label: 'Node 1' },
+    { id: 'node2', label: 'Node 2' }
+  ],
+  edges: [
+    { source: 'node1', target: 'node2' }
+  ]
+};
+
+const graph = new KnowledgeGraph(container, data, {
+  width: 800,
+  height: 600,
+  nodeRadius: 10,
+  enableZoom: true
+});
+```
+
+## 3. GraphConfig Interface (Complete TypeScript Definition)
+
+Configuration is passed to the constructor and includes all styling and behavior options:
 
 ```typescript
-interface DimensionMethods {
-  width(): number;
-  width(value: number): KnowledgeNetworkGraph;
-  
-  height(): number;
-  height(value: number): KnowledgeNetworkGraph;
-  
-  padding(): number;
-  padding(value: number): KnowledgeNetworkGraph;
+interface GraphConfig {
+  // Dimensions
+  width?: number;                    // Default: 800
+  height?: number;                   // Default: 600
+
+  // Node styling (using Accessor pattern)
+  nodeRadius?: Accessor<Node, number>;        // Default: 10
+  nodeFill?: Accessor<Node, string>;          // Default: '#69b3a2'
+  nodeStroke?: Accessor<Node, string>;        // Default: '#fff'
+  nodeStrokeWidth?: Accessor<Node, number>;   // Default: 1.5
+
+  // Edge styling
+  linkDistance?: Accessor<Edge, number>;      // Default: 100
+  linkStrength?: LinkStrengthFunction;        // Auto-generated if not provided
+  linkStroke?: Accessor<Edge, string>;        // Default: '#999'
+  linkStrokeWidth?: Accessor<Edge, number>;   // Default: 1.5
+
+  // Force simulation
+  chargeStrength?: Accessor<Node, number>;    // Default: -300
+  collisionRadius?: Accessor<Node, number>;   // Default: nodeRadius + 2
+  similarityFunction?: SimilarityFunction;    // Optional clustering
+
+  // Edge rendering
+  edgeRenderer?: 'simple' | 'bundled';       // Default: 'simple'
+  edgeBundling?: EdgeBundlingConfig;          // Configuration for bundled edges
+
+  // Simulation behavior
+  waitForStable?: boolean;           // Default: false
+  stabilityThreshold?: number;       // Default: 0.01
+
+  // Edge labels
+  showEdgeLabels?: boolean;          // Default: false
+  edgeLabelStyle?: EdgeLabelStyle;   // Styling for edge labels
+
+  // Interaction
+  enableZoom?: boolean;              // Default: true
+  enableDrag?: boolean;              // Default: true
+  zoomExtent?: [number, number];     // Default: [0.1, 10]
+  fitToViewport?: boolean;           // Default: false
+  padding?: number;                  // Default: 20
+
+  // Dimensionality
+  dimensions?: 2 | 3;                // Default: 2
+
+  // Callbacks
+  onEdgesRendered?: () => void;      // Called when edges finish rendering
 }
 ```
 
-### Node Configuration
+### 3.1 Accessor Type Pattern
+
+The flexible accessor pattern allows both constants and functions:
 
 ```typescript
-interface NodeMethods {
-  nodeRadius(): Accessor<Node, number>;
-  nodeRadius(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
-  
-  nodeFill(): Accessor<Node, string>;
-  nodeFill(value: string | ((d: Node, i: number, nodes: Node[]) => string)): KnowledgeNetworkGraph;
-  
-  nodeStroke(): Accessor<Node, string>;
-  nodeStroke(value: string | ((d: Node, i: number, nodes: Node[]) => string)): KnowledgeNetworkGraph;
-  
-  nodeStrokeWidth(): Accessor<Node, number>;
-  nodeStrokeWidth(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
-  
-  nodeOpacity(): Accessor<Node, number>;
-  nodeOpacity(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
-  
-  nodeLabel(): Accessor<Node, string>;
-  nodeLabel(value: string | ((d: Node, i: number, nodes: Node[]) => string)): KnowledgeNetworkGraph;
+type Accessor<T, R> = R | ((d: T, i: number, nodes: T[]) => R);
+
+// Examples of usage
+const config: GraphConfig = {
+  // Constant value
+  nodeRadius: 15,
+
+  // Function based on data
+  nodeFill: (node: Node) => {
+    return node.type === 'important' ? '#ff6b6b' : '#4ecdc4';
+  },
+
+  // Using index and array
+  linkDistance: (edge: Edge, i: number, edges: Edge[]) => {
+    return edge.weight ? edge.weight * 50 : 100;
+  }
+};
+```
+
+## 4. Public Methods
+
+### 4.1 `render(): void`
+Renders the knowledge graph visualization in the container element.
+
+- **Returns**: void
+- **Effect**: Creates SVG, force simulation, nodes, edges, and interaction handlers
+- **Triggers**: Complete rendering pipeline including stabilization and edge rendering
+
+```typescript
+const graph = new KnowledgeGraph(container, data, config);
+graph.render();  // Must be called to display the visualization
+```
+
+### 4.2 `updateData(data: GraphData): void`
+Updates the graph with new data and re-renders the visualization.
+
+- **Parameters**: `data` (GraphData) - New graph data
+- **Returns**: void
+- **Effect**: Destroys existing visualization and creates new one with updated data
+
+```typescript
+const newData: GraphData = {
+  nodes: [/* new nodes */],
+  edges: [/* new edges */]
+};
+graph.updateData(newData);
+```
+
+### 4.3 `getSimulation(): d3.Simulation<d3.SimulationNodeDatum, undefined> | null`
+Gets the D3 force simulation instance for advanced customization.
+
+- **Returns**: D3 simulation instance or null if not rendered
+- **Use case**: Direct manipulation of forces, alpha values, or simulation events
+
+```typescript
+const simulation = graph.getSimulation();
+if (simulation) {
+  // Adjust force strength
+  simulation.force('charge', d3.forceManyBody().strength(-1000));
+  // Restart with higher alpha
+  simulation.alpha(0.5).restart();
 }
 ```
 
-### Edge Configuration
+### 4.4 `destroy(): void`
+Destroys the graph visualization and cleans up all resources.
+
+- **Returns**: void
+- **Effect**: Stops simulation, removes SVG, cleans up edge renderer resources
 
 ```typescript
-interface EdgeMethods {
-  linkDistance(): Accessor<Edge, number>;
-  linkDistance(value: number | ((d: Edge, i: number, edges: Edge[]) => number)): KnowledgeNetworkGraph;
-  
-  linkStrength(): Accessor<Edge, number>;
-  linkStrength(value: number | ((d: Edge, i: number, edges: Edge[]) => number)): KnowledgeNetworkGraph;
-  
-  linkStroke(): Accessor<Edge, string>;
-  linkStroke(value: string | ((d: Edge, i: number, edges: Edge[]) => string)): KnowledgeNetworkGraph;
-  
-  linkStrokeWidth(): Accessor<Edge, number>;
-  linkStrokeWidth(value: number | ((d: Edge, i: number, edges: Edge[]) => number)): KnowledgeNetworkGraph;
-  
-  linkOpacity(): Accessor<Edge, number>;
-  linkOpacity(value: number | ((d: Edge, i: number, edges: Edge[]) => number)): KnowledgeNetworkGraph;
-}
+graph.destroy();  // Call when graph is no longer needed
 ```
 
-### Force Simulation Configuration
+## 5. TypeScript Data Types (Complete Interfaces)
+
+### 5.1 Core Data Structures
 
 ```typescript
-interface ForceMethods {
-  chargeStrength(): Accessor<Node, number>;
-  chargeStrength(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
-  
-  collisionRadius(): Accessor<Node, number>;
-  collisionRadius(value: number | ((d: Node, i: number, nodes: Node[]) => number)): KnowledgeNetworkGraph;
-  
-  alphaDecay(): number;
-  alphaDecay(value: number): KnowledgeNetworkGraph;
-  
-  velocityDecay(): number;
-  velocityDecay(value: number): KnowledgeNetworkGraph;
-  
-  alphaMin(): number;
-  alphaMin(value: number): KnowledgeNetworkGraph;
-  
-  alphaTarget(): number;
-  alphaTarget(value: number): KnowledgeNetworkGraph;
-}
-```
-
-### Rendering Configuration
-
-```typescript
-interface RenderingMethods {
-  edgeRenderer(): 'simple' | 'bundled' | 'curved';
-  edgeRenderer(value: 'simple' | 'bundled' | 'curved'): KnowledgeNetworkGraph;
-  
-  bundlingStrength(): number;
-  bundlingStrength(value: number): KnowledgeNetworkGraph;
-  
-  bundlingIterations(): number;
-  bundlingIterations(value: number): KnowledgeNetworkGraph;
-  
-  bundlingCompatibility(): number;
-  bundlingCompatibility(value: number): KnowledgeNetworkGraph;
-  
-  renderMode(): 'immediate' | 'progressive' | 'deferred';
-  renderMode(value: 'immediate' | 'progressive' | 'deferred'): KnowledgeNetworkGraph;
-  
-  hideGraphDuringLayout(): boolean;
-  hideGraphDuringLayout(value: boolean): KnowledgeNetworkGraph;
-  
-  waitForStableLayout(): boolean;
-  waitForStableLayout(value: boolean): KnowledgeNetworkGraph;
-  
-  stabilityThreshold(): number;
-  stabilityThreshold(value: number): KnowledgeNetworkGraph;
-  
-  maxLayoutDuration(): number;
-  maxLayoutDuration(value: number): KnowledgeNetworkGraph;
-}
-```
-
-### Interaction Configuration
-
-```typescript
-interface InteractionMethods {
-  enableZoom(): boolean;
-  enableZoom(value: boolean): KnowledgeNetworkGraph;
-  
-  zoomExtent(): [number, number];
-  zoomExtent(value: [number, number]): KnowledgeNetworkGraph;
-  
-  enablePan(): boolean;
-  enablePan(value: boolean): KnowledgeNetworkGraph;
-  
-  enableDrag(): boolean;
-  enableDrag(value: boolean): KnowledgeNetworkGraph;
-  
-  enableSelection(): boolean;
-  enableSelection(value: boolean): KnowledgeNetworkGraph;
-  
-  selectionMode(): 'single' | 'multiple';
-  selectionMode(value: 'single' | 'multiple'): KnowledgeNetworkGraph;
-  
-  neighborHighlightDepth(): number;
-  neighborHighlightDepth(value: number): KnowledgeNetworkGraph;
-}
-```
-
-## Event Callback Contract
-
-### Event Registration
-
-```typescript
-interface EventMethods {
-  on(event: 'stateChange', callback: StateChangeCallback): KnowledgeNetworkGraph;
-  on(event: 'layoutProgress', callback: LayoutProgressCallback): KnowledgeNetworkGraph;
-  on(event: 'edgeRenderStart', callback: EdgeRenderStartCallback): KnowledgeNetworkGraph;
-  on(event: 'edgeRenderProgress', callback: EdgeRenderProgressCallback): KnowledgeNetworkGraph;
-  on(event: 'edgeRenderComplete', callback: EdgeRenderCompleteCallback): KnowledgeNetworkGraph;
-  on(event: 'zoomFit', callback: ZoomFitCallback): KnowledgeNetworkGraph;
-  on(event: 'ready', callback: ReadyCallback): KnowledgeNetworkGraph;
-  on(event: 'error', callback: ErrorCallback): KnowledgeNetworkGraph;
-  on(event: 'nodeClick', callback: NodeEventCallback): KnowledgeNetworkGraph;
-  on(event: 'nodeMouseover', callback: NodeEventCallback): KnowledgeNetworkGraph;
-  on(event: 'nodeMouseout', callback: NodeEventCallback): KnowledgeNetworkGraph;
-  on(event: 'edgeClick', callback: EdgeEventCallback): KnowledgeNetworkGraph;
-  on(event: 'edgeMouseover', callback: EdgeEventCallback): KnowledgeNetworkGraph;
-  on(event: 'edgeMouseout', callback: EdgeEventCallback): KnowledgeNetworkGraph;
-  on(event: 'zoom', callback: ZoomCallback): KnowledgeNetworkGraph;
-  on(event: 'dragStart', callback: DragCallback): KnowledgeNetworkGraph;
-  on(event: 'drag', callback: DragCallback): KnowledgeNetworkGraph;
-  on(event: 'dragEnd', callback: DragCallback): KnowledgeNetworkGraph;
-  on(event: 'selectionChange', callback: SelectionChangeCallback): KnowledgeNetworkGraph;
-  on(event: 'performanceUpdate', callback: PerformanceCallback): KnowledgeNetworkGraph;
-  on(event: 'frameDrop', callback: FrameDropCallback): KnowledgeNetworkGraph;
-  on(event: 'validationError', callback: ValidationErrorCallback): KnowledgeNetworkGraph;
-  
-  // Get current callback
-  on(event: string): Function | undefined;
-  
-  // Remove callback
-  on(event: string, null): KnowledgeNetworkGraph;
-}
-```
-
-### Callback Type Definitions
-
-```typescript
-// State management callbacks
-type StateChangeCallback = (
-  state: LayoutState,
-  progress: number,
-  metadata: StateMetadata
-) => void;
-
-type LayoutProgressCallback = (
-  progress: number,
-  alpha: number,
-  metadata: LayoutMetadata
-) => void;
-
-// Edge rendering callbacks
-type EdgeRenderStartCallback = (
-  totalEdges: number,
-  renderMode: 'simple' | 'bundled' | 'curved'
-) => void;
-
-type EdgeRenderProgressCallback = (
-  rendered: number,
-  total: number,
-  batchInfo: BatchInfo
-) => void;
-
-type EdgeRenderCompleteCallback = (
-  renderStats: RenderStats
-) => void;
-
-// Viewport callbacks
-type ZoomFitCallback = (
-  transform: d3.ZoomTransform
-) => void;
-
-// Lifecycle callbacks
-type ReadyCallback = (
-  stats: GraphStats
-) => void;
-
-type ErrorCallback = (
-  error: Error,
-  context: ErrorContext
-) => void;
-
-// Interaction callbacks
-type NodeEventCallback = (
-  event: MouseEvent,
-  d: Node,
-  element: SVGElement
-) => void;
-
-type EdgeEventCallback = (
-  event: MouseEvent,
-  d: Edge,
-  element: SVGElement
-) => void;
-
-type ZoomCallback = (
-  transform: d3.ZoomTransform
-) => void;
-
-type DragCallback = (
-  event: d3.D3DragEvent<SVGElement, Node, Node>,
-  d: Node
-) => void;
-
-type SelectionChangeCallback = (
-  selected: string[],
-  highlighted: Set<string>
-) => void;
-
-// Performance callbacks
-type PerformanceCallback = (
-  metrics: PerformanceMetrics
-) => void;
-
-type FrameDropCallback = (
-  info: FrameDropInfo
-) => void;
-
-// Validation callbacks
-type ValidationErrorCallback = (
-  errors: ValidationError[]
-) => void;
-```
-
-## Data Structure Contract
-
-### Input Data Structures
-
-```typescript
-interface GraphData {
-  nodes: Node[];
-  edges: Edge[];
-}
-
 interface Node {
-  id: string;
-  label?: string;
-  type?: string;
-  x?: number;
-  y?: number;
-  z?: number;
-  fx?: number;  // Fixed x position
-  fy?: number;  // Fixed y position
-  vector?: number[];
-  metadata?: Record<string, unknown>;
-  // Runtime properties added by D3
-  index?: number;
-  vx?: number;
-  vy?: number;
+  id: string;                       // Required: unique identifier
+  label?: string;                   // Optional: display label
+  type?: string;                    // Optional: node type for styling
+  x?: number; y?: number; z?: number; // Optional: coordinates
+  vector?: number[];                // Optional: vector embedding for similarity
+  metadata?: Record<string, unknown>; // Optional: arbitrary metadata
 }
 
 interface Edge {
-  id?: string;
-  source: string | Node;
-  target: string | Node;
-  label?: string;
-  type?: string;
-  weight?: number;
-  strength?: number;
-  metadata?: Record<string, unknown>;
-  // Runtime properties added by D3
-  index?: number;
+  id?: string;                      // Optional: unique identifier
+  source: string | Node;            // Required: source node ID or object
+  target: string | Node;            // Required: target node ID or object
+  label?: string;                   // Optional: edge label
+  type?: string;                    // Optional: edge type
+  weight?: number;                  // Optional: edge weight (0-1)
+  strength?: number;                // Optional: force strength override
+  metadata?: Record<string, unknown>; // Optional: arbitrary metadata
+}
+
+interface GraphData {
+  nodes: Node[];                    // Array of all nodes
+  edges: Edge[];                    // Array of all edges
 }
 ```
 
-### State and Metadata Structures
+### 5.2 Function Types
 
 ```typescript
-enum LayoutState {
-  IDLE = 'idle',
-  LOADING = 'loading',
-  LAYOUT_CALCULATING = 'layout_calculating',
-  EDGE_RENDERING = 'edge_rendering',
-  ZOOM_FITTING = 'zoom_fitting',
-  READY = 'ready',
-  ERROR = 'error',
-  DISPOSED = 'disposed'
-}
+// Accessor pattern - can be constant or function
+type Accessor<T, R> = R | ((d: T, i: number, nodes: T[]) => R);
 
-interface StateMetadata {
-  phase?: string;
-  nodesLoaded?: number;
-  edgesLoaded?: number;
-  validationStatus?: 'success' | 'warning' | 'error';
-  errors?: ValidationError[];
-  timestamp?: number;
-}
+// Similarity function for node clustering
+type SimilarityFunction = (a: Node, b: Node) => number;
 
-interface LayoutMetadata {
-  iterations: number;
-  stability: number;
-  converging: boolean;
-  estimatedCompletion?: number;
-  alpha: number;
-  alphaTarget: number;
-  alphaMin: number;
-}
+// Link strength function for force simulation
+type LinkStrengthFunction = (edge: Edge, i: number, edges: Edge[]) => number;
+```
 
-interface BatchInfo {
-  batchSize: number;
-  currentBatch: number;
-  totalBatches: number;
-  estimatedTimeRemaining?: number;
-}
+### 5.3 Edge Bundling Configuration
 
-interface RenderStats {
-  totalEdges: number;
-  renderTime: number;
-  mode: 'simple' | 'bundled' | 'curved';
-  bundlingIterations?: number;
-  bundlingTime?: number;
-}
-
-interface GraphStats {
-  renderTime: number;
-  layoutTime: number;
-  edgeRenderTime: number;
-  nodeCount: number;
-  edgeCount: number;
-  layoutIterations: number;
-  finalAlpha: number;
-}
-
-interface ErrorContext {
-  phase: LayoutState;
-  operation: string;
-  recoverable: boolean;
-  fallback?: string;
-  data?: Record<string, unknown>;
-}
-
-interface PerformanceMetrics {
-  fps: number;
-  renderTime: number;
-  layoutTime: number;
-  edgeRenderTime: number;
-  memoryUsage?: number;
-  nodeCount: number;
-  edgeCount: number;
-  visibleNodes: number;
-  visibleEdges: number;
-}
-
-interface FrameDropInfo {
-  targetFPS: number;
-  actualFPS: number;
-  duration: number;
-  cause?: string;
-}
-
-interface ValidationError {
-  type: 'missing_node' | 'missing_edge' | 'invalid_data' | 'circular_reference';
-  message: string;
-  nodeId?: string;
-  edgeId?: string;
-  data?: unknown;
+```typescript
+interface EdgeBundlingConfig {
+  subdivisions?: number;                    // Default: 20
+  adaptiveSubdivision?: boolean;           // Default: true
+  compatibilityThreshold?: number;         // Default: 0.6
+  iterations?: number;                     // Default: 90
+  stepSize?: number;                       // Default: 0.04
+  stiffness?: number;                      // Default: 0.1
+  momentum?: number;                       // Default: 0.5
+  curveType?: 'basis' | 'cardinal' | 'catmullRom' | 'bundle'; // Default: 'basis'
+  curveTension?: number;                   // Default: 0.85
+  smoothingType?: 'laplacian' | 'gaussian' | 'bilateral'; // Default: 'laplacian'
+  smoothingIterations?: number;            // Default: 2
+  smoothingFrequency?: number;             // Default: 5
+  compatibilityFunction?: (edge1: Edge, edge2: Edge) => number;
 }
 ```
 
-## Operational Methods Contract
+## 6. Current Callback System
 
-### Data Management
+### 6.1 Existing Callback Support
+
+The current implementation supports a simple callback system through configuration:
 
 ```typescript
-interface DataMethods {
-  data(): GraphData | null;
-  data(value: GraphData): KnowledgeNetworkGraph;
-  
-  addNodes(nodes: Node[]): KnowledgeNetworkGraph;
-  addEdges(edges: Edge[]): KnowledgeNetworkGraph;
-  removeNodes(nodeIds: string[]): KnowledgeNetworkGraph;
-  removeEdges(edgeIds: string[]): KnowledgeNetworkGraph;
-  
-  updateData(data: Partial<GraphData>, options?: UpdateOptions): KnowledgeNetworkGraph;
-  
-  startBatch(): KnowledgeNetworkGraph;
-  endBatch(): KnowledgeNetworkGraph;
+interface GraphConfig {
+  onEdgesRendered?: () => void;  // Called when edges complete rendering
 }
 
-interface UpdateOptions {
-  merge?: boolean;
-  key?: (d: Node | Edge) => string;
-  updateOnly?: boolean;
-  transition?: boolean;
-  duration?: number;
-}
+// Usage
+const graph = new KnowledgeGraph(container, data, {
+  onEdgesRendered: () => {
+    console.log('All edges have been rendered');
+    hideLoadingSpinner();
+  }
+});
 ```
 
-### Selection Management
+## 7. Enhanced Callback System for Demo Requirements
+
+### 7.1 Proposed Enhanced GraphConfig
+
+To support the 5-stage loading demo and advanced interactions, the following callbacks would be added:
 
 ```typescript
-interface SelectionMethods {
-  selectNode(nodeId: string, options?: SelectionOptions): KnowledgeNetworkGraph;
-  selectNodes(nodeIds: string[]): KnowledgeNetworkGraph;
-  deselectAll(): KnowledgeNetworkGraph;
-  
-  selectedNodes(): string[];
-  highlightedNodes(): Set<string>;
-  highlightedEdges(): Set<string>;
-  
-  highlightNodes(nodeIds: string[]): KnowledgeNetworkGraph;
-  highlightEdges(edgeIds: string[]): KnowledgeNetworkGraph;
-  clearHighlights(): KnowledgeNetworkGraph;
-  
-  neighbors(nodeId: string, depth?: number): string[];
-  adjacentEdges(nodeId: string): string[];
-}
+interface GraphConfig {
+  // State management callbacks
+  onStateChange?: (state: LayoutEngineState, progress: number) => void;
+  onLayoutProgress?: (alpha: number, stability: number) => void;
 
-interface SelectionOptions {
-  highlightNeighbors?: boolean;
-  depth?: number;
-  includeEdges?: boolean;
-  exclusive?: boolean;
+  // Edge rendering callbacks (5-stage loading)
+  onEdgeRenderingStart?: (totalEdges: number) => void;
+  onEdgeRenderingProgress?: (rendered: number, total: number) => void;
+  onEdgeRenderingComplete?: () => void;
+
+  // Selection callbacks
+  onNodeSelection?: (nodeId: string, neighbors: Node[], edges: Edge[]) => void;
+
+  // Error handling
+  onError?: (error: Error, stage: string, recoverable: boolean) => void;
+
+  // Existing callback
+  onEdgesRendered?: () => void;
 }
 ```
 
-### Zoom and Pan Control
+### 7.2 Layout Engine States
 
 ```typescript
-interface ZoomPanMethods {
-  zoom(): d3.ZoomBehavior<SVGSVGElement, unknown>;
-  
-  zoomTo(scale: number, center?: [number, number]): KnowledgeNetworkGraph;
-  zoomToFit(padding?: number): KnowledgeNetworkGraph;
-  zoomToSelection(padding?: number): KnowledgeNetworkGraph;
-  resetZoom(): KnowledgeNetworkGraph;
-  
-  panTo(x: number, y: number): KnowledgeNetworkGraph;
-  centerOn(nodeId: string): KnowledgeNetworkGraph;
-  
-  getTransform(): d3.ZoomTransform;
-  setTransform(transform: d3.ZoomTransform): KnowledgeNetworkGraph;
+enum LayoutEngineState {
+  INITIAL = 'INITIAL',
+  LOADING = 'LOADING',
+  LAYOUT_CALCULATING = 'LAYOUT_CALCULATING',
+  EDGES_RENDERING = 'EDGES_RENDERING',
+  READY = 'READY',
+  ERROR = 'ERROR'
 }
 ```
 
-### Force Simulation Access
+### 7.3 Example Usage with Enhanced Callbacks
 
 ```typescript
-interface SimulationMethods {
-  simulation(): d3.Simulation<Node, Edge> | null;
-  
-  force(name: string): d3.Force<Node, Edge> | undefined;
-  force(name: string, force: d3.Force<Node, Edge> | null): KnowledgeNetworkGraph;
-  
-  reheat(alpha?: number): KnowledgeNetworkGraph;
-  stop(): KnowledgeNetworkGraph;
-  restart(): KnowledgeNetworkGraph;
-  
-  tick(iterations?: number): KnowledgeNetworkGraph;
-}
-```
+const graph = new KnowledgeGraph(container, data, {
+  width: 800,
+  height: 600,
+  enableZoom: true,
+  enableDrag: true,
+  edgeRenderer: 'bundled',
+  waitForStable: true,
 
-### DOM Selection Access
+  // State tracking
+  onStateChange: (state, progress) => {
+    updateStatusDisplay(`State: ${state} (${progress}%)`);
+  },
 
-```typescript
-interface DOMSelectionMethods {
-  nodes(): d3.Selection<SVGElement, Node, any, any>;
-  edges(): d3.Selection<SVGElement, Edge, any, any>;
-  labels(): d3.Selection<SVGTextElement, Node, any, any>;
-  
-  container(): d3.Selection<SVGGElement, unknown, null, undefined>;
-  svg(): d3.Selection<SVGSVGElement, unknown, null, undefined>;
-}
-```
+  // Layout progress
+  onLayoutProgress: (alpha, stability) => {
+    updateProgressBar(Math.round((1 - alpha) * 100));
+  },
 
-### Lifecycle Management
+  // Edge rendering (5-stage loading)
+  onEdgeRenderingStart: (totalEdges) => {
+    showProgressBar(`Rendering ${totalEdges} edges...`);
+  },
 
-```typescript
-interface LifecycleMethods {
-  init(container: HTMLElement | d3.Selection<HTMLElement, any, any, any>): KnowledgeNetworkGraph;
-  render(): KnowledgeNetworkGraph;
-  dispose(): KnowledgeNetworkGraph;
-  
-  isReady(): boolean;
-  getState(): LayoutState;
-  getProgress(): number;
-}
-```
+  onEdgeRenderingProgress: (rendered, total) => {
+    const percent = Math.round((rendered / total) * 100);
+    updateProgressBar(`Edges: ${rendered}/${total} (${percent}%)`);
+  },
 
-## Behavior Contracts
+  onEdgeRenderingComplete: () => {
+    hideProgressBar();
+    showZoomControls();
+  },
 
-### State Transition Rules
+  // Node selection
+  onNodeSelection: (nodeId, neighbors, edges) => {
+    highlightNeighbors(neighbors);
+    showNodeDetails(nodeId, neighbors.length);
+  },
 
-```typescript
-const StateTransitions: Record<LayoutState, LayoutState[]> = {
-  IDLE: [LayoutState.LOADING, LayoutState.DISPOSED],
-  LOADING: [LayoutState.LAYOUT_CALCULATING, LayoutState.ERROR],
-  LAYOUT_CALCULATING: [LayoutState.EDGE_RENDERING, LayoutState.ERROR],
-  EDGE_RENDERING: [LayoutState.ZOOM_FITTING, LayoutState.ERROR],
-  ZOOM_FITTING: [LayoutState.READY, LayoutState.ERROR],
-  READY: [LayoutState.LOADING, LayoutState.DISPOSED],
-  ERROR: [LayoutState.IDLE, LayoutState.LOADING, LayoutState.DISPOSED],
-  DISPOSED: []
-};
-```
-
-### Callback Execution Order
-
-1. **Initialization Phase**
-   - `init` event
-   - `stateChange` (IDLE)
-
-2. **Loading Phase**
-   - `stateChange` (LOADING)
-   - `validationError` (if validation fails)
-   - Data preprocessing
-
-3. **Layout Phase**
-   - `stateChange` (LAYOUT_CALCULATING)
-   - `layoutProgress` (multiple times during simulation)
-   - Force simulation ticks
-
-4. **Edge Rendering Phase**
-   - `stateChange` (EDGE_RENDERING)
-   - `edgeRenderStart`
-   - `edgeRenderProgress` (per batch)
-   - `edgeRenderComplete`
-
-5. **Zoom Fitting Phase**
-   - `stateChange` (ZOOM_FITTING)
-   - `zoomFit`
-
-6. **Ready Phase**
-   - `stateChange` (READY)
-   - `ready`
-
-7. **Error Handling**
-   - `error` (at any phase)
-   - `stateChange` (ERROR)
-
-### Progress Calculation Contract
-
-```typescript
-interface ProgressCalculation {
-  // Overall progress (0-1)
-  overall(): number;
-  
-  // Phase-specific progress (0-1)
-  loading(): number;
-  layout(): number;
-  edgeRendering(): number;
-  zoomFitting(): number;
-  
-  // Progress calculation formulas
-  calculateLayoutProgress(alpha: number, alphaMin: number): number;
-  calculateEdgeProgress(rendered: number, total: number): number;
-  calculateZoomProgress(elapsed: number, duration: number): number;
-}
-
-// Layout progress formula
-const layoutProgress = (alpha: number, alphaMin: number, alphaTarget: number): number => {
-  return 1 - Math.max(0, Math.min(1, (alpha - alphaMin) / (alphaTarget - alphaMin)));
-};
-
-// Edge rendering progress formula  
-const edgeProgress = (rendered: number, total: number): number => {
-  return total > 0 ? rendered / total : 0;
-};
-```
-
-### Error Recovery Contract
-
-```typescript
-interface ErrorRecovery {
-  // Automatic recovery strategies
-  automaticRecovery: {
-    bundlingFallback: () => void;  // Fall back to simple edges
-    memoryReduction: () => void;   // Reduce visual complexity
-    dataValidation: () => void;    // Fix data issues
-  };
-  
-  // Manual recovery methods
-  recover(strategy: 'fallback' | 'retry' | 'reset'): KnowledgeNetworkGraph;
-  retryLastOperation(): KnowledgeNetworkGraph;
-  resetToSafeState(): KnowledgeNetworkGraph;
-}
-```
-
-## Performance Guarantees
-
-### Rendering Performance
-
-```typescript
-interface PerformanceGuarantees {
-  // Maximum time for operations
-  maxLayoutTime: 5000;      // 5 seconds
-  maxEdgeRenderTime: 3000;  // 3 seconds
-  maxZoomFitTime: 750;      // 750ms
-  
-  // Batch sizes
-  defaultEdgeBatchSize: 100;
-  minBatchSize: 10;
-  maxBatchSize: 1000;
-  
-  // Frame rate targets
-  targetFPS: 60;
-  minAcceptableFPS: 30;
-  
-  // Memory limits
-  maxNodes: 10000;
-  maxEdges: 50000;
-}
-```
-
-### Throttling and Debouncing
-
-```typescript
-interface ThrottleSettings {
-  progressUpdateInterval: 16;    // ~60 FPS
-  performanceUpdateInterval: 100; // 10 updates/second
-  resizeDebounce: 250;
-  selectionDebounce: 50;
-}
-```
-
-## Compatibility Contract
-
-### Browser Support
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-### D3.js Version
-
-- D3.js v7.x required
-- Uses d3-selection, d3-force, d3-zoom, d3-drag, d3-transition
-
-### TypeScript Support
-
-- Full TypeScript definitions included
-- Supports strict mode
-- Generic type parameters for custom node/edge data
-
-## Testing Contract
-
-### Required Test Coverage
-
-```typescript
-interface TestRequirements {
-  unitTests: {
-    configuration: ['chaining', 'accessors', 'defaults'];
-    events: ['registration', 'removal', 'triggering', 'order'];
-    state: ['transitions', 'progress', 'metadata'];
-    selection: ['single', 'multiple', 'neighbors', 'highlights'];
-    zoom: ['programmatic', 'constraints', 'transforms'];
-    data: ['updates', 'batching', 'validation'];
-  };
-  
-  integrationTests: {
-    rendering: ['immediate', 'progressive', 'deferred'];
-    interaction: ['click', 'hover', 'drag', 'zoom'];
-    performance: ['large-datasets', 'memory-usage', 'frame-rate'];
-    errorHandling: ['recovery', 'fallback', 'validation'];
-  };
-  
-  e2eTests: {
-    workflows: ['load-render-interact', 'update-transition', 'error-recovery'];
-  };
-}
-```
-
-### Test Utilities
-
-```typescript
-// Test helper functions
-function createMockGraph(nodeCount: number, edgeCount: number): GraphData;
-function simulateInteraction(graph: KnowledgeNetworkGraph, type: string, target: string): void;
-function waitForState(graph: KnowledgeNetworkGraph, state: LayoutState): Promise<void>;
-function measurePerformance(graph: KnowledgeNetworkGraph, data: GraphData): PerformanceMetrics;
-```
-
-## Version and Deprecation
-
-### Semantic Versioning
-
-- MAJOR: Breaking changes to API contract
-- MINOR: New methods or events (backward compatible)
-- PATCH: Bug fixes and performance improvements
-
-### Deprecation Policy
-
-- Deprecated features marked with `@deprecated` JSDoc
-- Minimum 2 minor versions before removal
-- Migration guide provided for breaking changes
-
-## Contract Validation
-
-### Runtime Validation
-
-```typescript
-interface ContractValidation {
-  validateData(data: GraphData): ValidationResult;
-  validateConfiguration(config: any): ValidationResult;
-  validateCallback(event: string, callback: Function): ValidationResult;
-  validateState(from: LayoutState, to: LayoutState): boolean;
-}
-
-interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-  warnings: string[];
-}
-```
-
-### Development Mode Checks
-
-- Type checking for all inputs
-- State transition validation
-- Callback parameter validation
-- Performance threshold warnings
-
-## Examples
-
-### Basic Usage
-
-```typescript
-import { knowledgeNetwork } from '@knowledge-network/layout-engine';
-
-const graph = knowledgeNetwork()
-  .width(800)
-  .height(600)
-  .on('ready', () => console.log('Graph ready'));
-
-d3.select('#container')
-  .datum(graphData)
-  .call(graph);
-```
-
-### Advanced Configuration
-
-```typescript
-const graph = knowledgeNetwork()
-  // Configuration
-  .nodeRadius(d => Math.sqrt(d.value) * 3)
-  .edgeRenderer('bundled')
-  .bundlingStrength(0.85)
-  
-  // State callbacks
-  .on('stateChange', (state, progress) => {
-    updateUI(state, progress);
-  })
-  
-  // Interaction callbacks
-  .on('nodeClick', (event, d) => {
-    graph.selectNode(d.id, { highlightNeighbors: true });
-  })
-  
-  // Performance monitoring
-  .on('performanceUpdate', metrics => {
-    if (metrics.fps < 30) {
-      graph.edgeRenderer('simple');  // Fallback to simpler rendering
+  // Error handling
+  onError: (error, stage, recoverable) => {
+    console.error(`Error in ${stage}:`, error);
+    if (recoverable) {
+      showRetryButton();
+    } else {
+      showErrorMessage(error.message);
     }
-  });
+  }
+});
 ```
 
-## Contract Compliance
+## 8. Complete Usage Example
 
-Implementation MUST:
-1. Support all specified methods with exact signatures
-2. Trigger callbacks in specified order
-3. Maintain state transition rules
-4. Meet performance guarantees
-5. Provide complete TypeScript definitions
-6. Pass all contract validation tests
+### 8.1 Basic Usage
 
-## References
+```typescript
+import { KnowledgeGraph } from './KnowledgeGraph';
+import type { GraphData, GraphConfig } from './types';
 
-- [D3.js v7 API](https://github.com/d3/d3/blob/main/API.md)
-- [Web Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance_API)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
+// Prepare data
+const data: GraphData = {
+  nodes: [
+    { id: 'node1', label: 'Machine Learning', type: 'concept' },
+    { id: 'node2', label: 'Neural Networks', type: 'concept' },
+    { id: 'node3', label: 'Deep Learning', type: 'concept' }
+  ],
+  edges: [
+    { source: 'node1', target: 'node2', type: 'relates-to' },
+    { source: 'node2', target: 'node3', type: 'part-of' }
+  ]
+};
+
+// Configuration
+const config: GraphConfig = {
+  width: 1200,
+  height: 800,
+  nodeRadius: (node) => node.type === 'concept' ? 15 : 10,
+  nodeFill: (node) => node.type === 'concept' ? '#ff6b6b' : '#4ecdc4',
+  linkDistance: 100,
+  chargeStrength: -500,
+  edgeRenderer: 'bundled',
+  enableZoom: true,
+  enableDrag: true,
+  waitForStable: true,
+  onEdgesRendered: () => console.log('Rendering complete')
+};
+
+// Create and render
+const container = document.getElementById('graph-container') as HTMLElement;
+const graph = new KnowledgeGraph(container, data, config);
+graph.render();
+```
+
+### 8.2 Advanced Usage with Enhanced Callbacks (Future)
+
+```typescript
+// With enhanced callback system for demo requirements
+const graph = new KnowledgeGraph(container, data, {
+  width: 1200,
+  height: 800,
+  edgeRenderer: 'bundled',
+  waitForStable: true,
+
+  // 5-stage loading callbacks
+  onStateChange: (state, progress) => {
+    console.log(`State: ${state}, Progress: ${progress}%`);
+  },
+
+  onLayoutProgress: (alpha, stability) => {
+    document.getElementById('progress')!.textContent =
+      `Layout: ${Math.round((1 - alpha) * 100)}%`;
+  },
+
+  onEdgeRenderingStart: (totalEdges) => {
+    console.log(`Starting to render ${totalEdges} edges`);
+  },
+
+  onEdgeRenderingProgress: (rendered, total) => {
+    document.getElementById('progress')!.textContent =
+      `Edges: ${rendered}/${total}`;
+  },
+
+  onEdgeRenderingComplete: () => {
+    document.getElementById('progress')!.textContent = 'Complete!';
+  },
+
+  // Node selection for highlighting
+  onNodeSelection: (nodeId, neighbors, edges) => {
+    console.log(`Selected ${nodeId} with ${neighbors.length} neighbors`);
+    highlightConnections(neighbors, edges);
+  },
+
+  // Error handling
+  onError: (error, stage, recoverable) => {
+    console.error(`Error in ${stage}:`, error);
+    if (!recoverable) {
+      showErrorDialog(error.message);
+    }
+  }
+});
+
+graph.render();
+```
+
+## 9. Integration with D3.js
+
+### 9.1 Accessing D3 Simulation
+
+```typescript
+// Get direct access to D3 simulation for advanced control
+const simulation = graph.getSimulation();
+if (simulation) {
+  // Modify forces
+  simulation.force('charge', d3.forceManyBody().strength(-1000));
+
+  // Add custom forces
+  simulation.force('custom', (alpha) => {
+    // Custom force implementation
+  });
+
+  // Control simulation
+  simulation.alpha(0.5).restart();
+}
+```
+
+### 9.2 Working with Existing D3 Code
+
+```typescript
+// The KnowledgeGraph class integrates well with existing D3 workflows
+const graph = new KnowledgeGraph(container, data, config);
+graph.render();
+
+// Access the SVG for additional D3 manipulations
+const svg = d3.select(container).select('svg');
+svg.append('g').attr('class', 'custom-overlay');
+```
+
+## 10. TypeScript Integration
+
+### 10.1 Full Type Safety
+
+```typescript
+// All interfaces are exported for full type safety
+import type {
+  GraphData,
+  GraphConfig,
+  Node,
+  Edge,
+  Accessor,
+  SimilarityFunction,
+  LinkStrengthFunction
+} from './types';
+
+// Type-safe configuration
+const config: GraphConfig = {
+  nodeRadius: (node: Node): number => {
+    return node.metadata?.importance as number * 10 || 10;
+  },
+
+  similarityFunction: (a: Node, b: Node): number => {
+    if (a.type === b.type) return 0.8;
+    return 0.2;
+  }
+};
+```
+
+### 10.2 Generic Constraints
+
+```typescript
+// The Accessor type provides flexible typing
+const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+const config: GraphConfig = {
+  nodeFill: (node: Node) => colorScale(node.type || 'default'),
+  linkStroke: (edge: Edge) => edge.type === 'important' ? '#red' : '#gray'
+};
+```
+
+This API contract reflects the current implementation while providing a clear path for the minimal enhancements needed to support advanced demo requirements.
