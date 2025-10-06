@@ -203,9 +203,17 @@ async function executeLoadingSequence(mode: 'simple' | 'enhanced'): Promise<void
   state.isLoading = true;
   state.loadStartTime = Date.now();
   setInteractionEnabled(false);
-  hideGraph();
 
   try {
+    const container = document.getElementById('graph');
+    if (!container) {
+      throw new GraphError('Graph container not found', false);
+    }
+
+    // Clear any existing graph and hide container
+    clearGraph();
+    hideGraph();
+
     // Stage 1: Load data (REQ-PROC-001.1)
     state.loadingStage = 1;
     updateStatus(LOADING_STAGES[0].message, true);
@@ -223,46 +231,53 @@ async function executeLoadingSequence(mode: 'simple' | 'enhanced'): Promise<void
     state.loadingStage = 2;
     updateStatus(LOADING_STAGES[1].message, true);
 
-    const container = document.getElementById('graph');
-    if (!container) {
-      throw new GraphError('Graph container not found', false);
-    }
-
-    // Clear and prepare container
-    clearGraph();
-
-    // Create graph with appropriate configuration
+    // Create graph configuration with callbacks
     const config = createGraphConfig(mode, container, data);
+
+    // Override onEdgesRendered to handle our stage 5 transition
+    const originalOnEdgesRendered = config.onEdgesRendered;
+    config.onEdgesRendered = () => {
+      if (originalOnEdgesRendered) originalOnEdgesRendered();
+
+      // Stage 5: Complete - show the graph
+      state.loadingStage = 5;
+      updateStatus(LOADING_STAGES[4].message, true);
+
+      // Apply zoom to fit then show
+      setTimeout(() => {
+        applyZoomToFit(container);
+        showGraph();
+
+        // Success message
+        const loadTime = Date.now() - state.loadStartTime;
+        updateStatus(`Visualization ready (${loadTime}ms)`, false);
+      }, 100);
+    };
+
+    // Create and render the graph (but keep it hidden)
     state.currentGraph = new KnowledgeGraph(container, data, config);
 
-    // Wait for layout stabilization (REQ-PROC-003)
-    await waitForLayoutStabilization();
+    // Ensure container stays hidden during rendering
+    container.style.visibility = 'hidden';
+    container.style.opacity = '0';
+
+    state.currentGraph.render();
+
+    // Wait for simulated layout time
+    await simulateAsyncOperation(LOADING_STAGES[1].duration);
 
     // Stage 3: Edge generation (REQ-PROC-001.3)
     state.loadingStage = 3;
     updateStatus(LOADING_STAGES[2].message, true);
     await simulateAsyncOperation(LOADING_STAGES[2].duration);
 
-    // Render the graph
-    state.currentGraph.render();
-
-    // Stage 4: Zoom to fit (REQ-PROC-001.4)
+    // Stage 4: Zoom calculation (REQ-PROC-001.4)
     state.loadingStage = 4;
     updateStatus(LOADING_STAGES[3].message, true);
     await simulateAsyncOperation(LOADING_STAGES[3].duration);
 
-    applyZoomToFit(container);
-
-    // Stage 5: Display (REQ-PROC-001.5)
-    state.loadingStage = 5;
-    showGraph();
-
     // Add interactivity
     setupInteractivity(container);
-
-    // Success message
-    const loadTime = Date.now() - state.loadStartTime;
-    updateStatus(`Visualization ready (${loadTime}ms)`, false);
 
   } catch (error) {
     handleLoadingError(error);
@@ -504,7 +519,17 @@ function createGraphConfig(mode: 'simple' | 'enhanced', container: HTMLElement, 
     zoomExtent: [0.1, 4] as [number, number],
     fitToViewport: false, // We handle this manually
     waitForStable: true,  // REQ-PROC-003
-    stabilityThreshold: 0.05
+    stabilityThreshold: 0.05,
+    // Add event callbacks to track progress
+    onLayoutProgress: (alpha: number, progress: number) => {
+      console.log(`Layout progress: ${progress}% (alpha: ${alpha.toFixed(3)})`);
+    },
+    onEdgeRenderingProgress: (current: number, total: number) => {
+      console.log(`Edge rendering: ${current}/${total}`);
+    },
+    onEdgesRendered: () => {
+      console.log('Edges fully rendered');
+    }
   };
 
   if (mode === 'enhanced') {

@@ -47,6 +47,8 @@ export class SVGRenderer implements IRenderer {
   private edgeRenderResult: EdgeRenderResult | null = null;
   private batching: boolean = false;
   private batchQueue: (() => void)[] = [];
+  private simpleEdgeRenderer: any | null = null;
+  private bundledEdgeRenderer: any | null = null;
 
   /**
    * Initialize the SVG renderer
@@ -80,8 +82,12 @@ export class SVGRenderer implements IRenderer {
     this.labelGroup = this.rootGroup.append('g')
       .attr('class', 'labels');
 
-    // Initialize edge renderer
-    this.edgeRenderer = new EdgeRenderer();
+    // Initialize edge renderers - we'll use them based on config
+    // Import them dynamically to avoid circular dependencies
+    const { SimpleEdge } = require('../edges/SimpleEdge');
+    const { EdgeBundling } = require('../edges/EdgeBundling');
+    this.simpleEdgeRenderer = new SimpleEdge();
+    this.bundledEdgeRenderer = new EdgeBundling();
   }
 
   /**
@@ -99,6 +105,8 @@ export class SVGRenderer implements IRenderer {
     this.container = null;
     this.config = null;
     this.edgeRenderer = null;
+    this.simpleEdgeRenderer = null;
+    this.bundledEdgeRenderer = null;
     this.edgeRenderResult = null;
     this.batchQueue = [];
   }
@@ -281,7 +289,7 @@ export class SVGRenderer implements IRenderer {
    * Render edges
    */
   renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig): void {
-    if (!this.edgeGroup || !this.edgeRenderer) return;
+    if (!this.edgeGroup) return;
 
     const operation = () => {
       const defaultConfig: EdgeRenderConfig = {
@@ -293,41 +301,43 @@ export class SVGRenderer implements IRenderer {
 
       const finalConfig = { ...defaultConfig, ...config };
 
-      // Prepare edges for rendering
+      // Prepare edges for rendering - ensure source/target are node objects
+      const nodes = new Map<string, any>();
+
+      // Create a map of node IDs to positioned nodes
+      edges.forEach(edge => {
+        if (typeof edge.source !== 'string') {
+          nodes.set(edge.source.id, edge.source);
+        }
+        if (typeof edge.target !== 'string') {
+          nodes.set(edge.target.id, edge.target);
+        }
+      });
+
       const processedEdges = edges.map(edge => {
-        const source = this.getNodeData(edge.source);
-        const target = this.getNodeData(edge.target);
+        const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+        const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
 
         return {
           ...edge,
-          source,
-          target
+          source: nodes.get(sourceId) || { id: sourceId, x: 0, y: 0 },
+          target: nodes.get(targetId) || { id: targetId, x: 0, y: 0 }
         };
       });
 
-      // Render edges based on curve type
-      if (finalConfig.curveType === 'bundle' && this.config) {
-        // Use edge bundling
-        this.edgeRenderResult = this.edgeRenderer.renderBundled(
+      // Choose the appropriate renderer
+      const renderer = finalConfig.curveType === 'bundle' ? this.bundledEdgeRenderer : this.simpleEdgeRenderer;
+
+      if (renderer) {
+        // Use the EdgeRenderer interface render method
+        this.edgeRenderResult = renderer.render(
           this.edgeGroup,
           processedEdges as any,
-          this.config.width,
-          this.config.height,
+          Array.from(nodes.values()),
           {
             stroke: finalConfig.stroke,
             strokeWidth: finalConfig.strokeWidth,
-            opacity: finalConfig.opacity
-          }
-        );
-      } else {
-        // Use simple edge rendering
-        this.edgeRenderResult = this.edgeRenderer.renderSimple(
-          this.edgeGroup,
-          processedEdges as any,
-          {
-            stroke: finalConfig.stroke,
-            strokeWidth: finalConfig.strokeWidth,
-            opacity: finalConfig.opacity,
+            strokeOpacity: finalConfig.opacity,
             strokeDasharray: finalConfig.strokeDasharray
           }
         );

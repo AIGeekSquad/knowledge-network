@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import * as d3 from 'd3';
 import type { RenderingSystem, Transform } from '../rendering/RenderingSystem';
-import type { Point, BoundingBox } from '../layout/LayoutEngine';
+import type { Point, BoundingBox, NodePosition } from '../layout/LayoutEngine';
 
 export type EasingFunction =
   | 'linear'
@@ -304,6 +304,16 @@ export class ViewportManager extends EventEmitter {
         }, false);
       }
     }
+  }
+
+  /**
+   * Set node positions for viewport calculations
+   */
+  setNodePositions(positions: NodePosition[]): void {
+    this.nodePositions.clear();
+    positions.forEach(pos => {
+      this.nodePositions.set(pos.id, { x: pos.x, y: pos.y, z: pos.z });
+    });
   }
 
   /**

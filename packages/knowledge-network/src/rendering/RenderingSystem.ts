@@ -183,9 +183,9 @@ export class RenderingSystem extends EventEmitter {
 
     switch (type) {
       case 'svg':
-        // Import dynamically to avoid circular dependencies
-        const { SVGRenderer } = require('./SVGRenderer');
-        this.renderer = new SVGRenderer();
+        // Import SVGRenderer using require to avoid circular dependencies
+        const SVGRendererModule = require('./SVGRenderer');
+        this.renderer = new SVGRendererModule.SVGRenderer();
         break;
       case 'canvas':
         // Canvas renderer would be implemented separately

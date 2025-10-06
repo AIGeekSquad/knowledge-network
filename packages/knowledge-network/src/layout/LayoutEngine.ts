@@ -803,4 +803,36 @@ export class LayoutEngine extends EventEmitter {
       (node as any).fy = null;
     }
   }
+
+  /**
+   * Update multiple node positions at once
+   */
+  updateNodePositions(positions: NodePosition[]): void {
+    if (!this.currentData) return;
+
+    positions.forEach(pos => {
+      const node = this.currentData!.nodes.find(n => n.id === pos.id);
+      if (node) {
+        (node as any).x = pos.x;
+        (node as any).y = pos.y;
+        if (pos.z !== undefined) {
+          (node as any).z = pos.z;
+        }
+      }
+    });
+
+    this.emit('positions', this.getCurrentPositions());
+  }
+
+  /**
+   * Destroy the layout engine and clean up resources
+   */
+  destroy(): void {
+    if (this.simulation) {
+      this.simulation.stop();
+      this.simulation = null;
+    }
+    this.currentData = null;
+    this.removeAllListeners();
+  }
 }
