@@ -1,6 +1,15 @@
 import { EventEmitter } from 'events';
-import type { LayoutResult, PositionedNode, PositionedEdge, NodePosition, EdgePosition, Point, BoundingBox } from '../layout/LayoutEngine';
+import type {
+  LayoutResult,
+  PositionedNode,
+  PositionedEdge,
+  NodePosition,
+  EdgePosition,
+  Point,
+  BoundingBox,
+} from '../layout/LayoutEngine';
 import type { Node, Edge, GraphConfig } from '../types';
+import { SVGRenderer } from './SVGRenderer';
 
 export type RendererType = 'svg' | 'canvas' | 'webgl';
 export type NodeShape = 'circle' | 'square' | 'diamond' | 'triangle' | 'star';
@@ -100,7 +109,7 @@ export interface IRenderer {
   // Rendering
   render(layout: LayoutResult, config: RenderConfig): void;
   renderNodes(nodes: PositionedNode[], config?: NodeRenderConfig): void;
-  renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig): void;
+  renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig, nodes?: PositionedNode[]): void;
   renderLabels(items: LabelItem[], config?: LabelRenderConfig): void;
 
   // Updates
@@ -156,7 +165,11 @@ export class RenderingSystem extends EventEmitter {
   private highlightedNodes: Set<string> = new Set();
   private highlightedEdges: Set<string> = new Set();
 
-  constructor(container: HTMLElement, config?: Partial<RendererConfig>, renderConfig?: RenderConfig) {
+  constructor(
+    container: HTMLElement,
+    config?: Partial<RendererConfig>,
+    renderConfig?: RenderConfig
+  ) {
     super();
     this.container = container;
     this.config = {
@@ -165,27 +178,25 @@ export class RenderingSystem extends EventEmitter {
       pixelRatio: window.devicePixelRatio || 1,
       antialias: true,
       preserveDrawingBuffer: false,
-      ...config
+      ...config,
     };
     this.renderConfig = {
       layerOrder: ['edges', 'nodes', 'labels'],
-      ...renderConfig
+      ...renderConfig,
     };
   }
 
   /**
    * Set the renderer type
    */
-  setRenderer(type: RendererType): void {
+  async setRenderer(type: RendererType): Promise<void> {
     if (this.renderer) {
       this.renderer.destroy();
     }
 
     switch (type) {
       case 'svg':
-        // Import SVGRenderer using require to avoid circular dependencies
-        const SVGRendererModule = require('./SVGRenderer');
-        this.renderer = new SVGRendererModule.SVGRenderer();
+        this.renderer = new SVGRenderer();
         break;
       case 'canvas':
         // Canvas renderer would be implemented separately
@@ -284,7 +295,7 @@ export class RenderingSystem extends EventEmitter {
 
     // Apply new highlights
     this.renderer.highlightNodes(nodeIds, config);
-    nodeIds.forEach(id => this.highlightedNodes.add(id));
+    nodeIds.forEach((id) => this.highlightedNodes.add(id));
 
     this.emit('nodesHighlighted', nodeIds);
   }
@@ -300,7 +311,7 @@ export class RenderingSystem extends EventEmitter {
 
     // Apply new highlights
     this.renderer.highlightEdges(edgeIds, config);
-    edgeIds.forEach(id => this.highlightedEdges.add(id));
+    edgeIds.forEach((id) => this.highlightedEdges.add(id));
 
     this.emit('edgesHighlighted', edgeIds);
   }
@@ -311,13 +322,13 @@ export class RenderingSystem extends EventEmitter {
   clearNodeHighlights(): void {
     if (!this.renderer || this.highlightedNodes.size === 0) return;
 
-    const defaultStyle: NodeStyleUpdate[] = Array.from(this.highlightedNodes).map(nodeId => ({
+    const defaultStyle: NodeStyleUpdate[] = Array.from(this.highlightedNodes).map((nodeId) => ({
       nodeId,
       style: {
         opacity: 1,
         stroke: this.renderConfig.nodeConfig?.stroke,
-        strokeWidth: this.renderConfig.nodeConfig?.strokeWidth
-      }
+        strokeWidth: this.renderConfig.nodeConfig?.strokeWidth,
+      },
     }));
 
     this.renderer.updateNodeStyles(defaultStyle);
@@ -330,13 +341,13 @@ export class RenderingSystem extends EventEmitter {
   clearEdgeHighlights(): void {
     if (!this.renderer || this.highlightedEdges.size === 0) return;
 
-    const defaultStyle: EdgeStyleUpdate[] = Array.from(this.highlightedEdges).map(edgeId => ({
+    const defaultStyle: EdgeStyleUpdate[] = Array.from(this.highlightedEdges).map((edgeId) => ({
       edgeId,
       style: {
         opacity: 1,
         stroke: this.renderConfig.edgeConfig?.stroke,
-        strokeWidth: this.renderConfig.edgeConfig?.strokeWidth
-      }
+        strokeWidth: this.renderConfig.edgeConfig?.strokeWidth,
+      },
     }));
 
     this.renderer.updateEdgeStyles(defaultStyle);
@@ -355,7 +366,7 @@ export class RenderingSystem extends EventEmitter {
   /**
    * Highlight selection
    */
-  highlightSelection(selection: { nodes: string[], edges: string[] }): void {
+  highlightSelection(selection: { nodes: string[]; edges: string[] }): void {
     if (selection.nodes.length > 0) {
       this.highlightNodes(selection.nodes);
     } else {

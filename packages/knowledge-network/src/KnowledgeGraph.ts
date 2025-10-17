@@ -1,6 +1,11 @@
 import type { GraphData, GraphConfig, Node, Accessor } from './types';
 import { LayoutEngineState } from './types';
-import { LayoutEngine, type LayoutResult, type NodePosition } from './layout/LayoutEngine';
+import {
+  LayoutEngine,
+  type LayoutResult,
+  type NodePosition,
+  type LayoutConfig,
+} from './layout/LayoutEngine';
 import { RenderingSystem } from './rendering/RenderingSystem';
 import { ViewportManager } from './viewport/ViewportManager';
 import { SimpleEdge, EdgeBundling } from './edges';
@@ -91,7 +96,7 @@ export class KnowledgeGraph {
       zoomExtent: config.zoomExtent,
       enableDrag: config.enableDrag ?? true,
       dimensions: config.dimensions ?? 2,
-      ...config
+      ...config,
     };
 
     this.initializeComponents();
@@ -102,23 +107,29 @@ export class KnowledgeGraph {
    */
   private initializeComponents(): void {
     // Initialize LayoutEngine
-    this.layoutEngine = new LayoutEngine('force-directed', {
+    const layoutConfig: Partial<LayoutConfig> = {
       width: this.config.width!,
       height: this.config.height!,
       linkDistance: typeof this.config.linkDistance === 'function' ? 100 : this.config.linkDistance,
-      linkStrength: typeof this.config.linkStrength === 'function' ? 1 : (this.config.linkStrength ?? 1),
-      chargeStrength: typeof this.config.chargeStrength === 'function' ? -300 : this.config.chargeStrength,
-      collisionRadius: typeof this.config.collisionRadius === 'function' ? 20 : this.config.collisionRadius,
+      linkStrength:
+        typeof this.config.linkStrength === 'function' ? 1 : (this.config.linkStrength ?? 1),
+      chargeStrength:
+        typeof this.config.chargeStrength === 'function' ? -300 : this.config.chargeStrength,
+      collisionRadius:
+        typeof this.config.collisionRadius === 'function' ? 20 : this.config.collisionRadius,
       similarityFunction: this.config.similarityFunction,
+      similarityThreshold: this.config.similarityThreshold,
       alpha: 1,
       alphaMin: this.config.stabilityThreshold ?? 0.01,
-      dimensions: this.config.dimensions
-    });
+      dimensions: this.config.dimensions,
+    };
+
+    this.layoutEngine = new LayoutEngine('force-directed', layoutConfig);
 
     // Initialize RenderingSystem
     this.renderingSystem = new RenderingSystem(this.container, {
       width: this.config.width!,
-      height: this.config.height!
+      height: this.config.height!,
     });
 
     // Initialize ViewportManager
@@ -142,7 +153,10 @@ export class KnowledgeGraph {
 
     // Layout progress events
     this.layoutEngine.on('layoutProgress', (progress: number) => {
-      if (this.config.onLayoutProgress && this.currentState === LayoutEngineState.LAYOUT_CALCULATING) {
+      if (
+        this.config.onLayoutProgress &&
+        this.currentState === LayoutEngineState.LAYOUT_CALCULATING
+      ) {
         const simulation = this.layoutEngine?.getSimulation();
         const alpha = simulation?.alpha() ?? 0;
         this.config.onLayoutProgress(alpha, progress);
@@ -203,7 +217,10 @@ export class KnowledgeGraph {
   /**
    * Convert accessor to a function that can be called
    */
-  private accessor<T, R>(accessor: Accessor<T, R> | undefined, defaultValue: R): (d: T, i: number, nodes: T[]) => R {
+  private accessor<T, R>(
+    accessor: Accessor<T, R> | undefined,
+    defaultValue: R
+  ): (d: T, i: number, nodes: T[]) => R {
     if (accessor === undefined) {
       return () => defaultValue;
     }
@@ -218,7 +235,7 @@ export class KnowledgeGraph {
    *
    * Flow: Layout → Edge Generation → Rendering → Viewport
    */
-  render(): void {
+  async render(): Promise<void> {
     try {
       this.updateState(LayoutEngineState.LOADING, 10);
 
@@ -226,25 +243,18 @@ export class KnowledgeGraph {
         throw new Error('Components not initialized');
       }
 
-      // Step 1: Layout Calculation (NO rendering) - start async
+      // Step 1: Layout Calculation (NO rendering)
       this.updateState(LayoutEngineState.LAYOUT_CALCULATING, 30);
+      this.layoutResult = await this.layoutEngine.calculateLayout(this.data);
 
-      // Use the layout engine's async calculation
-      this.layoutEngine.calculateLayout(this.data).then((result) => {
-        this.layoutResult = result;
-        this.onLayoutComplete();
+      // Step 2: Edge Generation (using layout data)
+      this.updateState(LayoutEngineState.EDGE_GENERATING, 70);
+      this.onLayoutComplete();
 
-        // Step 2: Edge Generation (using layout data)
-        this.updateState(LayoutEngineState.EDGE_GENERATING, 70);
-
-        if (!this.config.waitForStable) {
-          this.renderEdges();
-        }
-        // If waitForStable is true, renderEdges will be called by the 'stable' event
-      }).catch((error) => {
-        this.handleError(error as Error, 'layout');
-      });
-
+      if (!this.config.waitForStable) {
+        await this.renderEdges();
+      }
+      // If waitForStable is true, renderEdges will be called by the 'stable' event
     } catch (error) {
       this.handleError(error as Error, 'render');
       throw error;
@@ -258,11 +268,11 @@ export class KnowledgeGraph {
     if (!this.layoutResult || !this.viewportManager) return;
 
     // Update viewport manager with node positions
-    const nodePositions: NodePosition[] = this.layoutResult.nodes.map(node => ({
+    const nodePositions: NodePosition[] = this.layoutResult.nodes.map((node) => ({
       id: node.id,
       x: node.x,
       y: node.y,
-      z: node.z
+      z: node.z,
     }));
 
     this.viewportManager.setNodePositions(nodePositions);
@@ -271,7 +281,7 @@ export class KnowledgeGraph {
   /**
    * Render edges using layout data
    */
-  private renderEdges(): void {
+  private async renderEdges(): Promise<void> {
     if (!this.layoutResult || !this.renderingSystem || !this.edgeRenderer) return;
 
     try {
@@ -281,19 +291,19 @@ export class KnowledgeGraph {
       }
 
       // Step 3: Rendering (DOM operations)
-      this.renderingSystem.setRenderer('svg');
+      await this.renderingSystem.setRenderer('svg');
       this.renderingSystem.render(this.layoutResult, {
         nodeConfig: {
           radius: this.config.nodeRadius,
           fill: this.config.nodeFill,
           stroke: this.config.nodeStroke,
-          strokeWidth: this.config.nodeStrokeWidth
+          strokeWidth: this.config.nodeStrokeWidth,
         },
         edgeConfig: {
           stroke: this.config.linkStroke,
           strokeWidth: this.config.linkStrokeWidth,
-          curveType: this.config.edgeRenderer === 'bundled' ? 'bundle' : 'straight'
-        }
+          curveType: this.config.edgeRenderer === 'bundled' ? 'bundle' : 'straight',
+        },
       });
 
       // Step 4: Viewport Management
@@ -310,7 +320,6 @@ export class KnowledgeGraph {
       }
 
       this.updateState(LayoutEngineState.READY, 100);
-
     } catch (error) {
       this.handleError(error as Error, 'renderEdges');
     }
@@ -345,11 +354,11 @@ export class KnowledgeGraph {
   /**
    * Updates the graph with new data and re-renders the visualization.
    */
-  updateData(data: GraphData): void {
+  async updateData(data: GraphData): Promise<void> {
     this.data = data;
     this.destroy();
     this.initializeComponents();
-    this.render();
+    await this.render();
   }
 
   /**
@@ -411,7 +420,7 @@ export class KnowledgeGraph {
   getNeighbors(nodeId: string): string[] {
     const neighbors: Set<string> = new Set();
 
-    this.data.edges.forEach(edge => {
+    this.data.edges.forEach((edge) => {
       const sourceId = typeof edge.source === 'string' ? edge.source : (edge.source as Node).id;
       const targetId = typeof edge.target === 'string' ? edge.target : (edge.target as Node).id;
 

@@ -360,7 +360,7 @@ export enum LayoutEngineState {
   /**
    * An error occurred during rendering.
    */
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 /**
@@ -653,6 +653,14 @@ export interface GraphConfig {
   similarityFunction?: SimilarityFunction;
 
   /**
+   * Threshold for similarity-based clustering.
+   * Only node pairs with similarity above this threshold will be attracted.
+   * Range: 0 (no clustering) to 1 (maximum clustering).
+   * @default 0.5
+   */
+  similarityThreshold?: number;
+
+  /**
    * Collision radius accessor to prevent node overlap.
    * Sets minimum distance between node centers.
    * @example
@@ -697,7 +705,13 @@ export interface GraphConfig {
     fontFamily?: string;
     fill?: string;
     textAnchor?: 'start' | 'middle' | 'end';
-    dominantBaseline?: 'auto' | 'text-before-edge' | 'text-after-edge' | 'central' | 'middle' | 'hanging';
+    dominantBaseline?:
+      | 'auto'
+      | 'text-before-edge'
+      | 'text-after-edge'
+      | 'central'
+      | 'middle'
+      | 'hanging';
   };
 
   // Interaction
