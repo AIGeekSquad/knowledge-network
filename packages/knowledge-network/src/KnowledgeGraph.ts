@@ -291,7 +291,7 @@ export class KnowledgeGraph {
       }
 
       // Step 3: Rendering (DOM operations)
-      await this.renderingSystem.setRenderer('svg');
+      await this.renderingSystem.setRenderer(this.config.renderer || 'svg');
       this.renderingSystem.render(this.layoutResult, {
         nodeConfig: {
           radius: this.config.nodeRadius,

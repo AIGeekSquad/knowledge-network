@@ -1,15 +1,14 @@
 import { EventEmitter } from 'events';
 import type {
   LayoutResult,
-  PositionedNode,
-  PositionedEdge,
   NodePosition,
   EdgePosition,
   Point,
-  BoundingBox,
 } from '../layout/LayoutEngine';
-import type { Node, Edge, GraphConfig } from '../types';
+import type { Node, Edge } from '../types';
 import { SVGRenderer } from './SVGRenderer';
+import { CanvasRenderer } from './CanvasRenderer';
+import type { IRenderer } from './IRenderer';
 
 export type RendererType = 'svg' | 'canvas' | 'webgl';
 export type NodeShape = 'circle' | 'square' | 'diamond' | 'triangle' | 'star';
@@ -96,48 +95,6 @@ export interface HighlightConfig {
 }
 
 /**
- * Abstract renderer interface
- */
-export interface IRenderer {
-  readonly type: RendererType;
-
-  // Lifecycle
-  initialize(container: HTMLElement, config: RendererConfig): void;
-  destroy(): void;
-  clear(): void;
-
-  // Rendering
-  render(layout: LayoutResult, config: RenderConfig): void;
-  renderNodes(nodes: PositionedNode[], config?: NodeRenderConfig): void;
-  renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig, nodes?: PositionedNode[]): void;
-  renderLabels(items: LabelItem[], config?: LabelRenderConfig): void;
-
-  // Updates
-  updateNodePositions(positions: NodePosition[]): void;
-  updateEdgePositions(positions: EdgePosition[]): void;
-  updateNodeStyles(updates: NodeStyleUpdate[]): void;
-  updateEdgeStyles(updates: EdgeStyleUpdate[]): void;
-
-  // Selection & Highlighting
-  highlightNodes(nodeIds: string[], config?: HighlightConfig): void;
-  highlightEdges(edgeIds: string[], config?: HighlightConfig): void;
-  clearHighlights(): void;
-
-  // Viewport
-  setTransform(transform: Transform): void;
-  getTransform(): Transform;
-
-  // Element Access
-  getNodeElement(nodeId: string): Element | null;
-  getEdgeElement(edgeId: string): Element | null;
-  getContainer(): Element;
-
-  // Performance
-  enableBatching(enabled: boolean): void;
-  flush(): void;
-}
-
-/**
  * RenderingSystem manages the rendering of graph layouts using different renderers.
  *
  * @remarks
@@ -199,8 +156,8 @@ export class RenderingSystem extends EventEmitter {
         this.renderer = new SVGRenderer();
         break;
       case 'canvas':
-        // Canvas renderer would be implemented separately
-        throw new Error('Canvas renderer not yet implemented');
+        this.renderer = new CanvasRenderer();
+        break;
       case 'webgl':
         // WebGL renderer would be implemented separately
         throw new Error('WebGL renderer not yet implemented');

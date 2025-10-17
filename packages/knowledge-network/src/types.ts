@@ -363,6 +363,8 @@ export enum LayoutEngineState {
   ERROR = 'error',
 }
 
+export type RendererType = 'svg' | 'canvas' | 'webgl';
+
 /**
  * Configuration options for the knowledge graph visualization.
  *
@@ -414,6 +416,12 @@ export enum LayoutEngineState {
  * ```
  */
 export interface GraphConfig {
+  /**
+   * The rendering engine to use.
+   * @default 'svg'
+   */
+  renderer?: RendererType;
+
   /**
    * Width of the visualization canvas in pixels.
    * @default 800

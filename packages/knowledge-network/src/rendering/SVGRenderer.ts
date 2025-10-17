@@ -12,7 +12,7 @@ import type {
   HighlightConfig,
   Transform,
   LabelItem,
-} from './RenderingSystem';
+} from './IRenderer';
 import type {
   LayoutResult,
   PositionedNode,
@@ -363,7 +363,7 @@ export class SVGRenderer implements IRenderer {
         this.edgeRenderResult = renderer.render(
           this.edgeGroup!,
           processedEdges as any,
-          Array.from(nodes.values()),
+          Array.from(nodeMap.values()),
           edgeRenderConfig
         );
 
