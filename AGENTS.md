@@ -7,8 +7,8 @@ This file provides guidance to AI assistants working with this project.
 The Knowledge Network is a TypeScript library for knowledge graph visualization built on D3.js. It's designed as an interactive web-based visualization tool that demonstrates knowledge graph rendering capabilities with progressive loading, interactive navigation, and multiple edge visualization modes.
 
 This monorepo contains:
-- **Core library** (`packages/knowledge-network`): The main `@aigeeksquad/knowledge-network` package
-- **Examples** (`packages/examples`): Vite-based interactive demonstrations
+- **Core library** (`packages/knowledge-network/`): The main `@aigeeksquad/knowledge-network` package
+- **Examples** (`packages/examples/`): Vite-based interactive demonstrations
 
 The library's standout feature is force-directed edge bundling, which reduces visual clutter in complex graphs by grouping related edges. This is particularly effective for knowledge graphs, mind maps, and dense networks requiring visual clarity.
 
@@ -34,10 +34,10 @@ Follow this process:
 - **TypeScript**: Strict configuration with modern ES2022 target
 - **D3.js v7**: Modern ES modules with d3-force for physics simulation
 - **Build Tools**: 
-  - `tsup` for fast TypeScript compilation with dual ESM/CJS output
-  - `Vite` for modern web development and examples
-- **Package Management**: `pnpm` with workspace support
-- **Testing**: `Vitest` with jsdom for DOM testing
+  - `tsup` (`packages/knowledge-network/tsup.config.ts`) for fast TypeScript compilation with dual ESM/CJS output
+  - `Vite` (`packages/examples/vite.config.ts`) for modern web development and examples
+- **Package Management**: `pnpm` (`pnpm-workspace.yaml`) with workspace support
+- **Testing**: `Vitest` (`packages/knowledge-network/vitest.config.ts`) with jsdom for DOM testing
 - **Rendering**: HTML5 Canvas and SVG support for different performance needs
 
 ## Development Workflow
@@ -106,19 +106,22 @@ pnpm preview
 ### Core Library Structure
 The main library follows a modular architecture:
 
-- **`KnowledgeGraph`**: Main orchestration class
-- **Layout Engine**: Force-directed layout using `d3-force`
+- **`KnowledgeGraph`** (`packages/knowledge-network/src/KnowledgeGraph.ts`): Main orchestration class
+- **Layout Engine**: Force-directed layout using `d3-force` (`packages/knowledge-network/src/layout/ForceLayoutEngine.ts`)
 - **Edge Rendering System**: Pluggable edge renderers
-  - `SimpleEdge`: Basic straight line edges  
-  - `EdgeBundling`: Advanced force-directed edge bundling
-  - **Edge Smoothing**: Multiple strategies (Laplacian, Gaussian, Bilateral)
-- **`Types`**: Comprehensive TypeScript definitions
+  - `SimpleEdge` (`packages/knowledge-network/src/edges/SimpleEdge.ts`): Basic straight line edges  
+  - `EdgeBundling` (`packages/knowledge-network/src/edges/EdgeBundling.ts`): Advanced force-directed edge bundling
+  - **Edge Smoothing**: Multiple strategies
+    - `Laplacian` (`packages/knowledge-network/src/edges/smoothing/LaplacianSmoother.ts`)
+    - `Gaussian` (`packages/knowledge-network/src/edges/smoothing/GaussianSmoother.ts`)
+    - `Bilateral` (`packages/knowledge-network/src/edges/smoothing/BilateralSmoother.ts`)
+- **`Types`** (`packages/knowledge-network/src/types.ts`): Comprehensive TypeScript definitions
 
 ### Key Design Patterns
 
-1. **Modular Edge Rendering**: The `EdgeRenderer` system allows switching between different strategies (`simple` or `bundling`)
+1. **Modular Edge Rendering**: The `EdgeRenderer` (`packages/knowledge-network/src/edges/EdgeRenderer.ts`) system allows switching between different strategies (`simple` or `bundling`)
 
-2. **Configuration-Driven**: The `GraphConfig` interface provides extensive customization for layout, styling, and behavior
+2. **Configuration-Driven**: The `GraphConfig` (`packages/knowledge-network/src/types.ts`) interface provides extensive customization for layout, styling, and behavior
 
 3. **D3 Integration**: Built on d3.js v7 with modern ES modules, using d3-force for physics simulation
 
@@ -145,7 +148,7 @@ The main library follows a modular architecture:
 
 ## Configuration and Customization
 
-The `GraphConfig` interface supports extensive customization:
+The `GraphConfig` (`packages/knowledge-network/src/types.ts`) interface supports extensive customization:
 - **Layout parameters**: Forces, distances, collision detection
 - **Styling options**: Colors, strokes, node radii
 - **Behavior settings**: Zoom, drag, stability detection  
@@ -155,7 +158,7 @@ The `GraphConfig` interface supports extensive customization:
 ## Testing Strategy
 
 - **Framework**: Vitest with jsdom for DOM testing
-- **Test Location**: Tests are in the `tests/` directory
+- **Test Location**: Tests are in the `tests/` (`packages/knowledge-network/tests/`) directory
 - **Coverage Areas**: 
   - Initialization and data management
   - Edge bundling algorithms  
