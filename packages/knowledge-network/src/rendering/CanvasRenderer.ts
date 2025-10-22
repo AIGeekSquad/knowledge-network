@@ -218,25 +218,6 @@ export class CanvasRenderer implements IRenderer {
     return { ...this.transform };
   }
 
-  getTransform(): Transform {
-    throw new Error('Method not implemented.');
-  }
-
-  getNodeElement(nodeId: string): Element | null {
-    throw new Error('Method not implemented.');
-  }
-
-  getEdgeElement(edgeId: string): Element | null {
-    throw new Error('Method not implemented.');
-  }
-
-  getContainer(): Element {
-    throw new Error('Method not implemented.');
-  }
-
-  enableBatching(enabled: boolean): void {
-    throw new Error('Method not implemented.');
-  }
 
     private accessor<T, R>(value: R | ((d: T) => R), data: T): R {
     return typeof value === 'function' ? (value as (d: T) => R)(data) : value;

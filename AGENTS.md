@@ -7,8 +7,8 @@ This file provides guidance to AI assistants working with this project.
 The Knowledge Network is a TypeScript library for knowledge graph visualization built on D3.js. It's designed as an interactive web-based visualization tool that demonstrates knowledge graph rendering capabilities with progressive loading, interactive navigation, and multiple edge visualization modes.
 
 This monorepo contains:
-- **Core library** ([`packages/knowledge-network`](packages/knowledge-network/)): The main `@aigeeksquad/knowledge-network` package
-- **Examples** ([`packages/examples`](packages/examples/)): Vite-based interactive demonstrations
+- **Core library** (`packages/knowledge-network`): The main `@aigeeksquad/knowledge-network` package
+- **Examples** (`packages/examples`): Vite-based interactive demonstrations
 
 The library's standout feature is force-directed edge bundling, which reduces visual clutter in complex graphs by grouping related edges. This is particularly effective for knowledge graphs, mind maps, and dense networks requiring visual clarity.
 
@@ -16,20 +16,28 @@ The library's standout feature is force-directed edge bundling, which reduces vi
 
 When working on this project:
 - All project files belong in this monorepo structure
-- Use [`ai_working/`](ai_working/) for temporary analysis files and working documents
-- Reference files with [`@knowledge-network/`](packages/knowledge-network/) prefix for the core library
-- Examples use [`workspace:*`](packages/examples/package.json) dependencies to reference the local core library
-- Follow the modular architecture principles described in [`docs/`](docs/) documentation
+- Use `ai_working/` for temporary analysis files and working documents
+- Reference files with `@knowledge-network/` prefix for the core library
+- Examples use `workspace:*` dependencies to reference the local core library
+- Follow the modular architecture principles described in `docs/` documentation
+
+Follow this process:
+- Identify tasks to be done
+- Assert current state by building and running tests
+- Perform work and improve
+- Commit changes as they progress with actual improvement on build quality and no regression
+- Make commit message that clearly states the work done and the outcome measured
+- Proceed to next task
 
 ## Key Technologies
 
 - **TypeScript**: Strict configuration with modern ES2022 target
 - **D3.js v7**: Modern ES modules with d3-force for physics simulation
 - **Build Tools**: 
-  - [`tsup`](packages/knowledge-network/tsup.config.ts) for fast TypeScript compilation with dual ESM/CJS output
-  - [`Vite`](packages/examples/vite.config.ts) for modern web development and examples
-- **Package Management**: [`pnpm`](pnpm-workspace.yaml) with workspace support
-- **Testing**: [`Vitest`](packages/knowledge-network/vitest.config.ts) with jsdom for DOM testing
+  - `tsup` for fast TypeScript compilation with dual ESM/CJS output
+  - `Vite` for modern web development and examples
+- **Package Management**: `pnpm` with workspace support
+- **Testing**: `Vitest` with jsdom for DOM testing
 - **Rendering**: HTML5 Canvas and SVG support for different performance needs
 
 ## Development Workflow
@@ -59,7 +67,7 @@ pnpm clean
 ```
 
 ### Core Library Development
-Navigate to [`packages/knowledge-network/`](packages/knowledge-network/):
+Navigate to `packages/knowledge-network/`:
 ```bash
 # Build library with tsup
 pnpm build
@@ -81,7 +89,7 @@ pnpm clean
 ```
 
 ### Examples Development
-Navigate to [`packages/examples/`](packages/examples/):
+Navigate to `packages/examples/`:
 ```bash
 # Start development server
 pnpm dev
@@ -98,19 +106,19 @@ pnpm preview
 ### Core Library Structure
 The main library follows a modular architecture:
 
-- **[`KnowledgeGraph`](packages/knowledge-network/src/KnowledgeGraph.ts)**: Main orchestration class
-- **Layout Engine**: Force-directed layout using [`d3-force`](packages/knowledge-network/src/layout/ForceLayoutEngine.ts)
+- **`KnowledgeGraph`**: Main orchestration class
+- **Layout Engine**: Force-directed layout using `d3-force`
 - **Edge Rendering System**: Pluggable edge renderers
-  - [`SimpleEdge`](packages/knowledge-network/src/edges/SimpleEdge.ts): Basic straight line edges  
-  - [`EdgeBundling`](packages/knowledge-network/src/edges/EdgeBundling.ts): Advanced force-directed edge bundling
-  - **Edge Smoothing**: Multiple strategies ([`Laplacian`](packages/knowledge-network/src/edges/smoothing/LaplacianSmoother.ts), [`Gaussian`](packages/knowledge-network/src/edges/smoothing/GaussianSmoother.ts), [`Bilateral`](packages/knowledge-network/src/edges/smoothing/BilateralSmoother.ts))
-- **[`Types`](packages/knowledge-network/src/types.ts)**: Comprehensive TypeScript definitions
+  - `SimpleEdge`: Basic straight line edges  
+  - `EdgeBundling`: Advanced force-directed edge bundling
+  - **Edge Smoothing**: Multiple strategies (Laplacian, Gaussian, Bilateral)
+- **`Types`**: Comprehensive TypeScript definitions
 
 ### Key Design Patterns
 
-1. **Modular Edge Rendering**: The [`EdgeRenderer`](packages/knowledge-network/src/edges/EdgeRenderer.ts) system allows switching between different strategies (`simple` or `bundling`)
+1. **Modular Edge Rendering**: The `EdgeRenderer` system allows switching between different strategies (`simple` or `bundling`)
 
-2. **Configuration-Driven**: The [`GraphConfig`](packages/knowledge-network/src/types.ts) interface provides extensive customization for layout, styling, and behavior
+2. **Configuration-Driven**: The `GraphConfig` interface provides extensive customization for layout, styling, and behavior
 
 3. **D3 Integration**: Built on d3.js v7 with modern ES modules, using d3-force for physics simulation
 
@@ -137,7 +145,7 @@ The main library follows a modular architecture:
 
 ## Configuration and Customization
 
-The [`GraphConfig`](packages/knowledge-network/src/types.ts) interface supports extensive customization:
+The `GraphConfig` interface supports extensive customization:
 - **Layout parameters**: Forces, distances, collision detection
 - **Styling options**: Colors, strokes, node radii
 - **Behavior settings**: Zoom, drag, stability detection  
@@ -147,7 +155,7 @@ The [`GraphConfig`](packages/knowledge-network/src/types.ts) interface supports 
 ## Testing Strategy
 
 - **Framework**: Vitest with jsdom for DOM testing
-- **Test Location**: Tests are in the [`tests/`](packages/knowledge-network/tests/) directory
+- **Test Location**: Tests are in the `tests/` directory
 - **Coverage Areas**: 
   - Initialization and data management
   - Edge bundling algorithms  
@@ -157,7 +165,7 @@ The [`GraphConfig`](packages/knowledge-network/src/types.ts) interface supports 
 
 ## Demo Application Requirements
 
-The project includes a comprehensive demo specification ([`docs/DEMO_SPECIFICATION.md`](docs/DEMO_SPECIFICATION.md)) that defines:
+The project includes a comprehensive demo specification (`docs/DEMO_SPECIFICATION.md`) that defines:
 - Progressive loading with status messages
 - Two visualization modes (Simple Edges vs Enhanced Bundling)
 - Interactive node selection with opacity management
@@ -167,9 +175,9 @@ The project includes a comprehensive demo specification ([`docs/DEMO_SPECIFICATI
 ## Research and Documentation
 
 The project includes extensive research documentation:
-- [`docs/EDGE_BUNDLING.md`](docs/EDGE_BUNDLING.md): Comprehensive guide to edge bundling techniques
-- [`docs/EDGE_BUNDLING_RESEARCH.md`](docs/EDGE_BUNDLING_RESEARCH.md): Academic research on bundling approaches
-- [`docs/SEMANTIC_SPACETIME_RESEARCH.md`](docs/SEMANTIC_SPACETIME_RESEARCH.md): Advanced semantic spacetime approaches
+- `docs/EDGE_BUNDLING.md`: Comprehensive guide to edge bundling techniques
+- `docs/EDGE_BUNDLING_RESEARCH.md`: Academic research on bundling approaches
+- `docs/SEMANTIC_SPACETIME_RESEARCH.md`: Advanced semantic spacetime approaches
 
 ## File Naming Conventions
 
