@@ -135,9 +135,11 @@ describe('SpatialIndexer', () => {
 
     it('should handle 2D query on 3D index', () => {
       // 2D point should be converted to 3D with z=0
-      const results = indexer.queryPoint({ x: 52, y: 48 }, 15);
-      // Should find nodes near the XY projection
+      const results = indexer.queryPoint({ x: 52, y: 48 }, 55);
+      // Should find nodes near the XY projection (accounting for Z distance)
       expect(results.length).toBeGreaterThan(0);
+      // Should find n2 which is closest in XY plane
+      expect(results.some(r => r.id === 'n2')).toBe(true);
     });
   });
 

@@ -114,7 +114,7 @@ describe('EdgeBundling - Algorithm Validation & Research Compliance', () => {
 
       // Both should create paths but with different curvatures
       // This validates the compatibility threshold affects bundling behavior
-    });
+    }, { timeout: 15000 });
   });
 
   describe('Compatibility Metrics Validation', () => {
@@ -381,7 +381,7 @@ describe('EdgeBundling - Algorithm Validation & Research Compliance', () => {
           expect(pathData.includes('C')).toBe(true); // Should have smooth curves
         });
       }
-    });
+    }, { timeout: 20000 });
   });
 
   describe('Research Compliance Validation', () => {

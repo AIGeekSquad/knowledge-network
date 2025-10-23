@@ -147,7 +147,7 @@ export class RenderingSystem extends EventEmitter {
   /**
    * Set the renderer type
    */
-  async setRenderer(type: RendererType): Promise<void> {
+  setRenderer(type: RendererType): void {
     if (this.renderer) {
       this.renderer.destroy();
     }

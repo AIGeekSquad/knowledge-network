@@ -15,6 +15,11 @@ export class CanvasRenderer implements IRenderer {
     this.canvas.height = config.height;
     container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
+
+    // Detect test environment where canvas is not available
+    if (!this.ctx) {
+      throw new Error('Canvas 2D context not available. Canvas rendering requires a browser environment or canvas npm package in Node.js.');
+    }
   }
 
     destroy(): void {

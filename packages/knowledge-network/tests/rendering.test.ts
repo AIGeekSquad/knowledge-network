@@ -29,9 +29,9 @@ describe('KnowledgeGraph - Rendering & DOM Manipulation', () => {
     document.body.removeChild(container);
   });
 
-  it('should create SVG with correct dimensions', () => {
+  it('should create SVG with correct dimensions', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData);
-    graph.render();
+    await graph.render();
 
     const svg = container.querySelector('svg');
     expect(svg).toBeTruthy();
@@ -39,29 +39,29 @@ describe('KnowledgeGraph - Rendering & DOM Manipulation', () => {
     expect(svg?.getAttribute('height')).toBe('600');
   });
 
-  it('should apply custom configuration for dimensions', () => {
+  it('should apply custom configuration for dimensions', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       width: 1000,
       height: 800,
     });
-    graph.render();
+    await graph.render();
 
     const svg = container.querySelector('svg');
     expect(svg?.getAttribute('width')).toBe('1000');
     expect(svg?.getAttribute('height')).toBe('800');
   });
 
-  it('should create nodes with correct count', () => {
+  it('should create nodes with correct count', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData);
-    graph.render();
+    await graph.render();
 
     const circles = container.querySelectorAll('circle');
     expect(circles).toHaveLength(3);
   });
 
-  it('should create labels for nodes', () => {
+  it('should create labels for nodes', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData);
-    graph.render();
+    await graph.render();
 
     const labels = container.querySelectorAll('text');
     expect(labels).toHaveLength(3);
@@ -70,7 +70,7 @@ describe('KnowledgeGraph - Rendering & DOM Manipulation', () => {
     expect(labels[2].textContent).toBe('Node 3');
   });
 
-  it('should use node id as fallback label', () => {
+  it('should use node id as fallback label', async () => {
     const dataWithoutLabels: GraphData = {
       nodes: [
         { id: 'nodeA' },
@@ -80,41 +80,43 @@ describe('KnowledgeGraph - Rendering & DOM Manipulation', () => {
     };
 
     const graph = new KnowledgeGraph(container, dataWithoutLabels);
-    graph.render();
+    await graph.render();
 
     const labels = container.querySelectorAll('text');
     expect(labels[0].textContent).toBe('nodeA');
     expect(labels[1].textContent).toBe('nodeB');
   });
 
-  it('should create force simulation', () => {
+  it('should create force simulation', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData);
-    graph.render();
+    await graph.render();
 
     const simulation = graph.getSimulation();
     expect(simulation).toBeTruthy();
     expect(typeof simulation?.alpha()).toBe('number');
   });
 
-  it('should render multiple times without error', () => {
+  it('should render multiple times without error', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData);
 
-    expect(() => graph.render()).not.toThrow();
+    // First render should succeed
+    await graph.render();
+    expect(container.querySelector('svg')).toBeTruthy();
 
     // Clear and render again
     graph.destroy();
-    expect(() => graph.render()).not.toThrow();
+    await graph.render();
 
     // Should have correct number of elements after re-render
     const circles = container.querySelectorAll('circle');
     const labels = container.querySelectorAll('text');
     expect(circles).toHaveLength(3);
     expect(labels).toHaveLength(3);
-  });
+  }, 10000);
 
-  it('should clean up DOM on destroy', () => {
+  it('should clean up DOM on destroy', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData);
-    graph.render();
+    await graph.render();
 
     expect(container.querySelector('svg')).toBeTruthy();
     expect(graph.getSimulation()).toBeTruthy();

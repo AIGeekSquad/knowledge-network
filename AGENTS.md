@@ -25,6 +25,8 @@ Follow this process:
 - Identify tasks to be done
 - Assert current state by building and running tests
 - Perform work and improve
+- Clean up and remove any temporary or debugging code added or clearly mark thigns to be addressed later using `//todo :` comments
+- Ensure high quality standard and clean project structure
 - Commit changes as they progress with actual improvement on build quality and no regression
 - Make commit message that clearly states the work done and the outcome measured
 - Proceed to next task

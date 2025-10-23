@@ -239,16 +239,22 @@ export class KnowledgeGraph {
     try {
       this.updateState(LayoutEngineState.LOADING, 10);
 
+      // Auto-initialize components if not already initialized (e.g., after destroy)
       if (!this.layoutEngine || !this.renderingSystem || !this.viewportManager) {
-        throw new Error('Components not initialized');
+        this.initializeComponents();
       }
 
       // Step 1: Layout Calculation (NO rendering)
       this.updateState(LayoutEngineState.LAYOUT_CALCULATING, 30);
       this.layoutResult = await this.layoutEngine.calculateLayout(this.data);
 
-      // Step 2: Edge Generation (using layout data)
-      this.updateState(LayoutEngineState.EDGE_GENERATING, 70);
+      // Step 2: Setup renderer and render nodes (always happens)
+      this.updateState(LayoutEngineState.LAYOUT_CALCULATING, 60);
+      this.renderingSystem.setRenderer(this.config.renderer || 'svg');
+      await this.renderNodes();
+
+      // Step 3: Edge Generation (using layout data)
+      this.updateState(LayoutEngineState.EDGE_GENERATING, 80);
       this.onLayoutComplete();
 
       if (!this.config.waitForStable) {
@@ -279,19 +285,12 @@ export class KnowledgeGraph {
   }
 
   /**
-   * Render edges using layout data
+   * Render nodes using layout data
    */
-  private async renderEdges(): Promise<void> {
-    if (!this.layoutResult || !this.renderingSystem || !this.edgeRenderer) return;
+  private async renderNodes(): Promise<void> {
+    if (!this.layoutResult || !this.renderingSystem) return;
 
     try {
-      // Call edge rendering progress callback
-      if (this.config.onEdgeRenderingProgress) {
-        this.config.onEdgeRenderingProgress(0, this.data.edges.length);
-      }
-
-      // Step 3: Rendering (DOM operations)
-      await this.renderingSystem.setRenderer(this.config.renderer || 'svg');
       this.renderingSystem.render(this.layoutResult, {
         nodeConfig: {
           radius: this.toRenderAccessor(this.config.nodeRadius, 10),
@@ -304,11 +303,34 @@ export class KnowledgeGraph {
           strokeWidth: this.toRenderAccessor(this.config.linkStrokeWidth, 1.5),
           curveType: this.config.edgeRenderer === 'bundled' ? 'bundle' : 'straight',
         },
+        labelConfig: {
+          text: (node: any) => node.label || node.id,
+          fontSize: 12,
+          fill: '#000',
+        },
       });
 
-      // Step 4: Viewport Management
-      this.updateState(LayoutEngineState.ZOOM_FITTING, 90);
       this.setupViewport();
+      this.updateState(LayoutEngineState.READY, 100);
+    } catch (error) {
+      this.handleError(error as Error, 'renderNodes');
+    }
+  }
+
+  /**
+   * Render edges using layout data
+   */
+  private async renderEdges(): Promise<void> {
+    if (!this.layoutResult || !this.renderingSystem || !this.edgeRenderer) return;
+
+    try {
+      // Call edge rendering progress callback
+      if (this.config.onEdgeRenderingProgress) {
+        this.config.onEdgeRenderingProgress(0, this.data.edges.length);
+      }
+
+      // Additional edge processing if needed (e.g., edge bundling operations)
+      // The basic edges are already rendered by renderNodes() -> RenderingSystem.render()
 
       // Call edge rendering completion callback
       if (this.config.onEdgeRenderingProgress) {

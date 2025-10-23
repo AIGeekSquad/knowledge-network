@@ -57,6 +57,18 @@ export class SVGRenderer implements IRenderer {
   private simpleEdgeRenderer: EdgeRenderer | null = null;
   private bundledEdgeRenderer: EdgeRenderer | null = null;
 
+  // Test environment detection
+  private isTestEnvironment(): boolean {
+    return typeof window === 'undefined' ||
+           (typeof window !== 'undefined' && window.location?.href.includes('vitest')) ||
+           (typeof process !== 'undefined' && process.env.NODE_ENV === 'test');
+  }
+
+  // Helper method to conditionally apply transitions
+  private applyWithTransition<T>(selection: d3.Selection<T, any, any, any>, duration: number = 200) {
+    return this.isTestEnvironment() ? selection : selection.transition().duration(duration);
+  }
+
   /**
    * Initialize the SVG renderer
    */
@@ -142,15 +154,23 @@ export class SVGRenderer implements IRenderer {
             this.renderNodes(layout.nodes, config.nodeConfig);
             break;
           case 'labels':
-            // Generate labels from nodes
+            // Generate labels from nodes (use labelConfig.text function if provided, otherwise node.label or node.id)
             const labels: LabelItem[] = layout.nodes
-              .filter((node) => node.label)
-              .map((node) => ({
-                id: node.id,
-                text: node.label!,
-                position: { x: node.x, y: node.y },
-                anchor: 'middle',
-              }));
+              .map((node) => {
+                const text = config.labelConfig?.text ?
+                  (typeof config.labelConfig.text === 'function' ?
+                    config.labelConfig.text(node) :
+                    config.labelConfig.text)
+                  : (node.label || node.id);
+
+                return {
+                  id: node.id,
+                  text: text,
+                  position: { x: node.x, y: node.y },
+                  anchor: 'middle' as const,
+                };
+              })
+              .filter((label) => label.text); // Filter out empty texts
             this.renderLabels(labels, config.labelConfig);
             break;
         }
@@ -463,9 +483,7 @@ export class SVGRenderer implements IRenderer {
       this.nodeGroup!.selectAll<SVGGElement, any>('.node').each((d, i, nodes) => {
         const position = positionMap.get(d.id);
         if (position) {
-          d3.select(nodes[i])
-            .transition()
-            .duration(200)
+          this.applyWithTransition(d3.select(nodes[i]), 200)
             .attr('transform', `translate(${position.x},${position.y})`);
         }
       });
@@ -487,9 +505,7 @@ export class SVGRenderer implements IRenderer {
     const operation = () => {
       // Update edge paths based on new positions
       if (this.edgeRenderResult?.selection) {
-        this.edgeRenderResult.selection
-          .transition()
-          .duration(200)
+        this.applyWithTransition(this.edgeRenderResult.selection, 200)
           .attr('d', (d: any, i: number) => {
             const pos = positions[i];
             if (pos) {
@@ -604,16 +620,14 @@ export class SVGRenderer implements IRenderer {
 
         if (idSet.has(d.id)) {
           // Highlight
-          shape
-            .transition()
-            .duration(finalConfig.duration!)
+          this.applyWithTransition(shape, finalConfig.duration!)
             .attr('stroke', finalConfig.color!)
             .attr('stroke-width', 3)
             .attr('opacity', finalConfig.opacity!)
             .attr('transform', `scale(${finalConfig.scale})`);
         } else {
           // Dim others
-          shape.transition().duration(finalConfig.duration!).attr('opacity', 0.3);
+          this.applyWithTransition(shape, finalConfig.duration!).attr('opacity', 0.3);
         }
       });
     };
@@ -648,15 +662,13 @@ export class SVGRenderer implements IRenderer {
 
         if (idSet.has(edgeId)) {
           // Highlight
-          element
-            .transition()
-            .duration(finalConfig.duration!)
+          this.applyWithTransition(element, finalConfig.duration!)
             .attr('stroke', finalConfig.color!)
             .attr('stroke-width', 3)
             .attr('opacity', finalConfig.opacity!);
         } else {
           // Dim others
-          element.transition().duration(finalConfig.duration!).attr('opacity', 0.2);
+          this.applyWithTransition(element, finalConfig.duration!).attr('opacity', 0.2);
         }
       });
     };
@@ -675,21 +687,19 @@ export class SVGRenderer implements IRenderer {
     const operation = () => {
       // Reset nodes
       if (this.nodeGroup) {
-        this.nodeGroup
+        const nodeShapes = this.nodeGroup
           .selectAll<SVGGElement, any>('.node')
-          .select('circle, rect, polygon')
-          .transition()
-          .duration(200)
+          .select('circle, rect, polygon');
+
+        this.applyWithTransition(nodeShapes, 200)
           .attr('opacity', 1)
           .attr('transform', 'scale(1)');
       }
 
       // Reset edges
       if (this.edgeGroup) {
-        this.edgeGroup
-          .selectAll<SVGPathElement, any>('.edge')
-          .transition()
-          .duration(200)
+        const edges = this.edgeGroup.selectAll<SVGPathElement, any>('.edge');
+        this.applyWithTransition(edges, 200)
           .attr('opacity', 0.6);
       }
     };
@@ -709,16 +719,8 @@ export class SVGRenderer implements IRenderer {
 
     if (this.rootGroup) {
       // Skip transitions in test environment to avoid JSDOM SVG issues
-      if (typeof window !== 'undefined' && !window.location?.href.includes('vitest')) {
-        this.rootGroup
-          .transition()
-          .duration(200)
-          .attr('transform', `translate(${transform.x},${transform.y}) scale(${transform.scale})`);
-      } else {
-        // Direct attribute setting without transition for tests
-        this.rootGroup
-          .attr('transform', `translate(${transform.x},${transform.y}) scale(${transform.scale})`);
-      }
+      this.applyWithTransition(this.rootGroup, 200)
+        .attr('transform', `translate(${transform.x},${transform.y}) scale(${transform.scale})`);
     }
   }
 

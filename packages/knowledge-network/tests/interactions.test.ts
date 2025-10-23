@@ -30,9 +30,9 @@ describe('KnowledgeGraph - User Interactions', () => {
   });
 
   describe('Zoom and Pan Functionality', () => {
-    it('should enable zoom and pan by default', () => {
+    it('should enable zoom and pan by default', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData);
-      graph.render();
+      await graph.render();
 
       const svg = container.querySelector('svg');
       expect(svg).toBeTruthy();
@@ -41,11 +41,11 @@ describe('KnowledgeGraph - User Interactions', () => {
       expect((svg as any).__zoom).toBeDefined();
     });
 
-    it('should disable zoom when configured', () => {
+    it('should disable zoom when configured', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableZoom: false,
       });
-      graph.render();
+      await graph.render();
 
       const svg = container.querySelector('svg');
       expect(svg).toBeTruthy();
@@ -54,41 +54,41 @@ describe('KnowledgeGraph - User Interactions', () => {
       expect((svg as any).__zoom).toBeUndefined();
     });
 
-    it('should apply zoom constraints when configured', () => {
+    it('should apply zoom constraints when configured', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableZoom: true,
         zoomScaleExtent: [0.5, 3],
       });
-      graph.render();
+      await graph.render();
 
       const svg = container.querySelector('svg');
       expect(svg).toBeTruthy();
       expect((svg as any).__zoom).toBeDefined();
     });
 
-    it('should handle zoom configuration without errors', () => {
+    it('should handle zoom configuration without errors', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableZoom: true,
       });
 
       // Should not throw when rendering with zoom enabled
-      expect(() => graph.render()).not.toThrow();
+      await expect(graph.render()).resolves.not.toThrow();
     });
 
-    it('should handle pan configuration without errors', () => {
+    it('should handle pan configuration without errors', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableZoom: true,
       });
 
       // Should not throw when rendering with pan enabled
-      expect(() => graph.render()).not.toThrow();
+      await expect(graph.render()).resolves.not.toThrow();
     });
   });
 
   describe('Drag Functionality', () => {
-    it('should enable node dragging by default', () => {
+    it('should enable node dragging by default', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData);
-      graph.render();
+      await graph.render();
 
       const circles = container.querySelectorAll('circle');
       expect(circles.length).toBeGreaterThan(0);
@@ -97,11 +97,11 @@ describe('KnowledgeGraph - User Interactions', () => {
       expect(circles[0]).toBeDefined();
     });
 
-    it('should disable dragging when configured', () => {
+    it('should disable dragging when configured', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableDrag: false,
       });
-      graph.render();
+      await graph.render();
 
       const circles = container.querySelectorAll('circle');
       expect(circles.length).toBeGreaterThan(0);
@@ -110,20 +110,20 @@ describe('KnowledgeGraph - User Interactions', () => {
       expect(circles[0]).toBeDefined();
     });
 
-    it('should handle drag configuration without errors', () => {
+    it('should handle drag configuration without errors', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableDrag: true,
       });
 
       // Should not throw when rendering with drag enabled
-      expect(() => graph.render()).not.toThrow();
+      await expect(graph.render()).resolves.not.toThrow();
     });
 
-    it('should create draggable nodes when enabled', () => {
+    it('should create draggable nodes when enabled', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableDrag: true,
       });
-      graph.render();
+      await graph.render();
 
       const circles = container.querySelectorAll('circle');
       expect(circles.length).toBeGreaterThan(0);
@@ -136,12 +136,12 @@ describe('KnowledgeGraph - User Interactions', () => {
   });
 
   describe('Combined Interactions', () => {
-    it('should handle both zoom and drag when both enabled', () => {
+    it('should handle both zoom and drag when both enabled', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableZoom: true,
         enableDrag: true,
       });
-      graph.render();
+      await graph.render();
 
       const svg = container.querySelector('svg');
       const circles = container.querySelectorAll('circle');
@@ -152,14 +152,14 @@ describe('KnowledgeGraph - User Interactions', () => {
       expect(circles[0]).toBeDefined();
     });
 
-    it('should configure interaction features independently', () => {
+    it('should configure interaction features independently', async () => {
       const graph = new KnowledgeGraph(container, basicGraphData, {
         enableZoom: true,
         enableDrag: true,
       });
 
       // Should not throw when rendering with both interactions enabled
-      expect(() => graph.render()).not.toThrow();
+      await graph.render();
 
       // Both features should be available
       const svg = container.querySelector('svg');

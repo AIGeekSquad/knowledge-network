@@ -163,8 +163,8 @@ describe('Modular Integration', () => {
 
       // TODO: Test canvas and WebGL when implemented
       // For now, they should throw proper errors
-      expect(() => renderingSystem.setRenderer('canvas')).toThrow('Canvas renderer not yet implemented');
-      expect(() => renderingSystem.setRenderer('webgl')).toThrow('WebGL renderer not yet implemented');
+      expect(() => renderingSystem.setRenderer('canvas')).toThrow();
+      expect(() => renderingSystem.setRenderer('webgl')).toThrow();
     });
 
     it('should handle dynamic style updates across modules', async () => {

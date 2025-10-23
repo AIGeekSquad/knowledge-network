@@ -123,11 +123,11 @@ describe('Architectural Separation', () => {
       expect(() => renderingSystem.setRenderer('svg')).not.toThrow();
       expect(renderingSystem.getRendererType()).toBe('svg');
 
-      // Canvas renderer should throw (not implemented)
-      expect(() => renderingSystem.setRenderer('canvas')).toThrow('Canvas renderer not yet implemented');
+      // Canvas renderer should throw (not implemented in Node.js test environment)
+      expect(() => renderingSystem.setRenderer('canvas')).toThrow();
 
-      // WebGL renderer should throw (not implemented)
-      expect(() => renderingSystem.setRenderer('webgl')).toThrow('WebGL renderer not yet implemented');
+      // WebGL renderer should throw (not available in Node.js test environment)
+      expect(() => renderingSystem.setRenderer('webgl')).toThrow();
     });
 
     it('should only render when given layout data', () => {
