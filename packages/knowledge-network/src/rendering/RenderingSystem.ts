@@ -8,6 +8,7 @@ import type {
 import type { Node, Edge } from '../types';
 import { SVGRenderer } from './SVGRenderer';
 import { CanvasRenderer } from './CanvasRenderer';
+import { WebGLRenderer } from './WebGLRenderer';
 import type { IRenderer } from './IRenderer';
 
 export type RendererType = 'svg' | 'canvas' | 'webgl';
@@ -159,8 +160,8 @@ export class RenderingSystem extends EventEmitter {
         this.renderer = new CanvasRenderer();
         break;
       case 'webgl':
-        // WebGL renderer would be implemented separately
-        throw new Error('WebGL renderer not yet implemented');
+        this.renderer = new WebGLRenderer();
+        break;
       default:
         throw new Error(`Unknown renderer type: ${type}`);
     }
