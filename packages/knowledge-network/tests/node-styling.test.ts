@@ -41,11 +41,11 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
     });
   });
 
-  it('should apply function nodeRadius', () => {
+  it('should apply function nodeRadius', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       nodeRadius: (d: Node) => d.type === 'primary' ? 20 : 10,
     });
-    graph.render();
+    await graph.render();
 
     const circles = container.querySelectorAll('circle');
     expect(circles[0].getAttribute('r')).toBe('20'); // primary node
@@ -65,11 +65,11 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
     });
   });
 
-  it('should apply function nodeFill', () => {
+  it('should apply function nodeFill', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       nodeFill: (d: Node) => d.type === 'primary' ? '#ff0000' : '#00ff00',
     });
-    graph.render();
+    await graph.render();
 
     const circles = container.querySelectorAll('circle');
     expect(circles[0].getAttribute('fill')).toBe('#ff0000'); // primary node
@@ -89,11 +89,11 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
     });
   });
 
-  it('should apply function nodeStroke', () => {
+  it('should apply function nodeStroke', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       nodeStroke: (d: Node) => d.type === 'primary' ? '#000' : '#999',
     });
-    graph.render();
+    await graph.render();
 
     const circles = container.querySelectorAll('circle');
     expect(circles[0].getAttribute('stroke')).toBe('#000'); // primary node
@@ -113,11 +113,11 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
     });
   });
 
-  it('should apply function nodeStrokeWidth', () => {
+  it('should apply function nodeStrokeWidth', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       nodeStrokeWidth: (d: Node) => d.type === 'primary' ? 4 : 1,
     });
-    graph.render();
+    await graph.render();
 
     const circles = container.querySelectorAll('circle');
     expect(circles[0].getAttribute('stroke-width')).toBe('4'); // primary node
@@ -125,7 +125,7 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
     expect(circles[2].getAttribute('stroke-width')).toBe('1'); // secondary node
   });
 
-  it('should support complex styling with multiple accessors', () => {
+  it('should support complex styling with multiple accessors', async () => {
     const complexData: GraphData = {
       nodes: [
         { id: 'important', type: 'critical', weight: 10 },
@@ -150,7 +150,7 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
         }
       },
     });
-    graph.render();
+    await graph.render();
 
     const circles = container.querySelectorAll('circle');
     expect(circles[0].getAttribute('r')).toBe('25'); // important node
@@ -161,7 +161,7 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
     expect(circles[2].getAttribute('fill')).toBe('#44ff44');
   });
 
-  it('should handle accessor functions with missing properties gracefully', () => {
+  it('should handle accessor functions with missing properties gracefully', async () => {
     const incompleteData: GraphData = {
       nodes: [
         { id: 'complete', type: 'primary', weight: 5 },
@@ -175,7 +175,7 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
       nodeFill: (d: Node) => d.type === 'primary' ? '#ff0000' : '#cccccc',
     });
 
-    expect(() => graph.render()).not.toThrow();
+    await expect(graph.render()).resolves.not.toThrow();
 
     const circles = container.querySelectorAll('circle');
     expect(circles[0].getAttribute('r')).toBe('10'); // 5 * 2
@@ -184,12 +184,12 @@ describe('KnowledgeGraph - Node Styling & Configuration', () => {
     expect(circles[1].getAttribute('fill')).toBe('#cccccc'); // fallback
   });
 
-  it('should combine styling accessors with built-in defaults', () => {
+  it('should combine styling accessors with built-in defaults', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       nodeRadius: (d: Node) => d.type === 'primary' ? 20 : 12,
       // Other properties should use defaults
     });
-    graph.render();
+    await graph.render();
 
     const circles = container.querySelectorAll('circle');
     expect(circles[0].getAttribute('r')).toBe('20');
