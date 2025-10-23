@@ -115,7 +115,7 @@ describe('KnowledgeGraph - Layout Simulation & Physics', () => {
         // Simple dot product
         return a.vector.reduce((sum, val, i) => sum + val * (b.vector![i] || 0), 0);
       },
-      similarityStrength: 0.5,
+      similarityThreshold: 0.5,
     });
     graph.render();
 
