@@ -215,19 +215,19 @@ export class KnowledgeGraph {
   }
 
   /**
-   * Convert accessor to a function that can be called
+   * Convert accessor to render config format (single parameter function)
    */
-  private accessor<T, R>(
+  private toRenderAccessor<T, R>(
     accessor: Accessor<T, R> | undefined,
     defaultValue: R
-  ): (d: T, i: number, nodes: T[]) => R {
+  ): R | ((item: T) => R) {
     if (accessor === undefined) {
-      return () => defaultValue;
+      return defaultValue;
     }
     if (typeof accessor === 'function') {
-      return accessor as (d: T, i: number, nodes: T[]) => R;
+      return (item: T) => (accessor as (d: T, i: number, nodes: T[]) => R)(item, 0, []);
     }
-    return () => accessor;
+    return accessor;
   }
 
   /**
@@ -294,14 +294,14 @@ export class KnowledgeGraph {
       await this.renderingSystem.setRenderer(this.config.renderer || 'svg');
       this.renderingSystem.render(this.layoutResult, {
         nodeConfig: {
-          radius: this.config.nodeRadius,
-          fill: this.config.nodeFill,
-          stroke: this.config.nodeStroke,
-          strokeWidth: this.config.nodeStrokeWidth,
+          radius: this.toRenderAccessor(this.config.nodeRadius, 10),
+          fill: this.toRenderAccessor(this.config.nodeFill, '#69b3a2'),
+          stroke: this.toRenderAccessor(this.config.nodeStroke, '#fff'),
+          strokeWidth: this.toRenderAccessor(this.config.nodeStrokeWidth, 1.5),
         },
         edgeConfig: {
-          stroke: this.config.linkStroke,
-          strokeWidth: this.config.linkStrokeWidth,
+          stroke: this.toRenderAccessor(this.config.linkStroke, '#999'),
+          strokeWidth: this.toRenderAccessor(this.config.linkStrokeWidth, 1.5),
           curveType: this.config.edgeRenderer === 'bundled' ? 'bundle' : 'straight',
         },
       });
@@ -366,6 +366,13 @@ export class KnowledgeGraph {
    */
   getSimulation(): any {
     return this.layoutEngine?.getSimulation() || null;
+  }
+
+  /**
+   * Gets the currently selected node ID.
+   */
+  getSelectedNodeId(): string | null {
+    return this.selectedNodeId;
   }
 
   /**
