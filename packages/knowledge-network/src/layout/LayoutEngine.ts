@@ -302,12 +302,35 @@ export class LayoutEngine extends EventEmitter {
       const alpha = this.simulation?.alpha() ?? 0;
       const progress = Math.min(99, Math.round((1 - alpha / this.initialAlpha) * 100));
 
+      // Update original data nodes with current simulation positions
+      nodes.forEach((simNode, index) => {
+        if (data.nodes[index]) {
+          (data.nodes[index] as any).x = simNode.x;
+          (data.nodes[index] as any).y = simNode.y;
+          (data.nodes[index] as any).vx = simNode.vx;
+          (data.nodes[index] as any).vy = simNode.vy;
+        }
+      });
+
       this.emit('layoutProgress', progress);
       this.emit('positions', this.getCurrentPositions());
     });
 
     // Resolve when stable
     this.simulation.on('end', () => {
+      // Update original data nodes with simulation results
+      nodes.forEach((simNode, index) => {
+        if (data.nodes[index]) {
+          (data.nodes[index] as any).x = simNode.x;
+          (data.nodes[index] as any).y = simNode.y;
+          (data.nodes[index] as any).z = simNode.z;
+          (data.nodes[index] as any).vx = simNode.vx;
+          (data.nodes[index] as any).vy = simNode.vy;
+          (data.nodes[index] as any).fx = simNode.fx;
+          (data.nodes[index] as any).fy = simNode.fy;
+        }
+      });
+
       this.emit('stable');
       this.emit('layoutEnd', this.createLayoutResult(data));
       resolve(this.createLayoutResult(data));

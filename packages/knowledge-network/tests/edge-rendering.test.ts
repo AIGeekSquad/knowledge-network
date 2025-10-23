@@ -29,12 +29,13 @@ describe('KnowledgeGraph - Edge Rendering & Integration', () => {
     document.body.removeChild(container);
   });
 
-  it('should apply constant linkStroke', () => {
+  it('should apply constant linkStroke', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       linkStroke: '#ff0000',
       edgeRenderer: 'simple',
+      layoutAlgorithm: 'grid', // Use static layout for tests
     });
-    graph.render();
+    await graph.render();
 
     const lines = container.querySelectorAll('line');
     expect(lines.length).toBeGreaterThan(0);
@@ -43,23 +44,25 @@ describe('KnowledgeGraph - Edge Rendering & Integration', () => {
     });
   });
 
-  it('should apply function linkStroke', () => {
+  it('should apply function linkStroke', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       linkStroke: (d: Edge) => d.type === 'is-a' ? '#blue' : '#green',
       edgeRenderer: 'simple',
+      // waitForStable: false, // Let rendering happen immediately
     });
-    graph.render();
+    await graph.render();
 
     const lines = container.querySelectorAll('line');
     expect(lines.length).toBe(2);
   });
 
-  it('should apply constant linkStrokeWidth', () => {
+  it('should apply constant linkStrokeWidth', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       linkStrokeWidth: 4,
       edgeRenderer: 'simple',
+      // waitForStable: false, // Let rendering happen immediately
     });
-    graph.render();
+    await graph.render();
 
     const lines = container.querySelectorAll('line');
     lines.forEach((line) => {
@@ -67,36 +70,39 @@ describe('KnowledgeGraph - Edge Rendering & Integration', () => {
     });
   });
 
-  it('should apply function linkStrokeWidth', () => {
+  it('should apply function linkStrokeWidth', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       linkStrokeWidth: (d: Edge) => d.weight ? d.weight * 3 : 1,
       edgeRenderer: 'simple',
+      // waitForStable: false, // Let rendering happen immediately
     });
-    graph.render();
+    await graph.render();
 
     const lines = container.querySelectorAll('line');
     expect(lines.length).toBe(2);
   });
 
-  it('should use bundled edge renderer when configured', () => {
+  it('should use bundled edge renderer when configured', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       edgeRenderer: 'bundled',
+      // waitForStable: false, // Let rendering happen immediately
       edgeBundling: {
         subdivisions: 20,
         iterations: 90,
       },
     });
 
-    expect(() => graph.render()).not.toThrow();
+    await expect(graph.render()).resolves.not.toThrow();
 
     // Bundled renderer creates path elements instead of lines
     const paths = container.querySelectorAll('path');
     expect(paths.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('should handle edge bundling configuration', () => {
+  it('should handle edge bundling configuration', async () => {
     const graph = new KnowledgeGraph(container, basicGraphData, {
       edgeRenderer: 'bundled',
+      // waitForStable: false, // Let rendering happen immediately
       edgeBundling: {
         subdivisions: 15,
         compatibilityThreshold: 0.7,
@@ -106,7 +112,7 @@ describe('KnowledgeGraph - Edge Rendering & Integration', () => {
       },
     });
 
-    expect(() => graph.render()).not.toThrow();
+    await expect(graph.render()).resolves.not.toThrow();
 
     const paths = container.querySelectorAll('path');
     expect(paths.length).toBeGreaterThanOrEqual(2);
