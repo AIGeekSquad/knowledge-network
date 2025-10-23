@@ -424,7 +424,7 @@ export class InteractionManager extends EventEmitter {
           this.emit('nodeDragged', nodeId, position);
         }
       })
-      .on('end', (event: any, d: any) => {
+      .on('end', (_event: any, d: any) => {
         const nodeId = d.id || this.draggedNodeId;
         if (nodeId) {
           this.endDrag();
@@ -487,7 +487,7 @@ export class InteractionManager extends EventEmitter {
     this.emit('selectionChanged', this.getSelection());
   }
 
-  selectNodesInRegion(region: Rectangle): void {
+  selectNodesInRegion(_region: Rectangle): void {
     // This would require access to node positions
     // Implementation would depend on layout engine integration
     console.warn('selectNodesInRegion not yet implemented');
@@ -581,7 +581,7 @@ export class InteractionManager extends EventEmitter {
     }
   }
 
-  startDrag(nodeId: string, event: MouseEvent): void {
+  startDrag(nodeId: string, _event: MouseEvent): void {
     if (!this.dragBehavior.enabled) return;
 
     this.isDraggingNode = true;

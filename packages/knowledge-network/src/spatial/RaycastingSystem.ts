@@ -520,8 +520,8 @@ export const RaycastingUtils = {
     mouseY: number,
     cameraPosition: Point3D,
     cameraTarget: Point3D,
-    fov: number,
-    aspectRatio: number
+    _fov: number,
+    _aspectRatio: number
   ): Ray3D {
     // Simplified camera ray calculation
     // In a real implementation, you'd use proper camera matrices

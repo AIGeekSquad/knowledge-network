@@ -30,10 +30,7 @@ import type {
   Box,
   Sphere,
   Ray,
-  Ray2D,
-  Ray3D,
   RayIntersection,
-  SpatialQueryResult,
   SpatialIndexStats,
   SpatialIndexConfig,
 } from './types';

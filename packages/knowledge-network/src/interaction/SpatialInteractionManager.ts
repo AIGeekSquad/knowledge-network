@@ -24,7 +24,7 @@ import * as d3 from 'd3';
 import type { Point } from '../layout/LayoutEngine';
 import type { SpatialRenderingSystem, NodeSelectionResult, RegionSelectionResult } from '../rendering/SpatialRenderingSystem';
 import { RaycastingUtils } from '../spatial';
-import type { Rectangle, Box, Ray2D } from '../spatial/types';
+import type { Rectangle, Ray2D } from '../spatial/types';
 
 // Enhanced event handlers with spatial information
 export type SpatialNodeClickHandler = (nodeId: string, event: MouseEvent, selectionInfo: NodeSelectionResult) => void;
@@ -127,7 +127,6 @@ export class SpatialInteractionManager extends EventEmitter {
   private renderingSystem: SpatialRenderingSystem | null = null;
   private selection: SpatialSelection = new SpatialSelection();
   private hoveredItem: { nodeId: string; selectionInfo: NodeSelectionResult } | null = null;
-  private dragBehavior: any = { enabled: false }; // DragBehavior type
   private regionSelection: RegionSelectionState = {
     active: false,
     startPoint: { x: 0, y: 0 },
@@ -308,7 +307,7 @@ export class SpatialInteractionManager extends EventEmitter {
   /**
    * Handle spatial mouse out.
    */
-  private handleSpatialMouseOut = (event: MouseEvent): void => {
+  private handleSpatialMouseOut = (_event: MouseEvent): void => {
     if (this.hoveredItem) {
       this.spatialNodeHoverHandlers.forEach(handler => handler(null));
       this.emit('spatialNodeHoverEnd', this.hoveredItem.nodeId);
@@ -543,7 +542,7 @@ export class SpatialInteractionManager extends EventEmitter {
     this.emit('backgroundClicked', event);
   }
 
-  private handleDoubleClick = (event: MouseEvent): void => {
+  private handleDoubleClick = (_event: MouseEvent): void => {
     // Implementation for double-click if needed
   };
 

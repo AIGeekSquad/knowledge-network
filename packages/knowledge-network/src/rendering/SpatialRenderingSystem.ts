@@ -28,12 +28,9 @@
 import { EventEmitter } from 'events';
 import type {
   LayoutResult,
-  NodePosition,
-  EdgePosition,
   Point,
   PositionedNode,
 } from '../layout/LayoutEngine';
-import type { Node, Edge } from '../types';
 import { SVGRenderer } from './SVGRenderer';
 import { CanvasRenderer } from './CanvasRenderer';
 import type { IRenderer } from './IRenderer';
@@ -417,7 +414,7 @@ export class SpatialRenderingSystem extends EventEmitter {
    * Check if spatial indexing is available and built.
    */
   isSpatialIndexAvailable(): boolean {
-    return this.spatialIndexer !== null && !this.spatialIndexer.getNodes().length === 0;
+    return this.spatialIndexer !== null && this.spatialIndexer.getNodes().length > 0;
   }
 
   /**
@@ -427,6 +424,13 @@ export class SpatialRenderingSystem extends EventEmitter {
     if (this.spatialConfig.enabled && this.currentLayout) {
       this.buildSpatialIndex();
     }
+  }
+
+  /**
+   * Get the container element from the underlying renderer.
+   */
+  getContainer(): Element | null {
+    return this.renderer?.getContainer() || null;
   }
 
   /**
