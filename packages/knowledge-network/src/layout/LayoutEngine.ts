@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import * as d3 from 'd3';
-import type { GraphData, Node, Edge, GraphConfig } from '../types';
+import type { GraphData, Node, Edge } from '../types';
+import { EmbeddingManager, type EmbeddingFunction, type TextEmbeddingFunction } from '../semantic/EmbeddingManager';
 
 export type LayoutAlgorithm = 'force-directed' | 'hierarchical' | 'circular' | 'grid' | 'radial' | 'custom';
 
@@ -40,6 +41,17 @@ export interface LayoutConfig {
   // Similarity-based clustering
   similarityFunction?: (a: Node, b: Node) => number;
   similarityThreshold?: number;
+
+  // Semantic embedding-based clustering
+  embeddingFunction?: EmbeddingFunction;
+  textEmbeddingFunction?: TextEmbeddingFunction;
+  textExtractor?: (node: Node) => string;
+  semanticWeight?: number;
+  semanticThreshold?: number;
+  semanticDimensions?: number;
+  semanticForceStrength?: number;
+  enableSemanticCache?: boolean;
+  maxSemanticCacheSize?: number;
 }
 
 export interface LayoutResult {
@@ -130,11 +142,14 @@ export class LayoutEngine extends EventEmitter {
   private simulation: d3.Simulation<d3.SimulationNodeDatum, undefined> | null = null;
   private initialAlpha: number = 1;
   private currentData: GraphData | null = null;
+  private embeddingManager: EmbeddingManager | null = null;
+  private nodeEmbeddings: Map<string, number[]> = new Map();
 
   constructor(algorithm: LayoutAlgorithm = 'force-directed', config?: Partial<LayoutConfig>) {
     super();
     this.algorithm = algorithm;
     this.config = this.mergeConfig(config);
+    this.initializeEmbeddingManager();
   }
 
   private mergeConfig(config?: Partial<LayoutConfig>): LayoutConfig {
@@ -165,10 +180,42 @@ export class LayoutEngine extends EventEmitter {
       // Grid defaults
       rows: 5,
       columns: 5,
-      cellPadding: 10
+      cellPadding: 10,
+      // Semantic defaults
+      semanticWeight: 0.3,
+      semanticThreshold: 0.7,
+      semanticDimensions: 384,
+      semanticForceStrength: 0.1,
+      enableSemanticCache: true,
+      maxSemanticCacheSize: 1000
     };
 
     return { ...defaults, ...config };
+  }
+
+  /**
+   * Initialize embedding manager based on configuration
+   */
+  private initializeEmbeddingManager(): void {
+    const { embeddingFunction, textEmbeddingFunction, textExtractor,
+            semanticDimensions, enableSemanticCache, maxSemanticCacheSize } = this.config;
+
+    // Only create embedding manager if semantic features are configured
+    if (embeddingFunction || textEmbeddingFunction) {
+      this.embeddingManager = new EmbeddingManager({
+        embeddingFunction,
+        textEmbeddingFunction,
+        textExtractor,
+        dimensions: semanticDimensions,
+        enableCache: enableSemanticCache,
+        maxCacheSize: maxSemanticCacheSize
+      });
+    } else {
+      this.embeddingManager = null;
+    }
+
+    // Clear existing embeddings when manager changes
+    this.nodeEmbeddings.clear();
   }
 
   /**
@@ -177,6 +224,25 @@ export class LayoutEngine extends EventEmitter {
   async calculateLayout(data: GraphData): Promise<LayoutResult> {
     this.currentData = data;
     this.emit('layoutStart');
+
+    // Pre-compute embeddings for semantic clustering if enabled
+    if (this.embeddingManager) {
+      try {
+        const embeddings = await this.embeddingManager.computeEmbeddings(data.nodes);
+
+        // Store embeddings by node ID
+        this.nodeEmbeddings.clear();
+        data.nodes.forEach((node, index) => {
+          this.nodeEmbeddings.set(node.id, embeddings[index]);
+        });
+
+        this.emit('embeddingsComputed', embeddings.length);
+      } catch (error) {
+        console.warn('Failed to compute semantic embeddings:', error);
+        // Continue with layout without semantic forces
+        this.nodeEmbeddings.clear();
+      }
+    }
 
     return new Promise((resolve) => {
       switch (this.algorithm) {
@@ -196,7 +262,7 @@ export class LayoutEngine extends EventEmitter {
           resolve(this.calculateRadialLayout(data));
           break;
         default:
-          resolve(this.calculateForceLayout(data, resolve));
+          this.calculateForceLayout(data, resolve);
       }
     });
   }
@@ -229,7 +295,8 @@ export class LayoutEngine extends EventEmitter {
   private calculateForceLayout(data: GraphData, resolve: (result: LayoutResult) => void): void {
     const { width, height, linkDistance, linkStrength, chargeStrength, chargeDistance,
             collisionRadius, alpha, alphaMin, alphaDecay, velocityDecay, centerStrength,
-            dimensions, similarityFunction, similarityThreshold } = this.config;
+            dimensions, similarityFunction, similarityThreshold, semanticThreshold,
+            semanticForceStrength } = this.config;
 
     // Create nodes with positions
     const nodes = data.nodes.map(node => ({
@@ -295,6 +362,11 @@ export class LayoutEngine extends EventEmitter {
       this.addSimilarityForce(nodes, similarityFunction, similarityThreshold);
     }
 
+    // Add semantic clustering if embeddings are available
+    if (this.nodeEmbeddings.size > 0 && semanticThreshold && semanticForceStrength) {
+      this.addSemanticForce(nodes, semanticThreshold, semanticForceStrength);
+    }
+
     this.initialAlpha = this.simulation.alpha();
 
     // Track progress
@@ -305,10 +377,11 @@ export class LayoutEngine extends EventEmitter {
       // Update original data nodes with current simulation positions
       nodes.forEach((simNode, index) => {
         if (data.nodes[index]) {
-          (data.nodes[index] as any).x = simNode.x;
-          (data.nodes[index] as any).y = simNode.y;
-          (data.nodes[index] as any).vx = simNode.vx;
-          (data.nodes[index] as any).vy = simNode.vy;
+          const node = data.nodes[index] as any;
+          node.x = simNode.x;
+          node.y = simNode.y;
+          node.vx = (simNode as any).vx;
+          node.vy = (simNode as any).vy;
         }
       });
 
@@ -321,13 +394,14 @@ export class LayoutEngine extends EventEmitter {
       // Update original data nodes with simulation results
       nodes.forEach((simNode, index) => {
         if (data.nodes[index]) {
-          (data.nodes[index] as any).x = simNode.x;
-          (data.nodes[index] as any).y = simNode.y;
-          (data.nodes[index] as any).z = simNode.z;
-          (data.nodes[index] as any).vx = simNode.vx;
-          (data.nodes[index] as any).vy = simNode.vy;
-          (data.nodes[index] as any).fx = simNode.fx;
-          (data.nodes[index] as any).fy = simNode.fy;
+          const node = data.nodes[index] as any;
+          node.x = simNode.x;
+          node.y = simNode.y;
+          node.z = (simNode as any).z;
+          node.vx = (simNode as any).vx;
+          node.vy = (simNode as any).vy;
+          node.fx = (simNode as any).fx;
+          node.fy = (simNode as any).fy;
         }
       });
 
@@ -375,10 +449,56 @@ export class LayoutEngine extends EventEmitter {
   }
 
   /**
+   * Add semantic embedding-based clustering force
+   */
+  private addSemanticForce(
+    nodes: any[],
+    threshold: number,
+    forceStrength: number
+  ): void {
+    if (!this.simulation || !this.embeddingManager) return;
+
+    const semanticForce = (alpha: number) => {
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const embedding1 = this.nodeEmbeddings.get(nodes[i].id);
+          const embedding2 = this.nodeEmbeddings.get(nodes[j].id);
+
+          if (!embedding1 || !embedding2) continue;
+
+          // Calculate semantic similarity using cosine similarity
+          const similarity = this.embeddingManager!.cosineSimilarity(embedding1, embedding2);
+
+          if (similarity > threshold) {
+            const dx = nodes[j].x - nodes[i].x;
+            const dy = nodes[j].y - nodes[i].y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 0) {
+              // Attractive force for similar nodes (proportional to similarity)
+              const force = alpha * similarity * forceStrength;
+              const fx = (dx / distance) * force;
+              const fy = (dy / distance) * force;
+
+              // Apply force to bring similar nodes closer
+              nodes[i].vx += fx;
+              nodes[i].vy += fy;
+              nodes[j].vx -= fx;
+              nodes[j].vy -= fy;
+            }
+          }
+        }
+      }
+    };
+
+    this.simulation.force('semantic', semanticForce);
+  }
+
+  /**
    * Hierarchical layout calculation
    */
   private calculateHierarchicalLayout(data: GraphData): LayoutResult {
-    const { width, height, direction, levelSeparation, nodeSeparation } = this.config;
+    const { width, height, direction, levelSeparation } = this.config;
 
     // Create hierarchy from edges
     const levels = this.calculateNodeLevels(data);
@@ -402,7 +522,6 @@ export class LayoutEngine extends EventEmitter {
       const isReversed = direction === 'BT' || direction === 'RL';
 
       const primaryAxis = isHorizontal ? height : width;
-      const secondaryAxis = isHorizontal ? width : height;
 
       const levelPosition = isReversed
         ? (maxLevel - level) * levelSeparation!
@@ -422,9 +541,11 @@ export class LayoutEngine extends EventEmitter {
     });
 
     // Process edges
-    const positionedEdges = data.edges.map(edge => ({
-      ...edge
-    }));
+    const positionedEdges: PositionedEdge[] = data.edges.map(edge => ({
+      ...edge,
+      source: edge.source,
+      target: edge.target
+    } as PositionedEdge));
 
     return {
       nodes: positionedNodes,
@@ -455,9 +576,11 @@ export class LayoutEngine extends EventEmitter {
       };
     });
 
-    const positionedEdges = data.edges.map(edge => ({
-      ...edge
-    }));
+    const positionedEdges: PositionedEdge[] = data.edges.map(edge => ({
+      ...edge,
+      source: edge.source,
+      target: edge.target
+    } as PositionedEdge));
 
     return {
       nodes: positionedNodes,
@@ -489,9 +612,11 @@ export class LayoutEngine extends EventEmitter {
       };
     });
 
-    const positionedEdges = data.edges.map(edge => ({
-      ...edge
-    }));
+    const positionedEdges: PositionedEdge[] = data.edges.map(edge => ({
+      ...edge,
+      source: edge.source,
+      target: edge.target
+    } as PositionedEdge));
 
     return {
       nodes: positionedNodes,
@@ -553,9 +678,11 @@ export class LayoutEngine extends EventEmitter {
       });
     });
 
-    const positionedEdges = data.edges.map(edge => ({
-      ...edge
-    }));
+    const positionedEdges: PositionedEdge[] = data.edges.map(edge => ({
+      ...edge,
+      source: edge.source,
+      target: edge.target
+    } as PositionedEdge));
 
     return {
       nodes: positionedNodes,
@@ -619,7 +746,7 @@ export class LayoutEngine extends EventEmitter {
   /**
    * Calculate rings for radial layout
    */
-  private calculateRings(nodes: Node[], degrees: Map<string, number>): Map<string, number> {
+  private calculateRings(nodes: Node[], _degrees: Map<string, number>): Map<string, number> {
     const rings = new Map<string, number>();
 
     if (nodes.length === 0) return rings;
@@ -629,7 +756,6 @@ export class LayoutEngine extends EventEmitter {
 
     // Place other nodes based on degree
     for (let i = 1; i < nodes.length; i++) {
-      const degree = degrees.get(nodes[i].id) || 0;
       const ring = Math.ceil(Math.log2(i + 1));
       rings.set(nodes[i].id, ring);
     }
@@ -684,7 +810,7 @@ export class LayoutEngine extends EventEmitter {
       ...edge,
       source: edge.source,
       target: edge.target
-    }));
+    } as PositionedEdge));
 
     return {
       nodes: positionedNodes,
@@ -766,6 +892,15 @@ export class LayoutEngine extends EventEmitter {
    */
   setConfig(config: Partial<LayoutConfig>): void {
     this.config = this.mergeConfig(config);
+
+    // Reinitialize embedding manager if semantic config changed
+    const hasSemanticConfig = config.embeddingFunction || config.textEmbeddingFunction ||
+                             config.textExtractor || config.semanticDimensions !== undefined ||
+                             config.enableSemanticCache !== undefined || config.maxSemanticCacheSize !== undefined;
+
+    if (hasSemanticConfig) {
+      this.initializeEmbeddingManager();
+    }
   }
 
   getConfig(): LayoutConfig {
@@ -848,6 +983,49 @@ export class LayoutEngine extends EventEmitter {
   }
 
   /**
+   * Get semantic embedding for a node
+   */
+  getNodeEmbedding(nodeId: string): number[] | null {
+    return this.nodeEmbeddings.get(nodeId) || null;
+  }
+
+  /**
+   * Get all computed embeddings
+   */
+  getAllEmbeddings(): Map<string, number[]> {
+    return new Map(this.nodeEmbeddings);
+  }
+
+  /**
+   * Get embedding manager statistics
+   */
+  getEmbeddingStats(): any {
+    return this.embeddingManager?.getCacheStats() || null;
+  }
+
+  /**
+   * Calculate semantic similarity between two nodes
+   */
+  getSemanticSimilarity(nodeId1: string, nodeId2: string): number | null {
+    const embedding1 = this.nodeEmbeddings.get(nodeId1);
+    const embedding2 = this.nodeEmbeddings.get(nodeId2);
+
+    if (!embedding1 || !embedding2 || !this.embeddingManager) {
+      return null;
+    }
+
+    return this.embeddingManager.cosineSimilarity(embedding1, embedding2);
+  }
+
+  /**
+   * Clear semantic embeddings cache
+   */
+  clearEmbeddingCache(): void {
+    this.embeddingManager?.clearCache();
+    this.nodeEmbeddings.clear();
+  }
+
+  /**
    * Destroy the layout engine and clean up resources
    */
   destroy(): void {
@@ -856,6 +1034,8 @@ export class LayoutEngine extends EventEmitter {
       this.simulation = null;
     }
     this.currentData = null;
+    this.embeddingManager = null;
+    this.nodeEmbeddings.clear();
     this.removeAllListeners();
   }
 }

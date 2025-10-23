@@ -16,6 +16,22 @@ export {
 } from './types';
 export { ForceLayoutEngine } from './layout/ForceLayoutEngine';
 export {
+  LayoutEngine,
+  LayoutConfig,
+  LayoutResult,
+  LayoutAlgorithm,
+  PositionedNode,
+  PositionedEdge
+} from './layout/LayoutEngine';
+export {
+  EmbeddingManager,
+  EmbeddingUtils,
+  EmbeddingFunction,
+  TextEmbeddingFunction,
+  EmbeddingConfig,
+  SemanticLayoutConfig
+} from './semantic';
+export {
   EdgeRenderer,
   EdgeRenderConfig,
   EdgeRenderResult,
