@@ -367,6 +367,9 @@ describe('EdgeBundling - Algorithm Validation & Research Compliance', () => {
           },
         });
 
+        // Disable animations to prevent D3 transition issues in test environment
+        graph.disableAnimations();
+
         await graph.render();
 
         const paths = container.querySelectorAll('path');

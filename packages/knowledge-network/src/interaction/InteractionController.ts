@@ -33,7 +33,7 @@ import {
   throttle,
 } from './types';
 
-import { ViewportState } from './ViewportState';
+import { ViewportState, type IViewportState } from './ViewportState';
 import { GestureRecognizer } from './GestureRecognizer';
 import { AnimationSystem } from './AnimationSystem';
 import { SpatialIndexer } from '../spatial/SpatialIndexer';
@@ -43,6 +43,7 @@ export class InteractionController extends EventEmitter {
   private config: InteractionConfig;
   private state: InteractionState;
   private viewport: ViewportState;
+  private previousViewportState: Readonly<IViewportState> | null = null;
   private gestureRecognizer: GestureRecognizer;
   private animationSystem: AnimationSystem;
 
@@ -779,14 +780,18 @@ export class InteractionController extends EventEmitter {
   }
 
   private emitViewportChangeEvent(reason: ViewportChangeEvent['reason']): void {
+    const currentState = this.viewport.getState();
     const event: ViewportChangeEvent = {
       type: 'viewportChange',
-      viewport: this.viewport.getState(),
-      previousViewport: this.viewport.getState(), // TODO: Track previous state
+      viewport: currentState,
+      previousViewport: this.previousViewportState || currentState,
       reason,
       timestamp: Date.now(),
       cancelled: false,
     };
+
+    // Update previous state for next time
+    this.previousViewportState = currentState;
 
     if (this.eventHandlers.onViewportChange) {
       this.eventHandlers.onViewportChange(event);

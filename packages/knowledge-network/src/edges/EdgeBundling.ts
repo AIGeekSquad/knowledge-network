@@ -407,15 +407,12 @@ export class EdgeBundling implements EdgeRenderer {
     _nodes: Node[],
     config: EdgeRenderConfig
   ): EdgeRenderResult {
-    console.log('EdgeBundling.render called with', edges.length, 'edges');
-    console.log('EdgeBundling config:', this.config);
 
     // Merge config
     const renderConfig = { ...this.config, ...config } as EdgeBundlingInternalConfig;
 
     // Initialize control points for each edge
     const controlPoints = this.initializeControlPoints(edges);
-    console.log('Control points initialized:', controlPoints.length, 'edges with', controlPoints[0]?.length, 'points each');
 
     // Perform edge bundling
     this.performBundling(edges, controlPoints);
@@ -434,25 +431,17 @@ export class EdgeBundling implements EdgeRenderer {
       .attr('fill', 'none')
       .attr('stroke', (d, i) => {
         const color = renderConfig.stroke ? renderConfig.stroke(d, i) : '#999';
-        console.log(`Edge ${i} stroke color:`, color, 'for edge:', d);
         return color;
       })
       .attr('stroke-opacity', renderConfig.strokeOpacity)
       .attr('stroke-width', (d, i) => {
         const width = renderConfig.strokeWidth ? renderConfig.strokeWidth(d, i) : 1.5;
-        console.log(`Edge ${i} stroke width:`, width);
         return width;
       })
       .attr('d', (_d, i) => {
         const pathData = lineGenerator(controlPoints[i]);
-        if (i === 0) {
-          console.log('First edge path data:', pathData);
-          console.log('First edge control points:', controlPoints[i]);
-        }
         return pathData;
       });
-
-    console.log('EdgeBundling rendered', selection.size(), 'paths');
 
     const bundlingData: EdgeBundlingData = {
       controlPoints,

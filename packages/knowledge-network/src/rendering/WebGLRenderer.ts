@@ -991,45 +991,6 @@ export class WebGLRenderer implements IRenderer {
     };
   }
 
-  /**
-   * Convert screen coordinates to world coordinates
-   */
-  private screenToWorld(screenPoint: Point): Point {
-    if (!this.canvas) return screenPoint;
-
-    const { x, y, scale } = this.transform;
-    const rect = this.canvas.getBoundingClientRect();
-
-    // Convert to canvas coordinates
-    const canvasX = (screenPoint.x - rect.left) * (this.canvas.width / rect.width);
-    const canvasY = (screenPoint.y - rect.top) * (this.canvas.height / rect.height);
-
-    // Apply inverse transformation
-    const worldX = (canvasX - x) / scale;
-    const worldY = (canvasY - y) / scale;
-
-    return { x: worldX, y: worldY };
-  }
-
-  /**
-   * Convert world coordinates to screen coordinates
-   */
-  private worldToScreen(worldPoint: Point): Point {
-    if (!this.canvas) return worldPoint;
-
-    const { x, y, scale } = this.transform;
-
-    // Apply transformation
-    const canvasX = worldPoint.x * scale + x;
-    const canvasY = worldPoint.y * scale + y;
-
-    // Convert to screen coordinates
-    const rect = this.canvas.getBoundingClientRect();
-    const screenX = (canvasX / this.canvas.width) * rect.width + rect.left;
-    const screenY = (canvasY / this.canvas.height) * rect.height + rect.top;
-
-    return { x: screenX, y: screenY };
-  }
 
   // === Rendering Methods ===
 
@@ -1638,7 +1599,7 @@ export class WebGLRenderer implements IRenderer {
       this.bufferManager.markDirty(['nodes', 'edges', 'picking']);
     }
 
-    console.log('WebGL error recovery attempted');
+    // WebGL error recovery attempted
   }
 
   /**
@@ -1711,7 +1672,7 @@ export class WebGLRenderer implements IRenderer {
    * Handle WebGL context restore (browser event)
    */
   private handleContextRestore = (event: Event): void => {
-    console.log('WebGL context restored, reinitializing...');
+    // WebGL context restored, reinitializing
 
     try {
       // Reinitialize WebGL
@@ -1745,7 +1706,7 @@ export class WebGLRenderer implements IRenderer {
       // Reset error state
       this.resetErrorState();
 
-      console.log('WebGL context restore completed');
+      // WebGL context restore completed
     } catch (error) {
       console.error('Failed to restore WebGL context:', error);
       this.handleInitializationError(error as Error);

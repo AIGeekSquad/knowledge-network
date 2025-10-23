@@ -442,6 +442,16 @@ export class KnowledgeGraph {
   }
 
   /**
+   * Disable animations for testing or performance reasons.
+   * Sets animation duration to 0 to make all transitions instant.
+   */
+  disableAnimations(): void {
+    if (this.viewportManager) {
+      this.viewportManager.setAnimationDuration(0);
+    }
+  }
+
+  /**
    * Destroys the graph visualization and cleans up all resources.
    */
   destroy(): void {

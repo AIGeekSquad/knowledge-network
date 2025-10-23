@@ -210,7 +210,7 @@ export class CanvasRendererMigration {
   static enableSpatialFeatures(renderer: EnhancedCanvasRenderer): void {
     // This would update renderer configuration to enable spatial features
     // In a real implementation, this might involve configuration updates
-    console.log('Enabling spatial features on renderer');
+    // Enabling spatial features on renderer
   }
 
   /**

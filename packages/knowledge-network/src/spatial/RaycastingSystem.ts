@@ -90,7 +90,12 @@ export class RaycastingSystem {
       };
       return this.performRaycast2D(ray2D, quadTree);
     } else {
-      return this.performRaycast2D(ray, quadTree);
+      // Normalize 2D ray direction for consistent behavior
+      const normalizedRay: Ray2D = {
+        origin: ray.origin,
+        direction: normalize2D(ray.direction),
+      };
+      return this.performRaycast2D(normalizedRay, quadTree);
     }
   }
 
@@ -100,13 +105,22 @@ export class RaycastingSystem {
   raycast3D(ray: Ray, octTree: OctTree): RayIntersection[] {
     if (!isRay3D(ray)) {
       // Convert 2D ray to 3D (extend along Z-axis)
+      // Determine appropriate Z coordinate from octTree bounds or use 0 as default
+      const root = octTree.getRoot();
+      const zCoordinate = root?.bounds ? (root.bounds.z + root.bounds.depth / 2) : 0;
+
       const ray3D: Ray3D = {
-        origin: { x: ray.origin.x, y: ray.origin.y, z: 0 },
+        origin: { x: ray.origin.x, y: ray.origin.y, z: zCoordinate },
         direction: normalize3D({ x: ray.direction.x, y: ray.direction.y, z: 0 }),
       };
       return this.performRaycast3D(ray3D, octTree);
     } else {
-      return this.performRaycast3D(ray, octTree);
+      // Normalize 3D ray direction for consistent behavior
+      const normalizedRay: Ray3D = {
+        origin: ray.origin,
+        direction: normalize3D(ray.direction),
+      };
+      return this.performRaycast3D(normalizedRay, octTree);
     }
   }
 

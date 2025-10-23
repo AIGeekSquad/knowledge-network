@@ -359,13 +359,13 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
   enableViewportCulling(enabled: boolean): void {
     // Store viewport culling preference
     // Implementation depends on renderer type
-    console.log(`Viewport culling ${enabled ? 'enabled' : 'disabled'} for ${this.type} renderer`);
+    // Viewport culling feature configured
   }
 
   setLevelOfDetail(enabled: boolean): void {
     // Store level of detail preference
     // Implementation depends on renderer type
-    console.log(`Level of detail ${enabled ? 'enabled' : 'disabled'} for ${this.type} renderer`);
+    // Level of detail feature configured
   }
 
   getPerformanceMetrics(): RendererPerformanceMetrics {
