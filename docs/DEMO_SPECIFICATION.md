@@ -1,5 +1,10 @@
 # Knowledge Network Demo Application - Contract Specification
 
+**Demo implementation specification**
+
+📚 **Looking for API documentation?** See the [Complete API Reference](../packages/knowledge-network/README.md)
+🔧 **Need integration help?** See the [Integration Guide](./INTEGRATION_GUIDE.md)
+
 **Version:** 1.0
 **Date:** 2025-01-05
 **Status:** Active

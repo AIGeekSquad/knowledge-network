@@ -1,7 +1,11 @@
 # Semantic Spacetime Approaches for Knowledge Graph Generation: A Comprehensive Research Analysis
 
-**Version:** 1.0  
-**Date:** October 2025  
+**Academic research and theoretical foundations**
+
+📚 **Looking for practical API usage?** See the [Complete API Reference](../packages/knowledge-network/README.md)
+
+**Version:** 1.0
+**Date:** October 2025
 **Context:** Research for the knowledge-network library focusing on knowledge and mind map visualization
 
 ## Executive Summary

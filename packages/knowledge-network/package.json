@@ -1,7 +1,7 @@
 {
   "name": "@aigeeksquad/knowledge-network",
   "version": "0.1.0",
-  "description": "A TypeScript library extending d3.js for knowledge graph visualization",
+  "description": "Modern TypeScript library for interactive knowledge graph visualizations with advanced edge bundling, similarity clustering, and ontology-aware relationships",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -30,7 +30,13 @@
     "visualization",
     "typescript",
     "network",
-    "graph"
+    "graph",
+    "edge-bundling",
+    "force-directed",
+    "interactive",
+    "clustering",
+    "ontology",
+    "semantic-network"
   ],
   "author": "AIGeekSquad",
   "license": "MIT",

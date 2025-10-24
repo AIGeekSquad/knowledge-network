@@ -1,5 +1,11 @@
 # Edge Bundling: The Definitive Guide
 
+**Comprehensive guide to edge bundling techniques and theory**
+
+📚 **Looking for basic API usage?** See the [Complete API Reference](../packages/knowledge-network/README.md#advanced-patterns)
+
+---
+
 ## Overview
 
 Edge bundling is a graph visualization technique that groups edges with similar paths together, creating visually appealing bundles that reduce clutter and reveal high-level connectivity patterns. In the knowledge-network library, edge bundling transforms tangled webs of connections into clear, flowing pathways that make complex relationships immediately understandable.
@@ -367,16 +373,20 @@ worker.onmessage = (event) => {
 ### Knowledge Graph with Semantic Bundling
 
 ```javascript
-import { KnowledgeNetwork } from 'knowledge-network';
+import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
 
-// Create network with semantic edge bundling
-const network = new KnowledgeNetwork({
-  container: document.getElementById('graph'),
-  bundling: {
-    enabled: true,
-    bundlingStrength: 0.85,
-    subdivisionPoints: 30,
-    compatibilityFunction: (edge1, edge2, nodes) => {
+// Create graph with semantic edge bundling
+const graph = new KnowledgeGraph(
+  document.getElementById('graph'),
+  data,
+  {
+    edgeRenderer: 'bundled',
+    waitForStable: true,
+    edgeBundling: {
+      iterations: 120,
+      subdivisions: 30,
+      compatibilityThreshold: 0.15,
+      compatibilityFunction: (edge1, edge2) => {
       // Get concept nodes
       const concept1a = nodes.get(edge1.source);
       const concept1b = nodes.get(edge1.target);

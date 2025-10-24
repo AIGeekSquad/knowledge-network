@@ -148,172 +148,48 @@ pnpm dev
 # Open http://localhost:5173 in your browser
 ```
 
-## 📚 API Reference
+## 📚 Complete API Documentation
 
-### Core Classes
+Looking for detailed API reference, configuration options, or advanced usage patterns?
 
-#### `KnowledgeGraph`
+### **📖 [Complete API Guide →](./packages/knowledge-network/README.md)**
 
-The main class for creating and managing graph visualizations.
+The complete API documentation includes:
+- **Comprehensive API Reference** - All classes, interfaces, and configuration options
+- **Advanced Usage Patterns** - Edge bundling, similarity clustering, ontology-aware links
+- **Configuration Examples** - Real-world configuration patterns and best practices
+- **TypeScript Integration** - Full type definitions and IDE integration guides
 
-```typescript
-class KnowledgeGraph {
-  constructor(
-    container: HTMLElement,
-    data: GraphData,
-    config?: GraphConfig
-  )
+### Quick API Overview
 
-  // Core methods
-  render(): void
-  updateData(data: GraphData): void
-  destroy(): void
-
-  // Simulation access (for advanced usage)
-  getSimulation(): d3.Simulation | null
-}
-```
-
-#### `GraphData`
+The library centers around the `KnowledgeGraph` class:
 
 ```typescript
-interface GraphData {
-  nodes: Node[]
-  edges: Edge[]
-}
+import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
 
-interface Node {
-  id: string
-  label?: string
-  type?: string           // Used for styling differentiation
-  x?: number             // Optional fixed position
-  y?: number             // Optional fixed position
-  [key: string]: any     // Additional properties
-}
-
-interface Edge {
-  source: string | Node   // Can be id or node object
-  target: string | Node   // Can be id or node object
-  label?: string
-  value?: number         // Edge weight/strength
-  [key: string]: any     // Additional properties
-}
+const graph = new KnowledgeGraph(container, data, config);
+graph.render();
 ```
 
-#### `GraphConfig`
+**Core Concepts:**
+- **GraphData** - `{ nodes: Node[], edges: Edge[] }`
+- **GraphConfig** - Comprehensive configuration with d3-style accessor functions
+- **EdgeRenderer** - Choose between `'simple'` or `'bundled'` edge styles
 
-```typescript
-interface GraphConfig {
-  // Container dimensions
-  width?: number
-  height?: number
+## 📖 Documentation & Guides
 
-  // Node styling (functions or static values)
-  nodeRadius?: number | ((d: Node) => number)
-  nodeFill?: string | ((d: Node) => string)
-  nodeStroke?: string | ((d: Node) => string)
-  nodeStrokeWidth?: number | ((d: Node) => number)
-  nodeOpacity?: number | ((d: Node) => number)
+### Specialized Guides
 
-  // Edge styling (functions or static values)
-  edgeStroke?: string | ((d: Edge) => string)
-  edgeStrokeWidth?: number | ((d: Edge) => number)
-  edgeOpacity?: number | ((d: Edge) => number)
+- **[📊 Edge Bundling Guide](./docs/EDGE_BUNDLING.md)** - Complete guide to edge bundling for cleaner visualizations
+- **[⚡ Performance Guide](./docs/PERFORMANCE_GUIDE.md)** - Optimization strategies for large graphs
+- **[🔧 Integration Guide](./docs/INTEGRATION_GUIDE.md)** - Framework integration patterns (React, Vue, Angular)
+- **[❓ Troubleshooting](./docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[🔄 Migration Guide](./docs/MIGRATION_GUIDE.md)** - Version upgrade guidance
 
-  // Edge rendering mode
-  edgeRenderer?: 'simple' | 'bundled'  // Default: 'simple'
+### Research & Theory
 
-  // Edge bundling configuration (when edgeRenderer is 'bundled')
-  edgeBundling?: {
-    subdivisions?: number           // Points per edge (default: 32)
-    iterations?: number             // Bundling iterations (default: 60)
-    compatibilityThreshold?: number // Edge compatibility (0-1, default: 0.6)
-    stepSize?: number              // Force step size (default: 0.04)
-    stiffness?: number             // Bundle stiffness (0-1, default: 0.3)
-    compatibilityFunction?: (edge1: Edge, edge2: Edge) => number
-  }
-
-  // Force simulation settings
-  forceStrength?: number         // Node repulsion strength
-  linkDistance?: number          // Target edge length
-  chargeStrength?: number        // Node charge force
-
-  // Interaction
-  enableZoom?: boolean           // Enable pan and zoom
-  enableDrag?: boolean           // Enable node dragging
-
-  // Labels
-  showLabels?: boolean           // Show node labels
-  labelFont?: string             // Label font family
-  labelSize?: number | ((d: Node) => number)
-  labelColor?: string | ((d: Node) => string)
-}
-```
-
-### Additional Exports
-
-```typescript
-// Edge bundling algorithm (for advanced usage)
-import { EdgeBundling } from '@aigeeksquad/knowledge-network'
-
-// Create a custom edge bundling instance
-const bundler = new EdgeBundling(edges, {
-  subdivisions: 60,
-  iterations: 150,
-  compatibilityThreshold: 0.2
-})
-
-// Process edges
-bundler.process()
-```
-
-Full API documentation with JSDoc is available through TypeScript IntelliSense in your IDE.
-
-## ⚡ Performance Guidance
-
-### Graph Size Recommendations
-
-| Graph Size | Nodes | Edges | Recommended Settings |
-|------------|-------|-------|---------------------|
-| Small | < 50 | < 100 | All features enabled |
-| Medium | 50-500 | 100-1000 | Consider selective rendering |
-| Large | 500-2000 | 1000-5000 | Enable WebGL, limit animations |
-| Extra Large | 2000+ | 5000+ | Use clustering, virtual rendering |
-
-### Optimization Tips
-
-```typescript
-// For large graphs
-const largeGraphConfig: GraphConfig = {
-  width: 1200,
-  height: 800,
-
-  // Use simpler rendering for performance
-  edgeRenderer: 'simple',  // Skip bundling for very large graphs
-
-  // Or use bundling with reduced iterations
-  // edgeRenderer: 'bundled',
-  // edgeBundling: {
-  //   iterations: 30,        // Reduce from default 60
-  //   subdivisions: 16       // Reduce from default 32
-  // },
-
-  // Simplify styling
-  nodeRadius: 5,           // Fixed size instead of function
-  nodeFill: '#4ecdc4',     // Fixed color instead of function
-  edgeOpacity: 0.3,        // Lower opacity for many edges
-
-  // Adjust force simulation
-  chargeStrength: -50,     // Reduce repulsion for tighter layout
-  linkDistance: 30         // Shorter edges for compact view
-}
-```
-
-### Memory Management
-
-- Destroy graph instances when unmounting: `graph.destroy()`
-- Use `graph.updateData()` instead of creating new instances
-- Consider using simpler rendering modes for very large datasets
+- **[📊 Edge Bundling Research](./docs/EDGE_BUNDLING_RESEARCH.md)** - Academic research and algorithmic foundations
+- **[🧠 Semantic Spacetime Research](./docs/SEMANTIC_SPACETIME_RESEARCH.md)** - Advanced semantic approaches
 
 ## 🛠️ Development
 
