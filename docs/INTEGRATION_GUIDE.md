@@ -1041,6 +1041,20 @@ test('renders graph after loading', async () => {
 
 ---
 
+---
+
+## 🎮 Interactive Integration Demonstrations
+
+**See framework integration in action:**
+
+- **[🚀 Complete Demo Suite](../packages/demo-suite/README.md)** - Comprehensive showcase with framework integration examples
+- **[👩‍💻 Developer Experience Module](../packages/demo-suite/src/modules/dev-experience/)** - Live code editor with React, Vue, Angular integration examples
+- **[📱 Mobile Integration Demo](../packages/demo-suite/src/modules/mobile/)** - Responsive framework integration with touch optimization
+
+**Interactive examples provide working code you can copy directly into your projects.**
+
+---
+
 ## Related Documentation
 
 - **[📚 Complete API Reference](../packages/knowledge-network/README.md)** - Full API documentation

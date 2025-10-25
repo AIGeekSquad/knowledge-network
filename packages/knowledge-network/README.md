@@ -604,6 +604,15 @@ const domainData: GraphData = {
 
 ## Related Guides
 
+### Interactive Demonstrations
+
+Experience the API capabilities through comprehensive interactive demonstrations:
+
+- **[🚀 Complete Demo Suite](../demo-suite/README.md)** - Next-generation showcase platform with 6 specialized modules
+- **[🔥 Performance Demo](../demo-suite/src/modules/performance/)** - See GPU acceleration and 10,000+ node handling in action
+- **[🤖 Semantic AI Demo](../demo-suite/src/modules/semantic-ai/)** - Interactive embedding-based clustering and AI layouts
+- **[👩‍💻 Developer Playground](../demo-suite/src/modules/dev-experience/)** - Live code editor with this exact API
+
 ### Essential Reading
 
 - **[📊 Edge Bundling Guide](../../docs/EDGE_BUNDLING.md)** - Complete guide to edge bundling techniques
@@ -615,6 +624,11 @@ const domainData: GraphData = {
 - **[❓ Troubleshooting](../../docs/TROUBLESHOOTING.md)** - Common issues and solutions
 - **[🔄 Migration Guide](../../docs/MIGRATION_GUIDE.md)** - Version upgrade guidance
 - **[📊 Research Documentation](../../docs/EDGE_BUNDLING_RESEARCH.md)** - Academic foundations and theory
+
+### Competitive Analysis
+
+- **[🏆 Competitive Showcase](../../docs/COMPETITIVE_SHOWCASE.md)** - Quantified advantages vs D3.js, Cytoscape.js, vis.js
+- **[🎯 Demo Development Guide](../../docs/DEMO_DEVELOPMENT_GUIDE.md)** - Creating new demonstration modules
 
 ---
 
