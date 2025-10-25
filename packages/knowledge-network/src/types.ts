@@ -20,6 +20,12 @@
  *   }
  * };
  * ```
+ *
+ * @see {@link Edge} for connecting nodes with relationships
+ * @see {@link GraphData} for the complete graph structure
+ * @see {@link SimilarityFunction} for clustering based on node.vector
+ * @see {@link Accessor} for data-driven styling based on node properties
+ * @since 0.1.0
  */
 export interface Node {
   /**
@@ -94,6 +100,12 @@ export interface Node {
  *   }
  * };
  * ```
+ *
+ * @see {@link Node} for the vertices that edges connect
+ * @see {@link GraphData} for the complete graph structure
+ * @see {@link EdgeBundling} for advanced edge rendering and weight usage
+ * @see {@link Accessor} for data-driven edge styling
+ * @since 0.1.0
  */
 export interface Edge {
   /**
@@ -155,6 +167,10 @@ export interface Edge {
  * Contains all nodes and edges that define the knowledge graph.
  * This is the primary data structure passed to the visualization library.
  *
+ * The data structure is immutable during rendering - updates should be made
+ * through the {@link KnowledgeGraph.updateData} method to ensure proper
+ * re-rendering and state management.
+ *
  * @example
  * ```typescript
  * const graphData: GraphData = {
@@ -169,6 +185,12 @@ export interface Edge {
  *   ]
  * };
  * ```
+ *
+ * @see {@link Node} for individual node structure
+ * @see {@link Edge} for individual edge structure
+ * @see {@link KnowledgeGraph} for the main visualization class
+ * @see {@link GraphConfig} for configuration options
+ * @since 0.1.0
  */
 export interface GraphData {
   /**

@@ -46,6 +46,30 @@ import type { EdgeRenderResult } from './edges/EdgeRenderer';
  * const graph = new KnowledgeGraph(container, data);
  * graph.render();
  * ```
+ *
+ * @example
+ * ```typescript
+ * // Advanced usage with edge bundling and semantic clustering
+ * import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
+ *
+ * const graph = new KnowledgeGraph(container, data, {
+ *   edgeRenderer: 'bundled',
+ *   waitForStable: true,
+ *   edgeBundling: {
+ *     iterations: 120,
+ *     compatibilityThreshold: 0.4
+ *   },
+ *   nodeRadius: (node) => node.type === 'concept' ? 15 : 8,
+ *   nodeFill: (node) => node.metadata?.color || '#69b3a2'
+ * });
+ * ```
+ *
+ * @see {@link GraphData} for data structure specification
+ * @see {@link GraphConfig} for complete configuration options
+ * @see {@link LayoutEngine} for layout calculation details
+ * @see {@link EdgeBundling} for advanced edge bundling features
+ * @see {@link RenderingSystem} for rendering implementation
+ * @since 0.1.0
  */
 export class KnowledgeGraph {
   private container: HTMLElement;
@@ -68,8 +92,19 @@ export class KnowledgeGraph {
    * Creates a new KnowledgeGraph instance.
    *
    * @param container - The HTML element that will contain the graph visualization.
+   *                   Should be a div or other block element with defined dimensions.
    * @param data - The graph data containing nodes and edges to visualize.
-   * @param config - Optional configuration object to customize the graph.
+   * @param config - Optional configuration object to customize the graph appearance and behavior.
+   *
+   * @remarks
+   * The constructor initializes all modular components including the layout engine,
+   * rendering system, viewport manager, and edge renderer based on configuration.
+   * No rendering occurs until {@link render} is called.
+   *
+   * @see {@link GraphData} for data structure requirements
+   * @see {@link GraphConfig} for all available configuration options
+   * @see {@link render} to actually display the graph
+   * @since 0.1.0
    */
   constructor(container: HTMLElement, data: GraphData, config: GraphConfig = {}) {
     this.container = container;

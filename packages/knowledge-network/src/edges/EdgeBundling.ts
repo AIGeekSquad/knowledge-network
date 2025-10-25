@@ -240,6 +240,11 @@ type EdgeBundlingInternalConfig = Required<Omit<EdgeBundlingConfig, 'compatibili
  * edges are gradually pulled together through iterative force calculations,
  * creating aesthetic bundles that reveal high-level patterns in the graph structure.
  *
+ * @remarks
+ * This implementation follows the research-validated Holten & van Wijk algorithm
+ * with additional optimizations for production use including adaptive subdivision,
+ * momentum-based movement, and configurable smoothing strategies.
+ *
  * Based on: Holten, D., & Van Wijk, J. J. (2009). Force-directed edge bundling for graph visualization.
  *
  * @example
@@ -320,14 +325,30 @@ type EdgeBundlingInternalConfig = Required<Omit<EdgeBundlingConfig, 'compatibili
  * ```
  *
  * @performance
- * Performance characteristics:
- * - O(n²) complexity for compatibility calculation (n = number of edges)
- * - O(n × s × i) for bundling iterations (s = subdivisions, i = iterations)
- * - Recommended limits:
- *   - < 500 edges for real-time interaction
- *   - < 2000 edges for static visualization
- *   - Use fewer subdivisions/iterations for better performance
+ * Performance characteristics and optimization guidelines:
  *
+ * **Complexity:**
+ * - O(n²) for compatibility calculation (n = number of edges)
+ * - O(n × s × i) for bundling iterations (s = subdivisions, i = iterations)
+ * - Memory: O(n × s) for control point storage
+ *
+ * **Recommended limits:**
+ * - < 100 edges: All features enabled, real-time interaction
+ * - 100-500 edges: Reduce subdivisions to 10-15, iterations to 60
+ * - 500-2000 edges: Use subdivisions=10, iterations=30, higher threshold
+ * - > 2000 edges: Consider SimpleEdge renderer or clustering
+ *
+ * **Optimization tips:**
+ * - Use higher compatibilityThreshold (0.7+) to reduce calculations
+ * - Set adaptiveSubdivision=false for consistent performance
+ * - Use custom compatibilityFunction to filter edge pairs early
+ * - Consider momentum=0.8 for faster convergence with fewer iterations
+ *
+ * @see {@link SimpleEdge} for high-performance alternative
+ * @see {@link EdgeBundlingConfig} for configuration options
+ * @see {@link EdgeCompatibilityFunction} for custom compatibility logic
+ * @see {@link KnowledgeGraph} for usage in graph visualization
+ * @since 0.1.0
  * @implements {EdgeRenderer}
  */
 export class EdgeBundling implements EdgeRenderer {
