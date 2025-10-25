@@ -281,10 +281,16 @@ export class KnowledgeGraph {
 
       // Step 1: Layout Calculation (NO rendering)
       this.updateState(LayoutEngineState.LAYOUT_CALCULATING, 30);
+      if (!this.layoutEngine) {
+        throw new Error('Layout engine not initialized');
+      }
       this.layoutResult = await this.layoutEngine.calculateLayout(this.data);
 
       // Step 2: Setup renderer and render nodes (always happens)
       this.updateState(LayoutEngineState.LAYOUT_CALCULATING, 60);
+      if (!this.renderingSystem) {
+        throw new Error('Rendering system not initialized');
+      }
       this.renderingSystem.setRenderer(this.config.renderer || 'svg');
       await this.renderNodes();
 
@@ -339,7 +345,6 @@ export class KnowledgeGraph {
           curveType: this.config.edgeRenderer === 'bundled' ? 'bundle' : 'straight',
         },
         labelConfig: {
-          text: (node: any) => node.label || node.id,
           fontSize: 12,
           fill: '#000',
         },
