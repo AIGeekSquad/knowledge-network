@@ -37,11 +37,11 @@ export class MetricsDashboard extends BaseComponent<{
   private updateTimer: number | null = null;
 
   private currentMetrics = {
-    fps: 60,
-    renderTime: 16,
+    fps: 0,
+    renderTime: 0,
     memoryUsage: 0,
-    selectionTime: 0.1,
-    nodeCount: 1000,
+    selectionTime: 0,
+    nodeCount: 0,
     gpuMemory: 0
   };
 
@@ -126,7 +126,7 @@ export class MetricsDashboard extends BaseComponent<{
       {
         id: 'fps-metric',
         label: 'FPS',
-        value: '60',
+        value: '0',
         unit: 'fps',
         color: 'var(--color-success)',
         icon: '🎯'
@@ -134,7 +134,7 @@ export class MetricsDashboard extends BaseComponent<{
       {
         id: 'render-metric',
         label: 'Render Time',
-        value: '16.7',
+        value: '0',
         unit: 'ms',
         color: 'var(--color-secondary)',
         icon: '⚡'
@@ -150,7 +150,7 @@ export class MetricsDashboard extends BaseComponent<{
       {
         id: 'selection-metric',
         label: 'Selection',
-        value: '<1',
+        value: '0',
         unit: 'ms',
         color: 'var(--color-primary)',
         icon: '🔍'
@@ -306,12 +306,12 @@ export class MetricsDashboard extends BaseComponent<{
     `;
 
     const detailedMetrics = [
-      { id: 'avg-fps', label: 'Avg FPS (60s)', value: '60.0' },
-      { id: 'min-fps', label: 'Min FPS', value: '58.2' },
-      { id: 'max-render', label: 'Max Render', value: '18.3ms' },
+      { id: 'avg-fps', label: 'Avg FPS (60s)', value: '0.0' },
+      { id: 'min-fps', label: 'Min FPS', value: '0.0' },
+      { id: 'max-render', label: 'Max Render', value: '0ms' },
       { id: 'gpu-usage', label: 'GPU Memory', value: '—' },
       { id: 'frame-drops', label: 'Frame Drops', value: '0' },
-      { id: 'efficiency', label: 'Efficiency', value: '98.5%' }
+      { id: 'efficiency', label: 'Efficiency', value: '0%' }
     ];
 
     detailedMetrics.forEach(metric => {
