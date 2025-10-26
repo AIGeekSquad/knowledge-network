@@ -298,8 +298,41 @@ export class DemoSuiteApp extends EventEmitter<AppEvents> {
       return await this.createOverviewModule();
     });
 
-    // Additional modules will be registered by other chunks
-    // This foundation provides the infrastructure for module registration
+    // Register performance showcase module
+    this.moduleRegistry.registerModule('performance', async () => {
+      const { createPerformanceModule } = await import('./modules/performance/index.js');
+      return await createPerformanceModule();
+    });
+
+    // Register renderer comparison module
+    this.moduleRegistry.registerModule('renderers', async () => {
+      const { createRendererComparisonModule } = await import('./modules/renderers/index.js');
+      return await createRendererComparisonModule();
+    });
+
+    // Register semantic AI module
+    this.moduleRegistry.registerModule('semantic-ai', async () => {
+      const { createSemanticAIModule } = await import('./modules/semantic-ai/index.js');
+      return await createSemanticAIModule();
+    });
+
+    // Register mobile excellence module
+    this.moduleRegistry.registerModule('mobile-excellence', async () => {
+      const { createMobileExcellenceModule } = await import('./modules/mobile-excellence/index.js');
+      return await createMobileExcellenceModule();
+    });
+
+    // Register accessibility leadership module
+    this.moduleRegistry.registerModule('accessibility-leadership', async () => {
+      const { createAccessibilityLeadershipModule } = await import('./modules/accessibility-leadership/index.js');
+      return await createAccessibilityLeadershipModule();
+    });
+
+    // Register developer experience module
+    this.moduleRegistry.registerModule('developer-experience', async () => {
+      const { createDeveloperExperienceModule } = await import('./modules/developer-experience/index.js');
+      return await createDeveloperExperienceModule();
+    });
   }
 
   private async createOverviewModule(): Promise<DemoModule> {
