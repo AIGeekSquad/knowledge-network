@@ -300,37 +300,42 @@ export class DemoSuiteApp extends EventEmitter<AppEvents> {
 
     // Register performance showcase module
     this.moduleRegistry.registerModule('performance', async () => {
-      const { createPerformanceModule } = await import('./modules/performance/index.js');
+      const { PerformanceDemo } = await import('./demos/performance/PerformanceDemo.js');
       return await createPerformanceModule();
     });
 
     // Register renderer comparison module
     this.moduleRegistry.registerModule('renderers', async () => {
-      const { createRendererComparisonModule } = await import('./modules/renderers/index.js');
+      // Module not implemented yet
+      throw new Error('Renderer comparison module not yet implemented');
       return await createRendererComparisonModule();
     });
 
     // Register semantic AI module
     this.moduleRegistry.registerModule('semantic-ai', async () => {
-      const { createSemanticAIModule } = await import('./modules/semantic-ai/index.js');
+      // Module not implemented yet
+      throw new Error('Semantic AI module not yet implemented');
       return await createSemanticAIModule();
     });
 
     // Register mobile excellence module
     this.moduleRegistry.registerModule('mobile-excellence', async () => {
-      const { createMobileExcellenceModule } = await import('./modules/mobile-excellence/index.js');
+      // Module not implemented yet
+      throw new Error('Mobile excellence module not yet implemented');
       return await createMobileExcellenceModule();
     });
 
     // Register accessibility leadership module
     this.moduleRegistry.registerModule('accessibility-leadership', async () => {
-      const { createAccessibilityLeadershipModule } = await import('./modules/accessibility-leadership/index.js');
+      // Module not implemented yet
+      throw new Error('Accessibility module not yet implemented');
       return await createAccessibilityLeadershipModule();
     });
 
     // Register developer experience module
     this.moduleRegistry.registerModule('developer-experience', async () => {
-      const { createDeveloperExperienceModule } = await import('./modules/developer-experience/index.js');
+      // Module not implemented yet
+      throw new Error('Developer experience module not yet implemented');
       return await createDeveloperExperienceModule();
     });
   }
