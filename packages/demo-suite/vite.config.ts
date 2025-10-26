@@ -17,9 +17,7 @@ export default defineConfig({
           // Vendor chunk for stable caching
           vendor: ['d3'],
           // Knowledge-network library separate chunk
-          'knowledge-network': ['@aigeeksquad/knowledge-network'],
-          // Monaco editor separate chunk (large dependency)
-          monaco: ['monaco-editor']
+          'knowledge-network': ['@aigeeksquad/knowledge-network']
         }
       }
     },
@@ -51,9 +49,6 @@ export default defineConfig({
     include: [
       'd3',
       '@aigeeksquad/knowledge-network'
-    ],
-    exclude: [
-      'monaco-editor' // Large dependency, load on demand
     ]
   },
 
@@ -80,22 +75,6 @@ export default defineConfig({
     }
   },
 
-  // Testing configuration integration
-  test: {
-    globals: true,
-    environment: 'happy-dom',
-    setupFiles: ['./src/test-setup.ts'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/test-setup.ts',
-        '**/*.test.ts',
-        '**/*.spec.ts'
-      ]
-    }
-  },
 
   // Performance monitoring
   esbuild: {

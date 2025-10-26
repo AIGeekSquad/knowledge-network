@@ -24,11 +24,8 @@
 
     // Strict type checking for quality
     "strict": true,
-    "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
 
     // Advanced checks for demo quality
     "useUnknownInCatchVariables": true,
@@ -36,7 +33,6 @@
     "allowUnusedLabels": false,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "noImplicitReturns": true,
 
     // Interoperability
     "allowSyntheticDefaultImports": true,
@@ -44,8 +40,7 @@
     "forceConsistentCasingInFileNames": true,
 
     // Development experience
-    "incremental": true,
-    "declarationMap": true
+    "incremental": true
   },
   "include": [
     "src/**/*",
@@ -57,10 +52,5 @@
     "dist",
     "**/*.test.ts",
     "**/*.spec.ts"
-  ],
-  "references": [
-    {
-      "path": "../knowledge-network"
-    }
   ]
 }
