@@ -8,7 +8,7 @@ The Knowledge Network is a TypeScript library for knowledge graph visualization 
 
 This monorepo contains:
 - **Core library** (`packages/knowledge-network/`): The main `@aigeeksquad/knowledge-network` package
-- **Examples** (`packages/examples/`): Vite-based interactive demonstrations
+- **Demo Suite** (`packages/demo-suite/`): Vite-based interactive demonstrations
 
 The library's standout feature is force-directed edge bundling, which reduces visual clutter in complex graphs by grouping related edges. This is particularly effective for knowledge graphs, mind maps, and dense networks requiring visual clarity.
 
@@ -18,7 +18,7 @@ When working on this project:
 - All project files belong in this monorepo structure
 - Use `ai_working/` for temporary analysis files and working documents
 - Reference files with `@knowledge-network/` prefix for the core library
-- Examples use `workspace:*` dependencies to reference the local core library
+- Demo Suite uses `workspace:*` dependencies to reference the local core library
 - Follow the modular architecture principles described in `docs/` documentation
 
 Follow this process:
@@ -36,9 +36,9 @@ Follow this process:
 
 - **TypeScript**: Strict configuration with modern ES2022 target
 - **D3.js v7**: Modern ES modules with d3-force for physics simulation
-- **Build Tools**: 
+- **Build Tools**:
   - `tsup` (`packages/knowledge-network/tsup.config.ts`) for fast TypeScript compilation with dual ESM/CJS output
-  - `Vite` (`packages/examples/vite.config.ts`) for modern web development and examples
+  - `Vite` (`packages/demo-suite/vite.config.ts`) for modern web development and examples
 - **Package Management**: `pnpm` (`pnpm-workspace.yaml`) with workspace support
 - **Testing**: `Vitest` (`packages/knowledge-network/vitest.config.ts`) with jsdom for DOM testing
 - **Rendering**: HTML5 Canvas and SVG support for different performance needs
@@ -108,8 +108,8 @@ pnpm lint
 pnpm clean
 ```
 
-### Examples Development
-Navigate to `packages/examples/`:
+### Demo Suite Development
+Navigate to `packages/demo-suite/`:
 ```bash
 # Start development server
 pnpm dev
@@ -145,7 +145,7 @@ The main library follows a modular architecture:
 
 3. **D3 Integration**: Built on d3.js v7 with modern ES modules, using d3-force for physics simulation
 
-4. **Workspace Dependencies**: Examples package uses `workspace:*` to depend on the local core library
+4. **Workspace Dependencies**: Demo Suite package uses `workspace:*` to depend on the local core library
 
 ## Project Structure
 
@@ -160,7 +160,7 @@ The main library follows a modular architecture:
 │   │   │   ├── state/             # State management
 │   │   │   └── viewport/          # Viewport controls
 │   │   └── tests/                 # Test suite
-│   └── examples/                   # Interactive demos
+│   └── demo-suite/                 # Next-generation interactive showcase platform
 ├── docs/                          # Project documentation
 ├── ai_working/                    # Analysis and working files
 └── screenshots/                   # Visual examples

@@ -1,12 +1,12 @@
 # Knowledge Network Demo Suite
 
-**Next-Generation Interactive Showcase Platform**
+**Interactive Exploration and Benchmarking Platform**
 
-A modular demonstration platform showcasing the world-class capabilities of the `@aigeeksquad/knowledge-network` library through specialized interactive modules.
+A comprehensive demonstration platform enabling interactive exploration of the `@aigeeksquad/knowledge-network` library's world-class capabilities through mode switching, rich datasets, and real-time performance benchmarking with Xbox gaming aesthetics.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue)](https://demo.knowledge-network.dev)
-[![Performance](https://img.shields.io/badge/10K%2B_nodes-60fps-green)](./src/modules/performance/)
-[![Accessibility](https://img.shields.io/badge/WCAG-AAA-green)](./src/modules/accessibility/)
+[![Interactive](https://img.shields.io/badge/Modes-SVG%7CCanvas%7CWebGL-green)](./src/components/)
+[![Datasets](https://img.shields.io/badge/Knowledge_Domains-5+-blue)](./src/components/data/)
 
 ---
 
@@ -16,68 +16,64 @@ A modular demonstration platform showcasing the world-class capabilities of the 
 
 ---
 
-## ✨ Demo Modules
+## ✨ Interactive Exploration Features
 
-### 🔥 **[Performance Showcase](./src/modules/performance/)**
-Demonstrates GPU acceleration and O(log n) spatial indexing handling 10,000+ nodes at 60fps
-- **Scale Progression**: Interactive scaling from 100 → 10,000+ nodes
-- **Real-Time Metrics**: FPS, memory usage, selection speed measurements
-- **Competitive Comparison**: Side-by-side benchmarks vs D3.js, Cytoscape.js, vis.js
+### 🎮 **Interactive Mode Switching**
+Real-time exploration of rendering engines and layout algorithms with Xbox gaming aesthetics
+- **Rendering Modes**: Instant switching between SVG, Canvas, and WebGL with performance comparison
+- **Layout Algorithms**: Toggle between force-directed, hierarchical, circular, grid, and radial layouts
+- **Edge Rendering**: Compare simple vs bundled edge rendering with visual clarity demonstration
+- **Live Performance Metrics**: Real-time FPS, memory usage, and render time monitoring
 
-### 🤖 **[Semantic AI Demo](./src/modules/semantic-ai/)**
-Showcases AI-powered graph layout and clustering capabilities
-- **Live Embedding**: Real-time concept clustering with vector embeddings
-- **Hybrid Forces**: Balance structural and semantic attraction forces
-- **Interactive Concepts**: Add concepts and watch semantic clustering in action
+### 📚 **Rich Knowledge Graph Datasets**
+Comprehensive collection of interesting knowledge domains showcasing library versatility
+- **Computer Science**: Programming languages, algorithms, software architecture concepts
+- **Research Papers**: Academic citation networks and concept relationships
+- **Biology**: Biological systems, cellular processes, and ecosystem relationships
+- **Literature**: Character networks, thematic relationships, and literary analysis
+- **Business**: Organizational structures, process flows, and market relationships
 
-### 📱 **[Mobile Excellence](./src/modules/mobile/)**
-Mobile-native touch interactions and responsive design
-- **Multi-Touch Gestures**: Native pan, zoom, and selection with haptic feedback
-- **Adaptive Interface**: UI transformation across screen sizes and orientations
-- **Battery Optimization**: Performance scaling for mobile device efficiency
+### 📊 **Performance Benchmarking Tools**
+Comprehensive benchmarking platform for configuration optimization and competitive analysis
+- **Configuration Comparison**: Side-by-side metrics for different renderer/layout combinations
+- **Real-time Benchmarking**: Performance impact visualization as settings change
+- **Export Functionality**: Generate benchmark reports for technical evaluation
+- **Iteration Tools**: Find optimal configurations for specific use cases and data types
 
-### ♿ **[Accessibility Leadership](./src/modules/accessibility/)**
-Inclusive design and assistive technology integration
-- **Screen Reader Navigation**: Full graph exploration using ARIA and spatial audio cues
-- **Voice Control**: Speech recognition for hands-free graph interaction
-- **Keyboard Navigation**: Arrow-key spatial navigation through graph topology
-
-### ⚖️ **[Renderer Comparison](./src/modules/renderers/)**
-Side-by-side comparison of SVG, Canvas, and WebGL rendering engines
-- **Visual Quality**: Same graphs rendered with different engines for quality comparison
-- **Performance Metrics**: Real-time FPS and memory usage across renderers
-- **Feature Matrix**: Interactive capability comparison across rendering approaches
-
-### 👩‍💻 **[Developer Experience](./src/modules/dev-experience/)**
-Interactive configuration playground and integration examples
-- **Live Code Editor**: Monaco editor with TypeScript IntelliSense and real-time updates
-- **Configuration Playground**: Interactive parameter adjustment with immediate visual feedback
-- **Framework Integration**: Working examples for React, Vue, Angular, and vanilla JavaScript
+### 🎯 **Competitive Advantage Demonstrations**
+Interactive validation of quantified competitive advantages with hands-on exploration
+- **Multi-Renderer Architecture**: Only library with three production-ready rendering engines
+- **Layout Variety**: Comprehensive algorithm selection unavailable in competing libraries
+- **Performance Leadership**: GPU acceleration and spatial indexing advantages demonstrated live
+- **Edge Bundling Excellence**: Research-compliant bundling for visual clarity improvement
 
 ---
 
 ## 🏗️ Architecture
 
-### Modular Design Philosophy
+### Interactive Platform Architecture
 
-The demo suite follows the "bricks and studs" modular architecture:
+The demo suite provides hands-on exploration through integrated components:
 
-**🧱 Bricks (Demo Modules)**:
-- Each module is self-contained and focused on specific capabilities
-- Independent development, testing, and deployment
-- Clear interfaces enable easy addition of new demonstration modules
+**🎮 Interactive Components (Working)**:
+- **Performance Monitoring**: Real-time FPS calculation and metrics overlay with Xbox theming
+- **Graph Renderer**: Knowledge graph visualization with Xbox Green nodes and Blue edges
+- **Control Panel**: Mode switching interface for rendering engines and layout algorithms
+- **Dataset Manager**: Rich knowledge graph data across multiple domains
+- **Benchmark Collector**: Performance comparison tools and export functionality
 
-**🔗 Studs (Shared Infrastructure)**:
-- **Navigation Router**: Consistent routing with deep linking
-- **Performance Monitor**: Real-time metrics overlay across all modules
-- **Data Generator**: Synthetic graph creation for different scenarios
-- **UI Components**: Reusable interface elements with consistent styling
+**🔗 Shared Infrastructure**:
+- **Performance Monitor**: Real-time metrics across all configurations with double-click toggle
+- **UI Components**: Xbox-themed controls (Green primary, Blue secondary, Gold accents)
+- **Configuration State**: Persistent settings and mode preferences
+- **Dataset Library**: Rich knowledge graph data for comprehensive demonstrations
 
-### Progressive Complexity
+### Interactive Exploration Flow
 
-**Beginner** (2-3 minutes): Performance Showcase, Renderer Comparison
-**Intermediate** (5-7 minutes): Semantic AI Demo, Mobile Excellence
-**Advanced** (10+ minutes): Accessibility Leadership, Developer Experience
+**Mode Switching**: Select rendering engine (SVG/Canvas/WebGL) → See performance impact in real-time
+**Layout Comparison**: Try different algorithms (force-directed/circular/grid) → Compare visual results
+**Dataset Exploration**: Switch between knowledge domains → See library versatility
+**Performance Benchmarking**: Compare configurations → Export optimization findings
 
 ---
 
@@ -113,29 +109,35 @@ pnpm preview
 
 ---
 
-## 📊 Performance Characteristics
+## 📊 Interactive Performance Exploration
 
-### Demonstrated Capabilities
+### Real-Time Benchmarking Capabilities
 
-**GPU Acceleration:**
-- ✅ 10,000+ nodes at consistent 60fps using WebGL renderer
-- ✅ Real-time performance metrics with memory usage tracking
-- ✅ Automatic fallback to Canvas/SVG for device compatibility
+**Rendering Engine Comparison:**
+- ✅ **SVG Mode**: High-quality graphics with excellent zoom clarity for small to medium graphs
+- ✅ **Canvas Mode**: Balanced performance with good visual quality for medium to large graphs
+- ✅ **WebGL Mode**: GPU-accelerated rendering handling 10,000+ nodes at 60fps for massive graphs
+- ✅ **Instant Switching**: Compare engines on same data with real-time performance metrics
 
-**Spatial Indexing:**
-- ✅ O(log n) node selection vs O(n) linear search competitors
-- ✅ Sub-millisecond selection time regardless of graph size
-- ✅ 10,000x performance improvement demonstration
+**Layout Algorithm Variety:**
+- ✅ **Force-Directed**: Physics-based organic layouts with customizable forces
+- ✅ **Hierarchical**: Tree-structure layouts with directional flow (TB/BT/LR/RL)
+- ✅ **Circular**: Radial arrangements with customizable radius and angular distribution
+- ✅ **Grid**: Structured layouts with defined rows, columns, and spacing
+- ✅ **Radial**: Center-out arrangements with distance-based positioning
 
-**Mobile Optimization:**
-- ✅ Native multi-touch gestures with haptic feedback
-- ✅ Battery-efficient rendering with automatic quality scaling
-- ✅ Responsive design adapting to any screen size or orientation
+**Edge Rendering Excellence:**
+- ✅ **Simple Edges**: Direct connections optimized for performance and clarity
+- ✅ **Bundled Edges**: Research-compliant force-directed bundling reducing visual complexity
+- ✅ **Dynamic Switching**: Toggle between modes to see visual clarity improvement
+- ✅ **Performance Impact**: Measure computational cost of different edge rendering approaches
 
-**Accessibility Excellence:**
-- ✅ WCAG AAA compliance with innovative assistive technology integration
-- ✅ Spatial keyboard navigation unique to graph visualization libraries
-- ✅ Voice control and screen reader support exceeding industry standards
+**Rich Dataset Exploration:**
+- ✅ **Computer Science Network**: 45+ concepts covering languages, algorithms, and architecture
+- ✅ **Research Paper Graph**: Academic citation relationships with 35+ influential papers
+- ✅ **Biological Systems**: 50+ entities showing cellular processes and organism relationships
+- ✅ **Literary Analysis**: Character and thematic networks from classic literature
+- ✅ **Business Processes**: Organizational and workflow relationships with 40+ business concepts
 
 ---
 
