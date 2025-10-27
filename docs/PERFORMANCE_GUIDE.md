@@ -876,15 +876,16 @@ benchmarkConfigurations(testData, configs).then(console.log);
 
 ---
 
-## 🎮 Interactive Performance Demonstrations
+## 🎮 Interactive Performance Exploration
 
-**See optimization techniques in action:**
+**Experience optimization techniques through hands-on exploration:**
 
-- **[🔥 Performance Showcase Module](../packages/demo-suite/src/modules/performance/)** - Live demonstration of GPU acceleration, spatial indexing, and large-scale rendering
-- **[⚖️ Renderer Comparison Module](../packages/demo-suite/src/modules/renderers/)** - Side-by-side performance comparison of SVG, Canvas, and WebGL engines
-- **[🏆 Competitive Benchmarks](./COMPETITIVE_SHOWCASE.md)** - Quantified performance advantages vs other libraries
+- **[🔥 Interactive Benchmarking Platform](../packages/demo-suite/)** - Real-time performance comparison across rendering modes and layout algorithms
+- **[⚖️ Renderer Mode Switching](../packages/demo-suite/)** - Live SVG vs Canvas vs WebGL performance comparison with metrics
+- **[🏆 Configuration Optimization Tools](../packages/demo-suite/)** - Find optimal settings for your data with benchmarking export
+- **[📊 Dataset Performance Analysis](../packages/demo-suite/src/components/data/)** - Compare performance across computer science, research, biology knowledge graphs
 
-**Experience the performance optimizations interactively with real-time metrics and scaling demonstrations.**
+**Interactive platform enables configuration iteration and quantified competitive advantage validation.**
 
 ---
 

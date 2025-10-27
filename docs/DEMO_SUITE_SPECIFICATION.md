@@ -16,45 +16,45 @@
 
 ### 1.1 Purpose
 
-The Knowledge Network Demo Suite is a modular, extensible demonstration platform that showcases the world-class capabilities of the knowledge-network library through specialized interactive modules. It serves as both a comprehensive evaluation tool and a competitive positioning platform that demonstrates measurable advantages over existing graph visualization solutions.
+The Knowledge Network Demo Suite is an interactive exploration and benchmarking platform that enables hands-on discovery of the knowledge-network library's world-class capabilities through real-time mode switching, rich datasets, and performance comparison tools. It serves as both a comprehensive evaluation platform and an iteration tool for configuration optimization, demonstrating measurable competitive advantages through interactive experimentation.
 
 ### 1.2 Scope
 
-This specification defines a next-generation demo architecture that transforms from a single-demo approach to a comprehensive showcase platform featuring:
+This specification defines an interactive exploration platform that transforms static demonstrations into dynamic discovery experiences featuring:
 
-- **6 specialized demo modules** showcasing distinct capabilities
-- **Modular architecture** enabling independent development and deployment
-- **Progressive complexity** guiding users from basic concepts to advanced features
-- **Competitive benchmarking** with quantified performance comparisons
-- **Multi-platform excellence** across desktop, mobile, and assistive technologies
+- **Interactive mode switching** enabling real-time comparison of rendering engines and layout algorithms
+- **Rich knowledge graph datasets** showcasing library versatility across multiple domains
+- **Performance benchmarking tools** providing quantified metrics and optimization guidance
+- **Xbox gaming aesthetic** with professional presentation suitable for technical evaluation
+- **Iteration platform** enabling users to find optimal configurations for their specific use cases
 
 ### 1.3 Stakeholders
 
-- **Library Evaluators**: Technical decision-makers comparing visualization solutions
-- **Enterprise Users**: Teams requiring production-ready, scalable graph visualization
-- **Developers**: Engineers integrating knowledge graphs into applications
-- **Community Contributors**: Open-source developers extending the library
-- **Accessibility Advocates**: Organizations requiring inclusive design compliance
+- **Library Evaluators**: Interactive platform for hands-on evaluation of rendering performance and layout quality
+- **Configuration Optimizers**: Teams using benchmarking tools to find optimal settings for their data
+- **Developers**: Engineers exploring rendering modes and layout algorithms for integration decisions
+- **Performance Analysts**: Technical teams validating competitive advantages through quantified benchmarking
+- **Knowledge Domain Experts**: Users exploring visualization approaches for their specific data types
 
 ---
 
 ## 2. Architecture Overview
 
-### 2.1 Modular Demo Platform
+### 2.1 Interactive Exploration Platform
 
-The demo suite implements a hub-and-spoke architecture where each demonstration module operates independently while sharing common infrastructure:
+The demo suite implements an integrated exploration platform where users interactively discover library capabilities through mode switching and benchmarking:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   DEMO SUITE HUB                    │
+│           INTERACTIVE EXPLORATION PLATFORM          │
 ├─────────────────────────────────────────────────────┤
-│  Navigation Router                                  │
-│  ├─ Performance Showcase      ←─ GPU + Spatial     │
-│  ├─ Semantic AI Demo         ←─ Embedding + ML     │
-│  ├─ Mobile Excellence        ←─ Touch + Responsive │
-│  ├─ Accessibility Leadership ←─ A11y + Voice       │
-│  ├─ Renderer Comparison      ←─ SVG/Canvas/WebGL   │
-│  └─ Developer Experience     ←─ Live Code + Config │
+│  Control Panel (Xbox-themed)                       │
+│  ├─ Rendering Mode Switch    ←─ SVG/Canvas/WebGL    │
+│  ├─ Layout Algorithm Select  ←─ Force/Grid/Circular │
+│  ├─ Dataset Selector         ←─ CS/Bio/Research     │
+│  └─ Benchmark Tools          ←─ Metrics + Export    │
+│                                                     │
+│  Graph Renderer + Performance Monitor               │
 └─────────────────────────────────────────────────────┘
 ```
 

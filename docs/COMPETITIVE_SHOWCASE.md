@@ -449,24 +449,24 @@ Configuration Object ────► Rendering Engine ────► Event Syst
 
 ---
 
-## 5. Demonstration Effectiveness
+## 5. Interactive Demonstration Platform
 
-### 5.1 Interactive Benchmark Modules
+### 5.1 Real-Time Exploration Tools
 
-**[Performance Showcase](../packages/demo-suite/src/modules/performance/):**
-- **Live Scaling**: Users interact with scale slider seeing real-time performance impact
-- **Comparative Metrics**: Side-by-side FPS and memory usage vs other libraries
-- **Stress Testing**: Push library limits with 10,000+ node real-time interaction
+**[Interactive Mode Switching Platform](../packages/demo-suite/):**
+- **Rendering Engine Toggle**: Users switch between SVG/Canvas/WebGL seeing immediate performance differences
+- **Layout Algorithm Comparison**: Real-time switching between force-directed, circular, grid, hierarchical layouts
+- **Configuration Benchmarking**: Live performance metrics and optimization recommendations
 
-**[Renderer Comparison](../packages/demo-suite/src/modules/renderers/):**
-- **Split-Screen Demo**: Same graph rendered simultaneously with different engines
-- **Quality Assessment**: Interactive zoom showing visual fidelity differences
-- **Feature Matrix**: Live demonstration of which features work with which renderers
+**[Rich Dataset Exploration](../packages/demo-suite/src/components/data/):**
+- **Domain Switching**: Compare performance across computer science, research papers, biological systems
+- **Complexity Analysis**: See how different data structures affect rendering performance
+- **Use Case Optimization**: Find optimal configurations for specific knowledge domain types
 
-**[Semantic AI Demo](../packages/demo-suite/src/modules/semantic-ai/):**
-- **Live Embedding**: Users add concepts and watch semantic clustering in real-time
-- **Force Balancing**: Interactive sliders showing structural vs semantic force influence
-- **Concept Exploration**: Natural language input with embedding visualization
+**[Performance Iteration Tools](../packages/demo-suite/):**
+- **Live Benchmarking**: Real-time metrics collection across configuration combinations
+- **Export Functionality**: Generate performance reports for technical evaluation
+- **Configuration Presets**: Quick access to optimized settings for different scenarios
 
 ### 5.2 Quantified Claims Validation
 

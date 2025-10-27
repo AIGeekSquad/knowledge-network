@@ -604,14 +604,14 @@ const domainData: GraphData = {
 
 ## Related Guides
 
-### Interactive Demonstrations
+### Interactive Exploration Platform
 
-Experience the API capabilities through comprehensive interactive demonstrations:
+Experience the API capabilities through hands-on interactive exploration and benchmarking:
 
-- **[🚀 Complete Demo Suite](../demo-suite/README.md)** - Next-generation showcase platform with 6 specialized modules
-- **[🔥 Performance Demo](../demo-suite/src/modules/performance/)** - See GPU acceleration and 10,000+ node handling in action
-- **[🤖 Semantic AI Demo](../demo-suite/src/modules/semantic-ai/)** - Interactive embedding-based clustering and AI layouts
-- **[👩‍💻 Developer Playground](../demo-suite/src/modules/dev-experience/)** - Live code editor with this exact API
+- **[🚀 Complete Demo Suite](../demo-suite/README.md)** - Interactive platform with mode switching and benchmarking tools
+- **[🎮 Mode Switching Demo](../demo-suite/)** - Live comparison of SVG, Canvas, WebGL rendering with performance metrics
+- **[📊 Layout Algorithm Explorer](../demo-suite/)** - Interactive comparison of force-directed, circular, grid, hierarchical layouts
+- **[📚 Rich Dataset Library](../demo-suite/src/components/data/)** - Computer science, research, biology, literature knowledge graphs
 
 ### Essential Reading
 

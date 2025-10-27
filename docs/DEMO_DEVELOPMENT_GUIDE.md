@@ -10,7 +10,7 @@
 
 ## Overview
 
-The Knowledge Network Demo Suite uses a modular architecture where each demonstration is a self-contained module following the `DemoModule` interface. This guide provides comprehensive instructions for creating new demo modules that maintain quality standards and architectural consistency.
+The Knowledge Network Demo Suite uses an interactive exploration architecture where users dynamically switch between rendering modes, layout algorithms, and rich datasets to discover optimal configurations. This guide provides comprehensive instructions for creating interactive components and rich datasets that maintain quality standards and Xbox gaming aesthetic consistency.
 
 ---
 
