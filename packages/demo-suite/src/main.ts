@@ -3,8 +3,8 @@
  * Initializes the application and handles progressive enhancement.
  */
 
-// Import single showcase demo
-import './showcase-demo.js';
+// Import actual knowledge graph library
+import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
 import { announceToScreenReader } from './shared/utils.js';
 
 /**
@@ -279,7 +279,7 @@ function setupDebugMode(app: any): void {
 }
 
 /**
- * Initialize the working demo components
+ * Initialize single working demo
  */
 async function initializeWorkingDemo(): Promise<void> {
   const container = document.getElementById('demo-container');
@@ -289,43 +289,54 @@ async function initializeWorkingDemo(): Promise<void> {
     return;
   }
 
-  // Add Xbox-themed content
-  container.innerHTML = `
-    <div style="padding: 20px; color: white; text-align: center;">
-      <h2 style="color: #107c10; margin-bottom: 20px;">Knowledge Network Performance Demo</h2>
-      <p style="margin-bottom: 20px;">Real-time FPS monitoring with Xbox-themed interface</p>
+  // Create comprehensive demo data
+  const demoData = {
+    nodes: [
+      { id: 'javascript', label: 'JavaScript', type: 'language' },
+      { id: 'typescript', label: 'TypeScript', type: 'language' },
+      { id: 'react', label: 'React', type: 'framework' },
+      { id: 'vue', label: 'Vue.js', type: 'framework' },
+      { id: 'd3', label: 'D3.js', type: 'library' },
+      { id: 'algorithms', label: 'Algorithms', type: 'concept' },
+      { id: 'visualization', label: 'Data Visualization', type: 'field' },
+      { id: 'performance', label: 'Performance', type: 'concept' }
+    ],
+    edges: [
+      { source: 'typescript', target: 'javascript', label: 'compiles to' },
+      { source: 'react', target: 'javascript', label: 'built with' },
+      { source: 'vue', target: 'javascript', label: 'built with' },
+      { source: 'd3', target: 'javascript', label: 'library for' },
+      { source: 'd3', target: 'visualization', label: 'enables' },
+      { source: 'algorithms', target: 'performance', label: 'affects' },
+      { source: 'performance', target: 'visualization', label: 'important for' }
+    ]
+  };
 
-      <div id="graph-area" style="
-        width: 600px;
-        height: 400px;
-        background: rgba(255,255,255,0.05);
-        border: 2px solid #107c10;
-        border-radius: 8px;
-        margin: 20px auto;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      ">
-        <div style="text-align: center; color: #aaa;">
-          <p>Performance monitoring active</p>
-          <p><small>Look for FPS overlay in top-right corner</small></p>
-          <p><small>Double-click overlay to toggle details</small></p>
-        </div>
-      </div>
-    </div>
-  `;
+  try {
+    // Clear container and create graph
+    container.innerHTML = '<div style="width: 100%; height: 100%;"></div>';
+    const graphDiv = container.firstElementChild as HTMLElement;
 
-  // Initialize performance demo on the graph area
-  const graphArea = container.querySelector('#graph-area') as HTMLElement;
-  if (graphArea) {
-    try {
-      const demo = new PerformanceDemo(graphArea);
-      await demo.initialize();
-      console.log('Performance demo initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize performance demo:', error);
+    if (graphDiv) {
+      const graph = new KnowledgeGraph(graphDiv, demoData, {
+        width: 800,
+        height: 600,
+        nodeRadius: 10,
+        nodeFill: (d) => {
+          const colors = { 'language': '#e74c3c', 'framework': '#3498db', 'library': '#2ecc71', 'concept': '#f39c12' };
+          return colors[d.type as keyof typeof colors] || '#95a5a6';
+        },
+        edgeStroke: '#7f8c8d',
+        enableZoom: true,
+        enableDrag: true
+      });
+
+      await graph.render();
+      console.log('Knowledge graph rendered successfully');
     }
+  } catch (error) {
+    console.error('Failed to initialize demo:', error);
+    container.innerHTML = `<div style="padding: 20px; color: white;">Error: ${error.message}</div>`;
   }
 }
 
