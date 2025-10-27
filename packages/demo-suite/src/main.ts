@@ -3,8 +3,8 @@
  * Initializes the application and handles progressive enhancement.
  */
 
-// Simple demo for testing
-import './simple-demo.js';
+// Import working performance components
+import { PerformanceDemo } from './components/performance/PerformanceDemo.js';
 import { announceToScreenReader } from './shared/utils.js';
 
 /**
@@ -279,6 +279,57 @@ function setupDebugMode(app: any): void {
 }
 
 /**
+ * Initialize the working demo components
+ */
+async function initializeWorkingDemo(): Promise<void> {
+  const container = document.getElementById('demo-container');
+
+  if (!container) {
+    console.error('Demo container not found');
+    return;
+  }
+
+  // Add Xbox-themed content
+  container.innerHTML = `
+    <div style="padding: 20px; color: white; text-align: center;">
+      <h2 style="color: #107c10; margin-bottom: 20px;">Knowledge Network Performance Demo</h2>
+      <p style="margin-bottom: 20px;">Real-time FPS monitoring with Xbox-themed interface</p>
+
+      <div id="graph-area" style="
+        width: 600px;
+        height: 400px;
+        background: rgba(255,255,255,0.05);
+        border: 2px solid #107c10;
+        border-radius: 8px;
+        margin: 20px auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="text-align: center; color: #aaa;">
+          <p>Performance monitoring active</p>
+          <p><small>Look for FPS overlay in top-right corner</small></p>
+          <p><small>Double-click overlay to toggle details</small></p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Initialize performance demo on the graph area
+  const graphArea = container.querySelector('#graph-area') as HTMLElement;
+  if (graphArea) {
+    try {
+      const demo = new PerformanceDemo(graphArea);
+      await demo.initialize();
+      console.log('Performance demo initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize performance demo:', error);
+    }
+  }
+}
+
+/**
  * Log initialization metrics.
  */
 function logInitMetrics(metrics: { loadTime: number; renderTime: number }, config: InitConfig): void {
@@ -327,13 +378,9 @@ async function main(): Promise<void> {
     // Mark initialization start
     startupMetrics.markStart();
 
-    // Initialize the application
-    const app = await initializeApp({
-      enablePerformanceMonitoring: config.enablePerformanceMonitoring,
-      enableDeepLinking: config.enableDeepLinking,
-      defaultModule: config.defaultModule,
-      showWelcomeMessage: config.showWelcomeMessage
-    });
+    // Initialize working performance demo
+    initializeWorkingDemo();
+    hideLoadingScreen();
 
     // Mark initialization end
     startupMetrics.markEnd();

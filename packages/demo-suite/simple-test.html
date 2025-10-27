@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance Demo Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1d20 0%, #212529 100%);
+      color: white;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    #demo-container {
+      width: 600px;
+      height: 400px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid #107c10;
+      border-radius: 8px;
+      margin: 20px 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="color: #107c10;">Performance Demo Test</h1>
+  <p>Testing FPS calculation and double-click functionality.</p>
+  <p><strong>Instructions:</strong> Look for performance overlay in the demo container, double-click it to toggle details.</p>
+
+  <div id="demo-container">
+    <p>Performance overlay should appear here</p>
+  </div>
+
+  <script type="module">
+    import { PerformanceDemo } from './src/components/performance/PerformanceDemo.js';
+
+    // Initialize when DOM ready
+    const container = document.getElementById('demo-container');
+
+    if (container) {
+      const demo = new PerformanceDemo(container);
+      demo.initialize().then(() => {
+        console.log('Performance demo initialized successfully');
+      }).catch(error => {
+        console.error('Failed to initialize performance demo:', error);
+      });
+    } else {
+      console.error('Demo container not found');
+    }
+  </script>
+</body>
+</html>
