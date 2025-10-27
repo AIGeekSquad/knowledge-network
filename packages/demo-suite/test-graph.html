@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graph Renderer Test</title>
+  <style>
+    body {
+      background: #1a1d20;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
+
+    #graph-container {
+      width: 800px;
+      height: 600px;
+      border: 2px solid #107c10;
+      border-radius: 8px;
+      margin: 20px 0;
+      position: relative;
+      background: rgba(255,255,255,0.02);
+    }
+  </style>
+</head>
+<body>
+  <h1 style="color: #107c10;">Knowledge Graph Renderer Test</h1>
+  <p>Testing actual graph rendering with Xbox theming.</p>
+
+  <div id="graph-container"></div>
+
+  <script type="module">
+    import { BasicGraphRenderer } from './src/components/graph/BasicGraphRenderer.js';
+
+    const container = document.getElementById('graph-container');
+
+    if (container) {
+      const renderer = new BasicGraphRenderer(container);
+
+      // Initialize and render
+      renderer.initialize()
+        .then(() => renderer.render())
+        .then(() => {
+          console.log('Graph renderer test successful');
+        })
+        .catch(error => {
+          console.error('Graph renderer test failed:', error);
+          container.innerHTML = `
+            <div style="padding: 20px; color: #e81123; text-align: center;">
+              <h3>Graph Rendering Error</h3>
+              <p>${error.message}</p>
+            </div>
+          `;
+        });
+    } else {
+      console.error('Graph container not found');
+    }
+  </script>
+</body>
+</html>
