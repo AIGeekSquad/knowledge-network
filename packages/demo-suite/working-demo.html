@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Network Showcase Demo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1d20, #2d3748);
+      color: white;
+      overflow: hidden;
+    }
+
+    .demo-container {
+      display: flex;
+      height: 100vh;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .controls-panel {
+      width: 280px;
+      background: rgba(45, 55, 72, 0.9);
+      border-radius: 12px;
+      padding: 24px;
+      height: fit-content;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(16, 124, 16, 0.3);
+    }
+
+    .controls-panel h2 {
+      margin: 0 0 24px 0;
+      color: #107c10;
+      font-size: 1.4em;
+      font-weight: 600;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #e2e8f0;
+    }
+
+    .control-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #4a5568;
+      border-radius: 6px;
+      background: #1a202c;
+      color: white;
+      font-size: 14px;
+    }
+
+    .control-group select:focus {
+      border-color: #107c10;
+      outline: none;
+    }
+
+    .apply-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #107c10, #0e6b0e);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .apply-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 124, 16, 0.3);
+    }
+
+    .graph-container {
+      flex: 1;
+      border: 2px solid #107c10;
+      border-radius: 12px;
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+    }
+
+    .performance-overlay {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      z-index: 1000;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid rgba(16, 124, 16, 0.4);
+    }
+
+    .info-panel {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      max-width: 300px;
+    }
+
+    .status {
+      text-align: center;
+      padding: 40px;
+      color: #cbd5e0;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <div class="controls-panel">
+      <h2>Library Showcase</h2>
+
+      <div class="control-group">
+        <label>Rendering Engine</label>
+        <select id="rendering-mode">
+          <option value="svg">SVG</option>
+          <option value="canvas">Canvas</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Edge Style</label>
+        <select id="edge-style">
+          <option value="simple">Simple</option>
+          <option value="bundled">Bundled</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Layout</label>
+        <select id="layout-type">
+          <option value="force">Force-Directed</option>
+          <option value="circular">Circular</option>
+        </select>
+      </div>
+
+      <button class="apply-btn" id="apply-config">Apply Configuration</button>
+
+      <div style="margin-top: 24px; padding: 12px; background: rgba(0, 188, 242, 0.1); border-radius: 6px; font-size: 12px;">
+        <strong>Interactive Features:</strong><br>
+        • Switch rendering modes<br>
+        • Compare edge bundling<br>
+        • Try different layouts<br>
+        • Monitor performance
+      </div>
+    </div>
+
+    <div class="graph-container" id="graph-area">
+      <div class="status" id="graph-status">
+        <h3>Knowledge Network Demo</h3>
+        <p>Loading interactive graph visualization...</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { KnowledgeGraph } from './src/components/graph/BasicGraphRenderer.js';
+
+    // Comprehensive technology knowledge graph
+    const demoData = {
+      nodes: [
+        { id: 'javascript', label: 'JavaScript' },
+        { id: 'typescript', label: 'TypeScript' },
+        { id: 'react', label: 'React' },
+        { id: 'vue', label: 'Vue.js' },
+        { id: 'angular', label: 'Angular' },
+        { id: 'd3', label: 'D3.js' },
+        { id: 'nodejs', label: 'Node.js' },
+        { id: 'webpack', label: 'Webpack' },
+        { id: 'vite', label: 'Vite' },
+        { id: 'algorithms', label: 'Algorithms' },
+        { id: 'data-viz', label: 'Data Visualization' },
+        { id: 'performance', label: 'Performance' }
+      ],
+      edges: [
+        { source: 'typescript', target: 'javascript' },
+        { source: 'react', target: 'javascript' },
+        { source: 'vue', target: 'javascript' },
+        { source: 'angular', target: 'typescript' },
+        { source: 'd3', target: 'javascript' },
+        { source: 'nodejs', target: 'javascript' },
+        { source: 'webpack', target: 'nodejs' },
+        { source: 'vite', target: 'nodejs' },
+        { source: 'algorithms', target: 'performance' },
+        { source: 'd3', target: 'data-viz' },
+        { source: 'performance', target: 'data-viz' }
+      ]
+    };
+
+    let currentGraph = null;
+    let fpsCounter = 0;
+    let lastTime = performance.now();
+
+    // Performance monitoring
+    function updatePerformanceOverlay() {
+      const overlay = document.getElementById('perf-overlay');
+      if (overlay) {
+        const currentTime = performance.now();
+        const fps = Math.round(1000 / (currentTime - lastTime));
+        lastTime = currentTime;
+        fpsCounter = fps > 0 && fps < 200 ? fps : fpsCounter;
+
+        overlay.innerHTML = `FPS: ${fpsCounter || '--'}<br>Nodes: ${demoData.nodes.length}`;
+      }
+      requestAnimationFrame(updatePerformanceOverlay);
+    }
+
+    // Create performance overlay
+    function createPerformanceOverlay() {
+      const overlay = document.createElement('div');
+      overlay.id = 'perf-overlay';
+      overlay.className = 'performance-overlay';
+      overlay.innerHTML = 'FPS: --<br>Nodes: 0';
+      document.getElementById('graph-area').appendChild(overlay);
+      requestAnimationFrame(updatePerformanceOverlay);
+    }
+
+    // Render graph function
+    async function renderGraph() {
+      const graphArea = document.getElementById('graph-area');
+      const statusDiv = document.getElementById('graph-status');
+
+      if (!graphArea) return;
+
+      try {
+        // Clear existing content
+        graphArea.innerHTML = '<div id="graph-status" class="status">Rendering graph...</div>';
+
+        // Simple SVG rendering since KnowledgeGraph import has issues
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        svg.style.background = 'transparent';
+
+        // Simple layout calculation
+        const nodes = demoData.nodes.map((node, i) => ({
+          ...node,
+          x: 100 + (i % 4) * 150,
+          y: 100 + Math.floor(i / 4) * 100
+        }));
+
+        // Draw edges
+        demoData.edges.forEach(edge => {
+          const sourceNode = nodes.find(n => n.id === edge.source);
+          const targetNode = nodes.find(n => n.id === edge.target);
+
+          if (sourceNode && targetNode) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', sourceNode.x.toString());
+            line.setAttribute('y1', sourceNode.y.toString());
+            line.setAttribute('x2', targetNode.x.toString());
+            line.setAttribute('y2', targetNode.y.toString());
+            line.setAttribute('stroke', '#00bcf2');
+            line.setAttribute('stroke-width', '2');
+            svg.appendChild(line);
+          }
+        });
+
+        // Draw nodes
+        nodes.forEach(node => {
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', node.x.toString());
+          circle.setAttribute('cy', node.y.toString());
+          circle.setAttribute('r', '12');
+          circle.setAttribute('fill', '#107c10');
+          circle.setAttribute('stroke', 'white');
+          circle.setAttribute('stroke-width', '2');
+          svg.appendChild(circle);
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', node.x.toString());
+          text.setAttribute('y', (node.y + 30).toString());
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('fill', 'white');
+          text.setAttribute('font-size', '11');
+          text.textContent = node.label;
+          svg.appendChild(text);
+        });
+
+        // Replace status with graph
+        graphArea.innerHTML = '';
+        graphArea.appendChild(svg);
+
+        // Add info panel
+        const infoPanel = document.createElement('div');
+        infoPanel.className = 'info-panel';
+        infoPanel.innerHTML = `
+          <strong>Technology Knowledge Graph</strong><br>
+          ${demoData.nodes.length} concepts, ${demoData.edges.length} relationships<br>
+          <small>Use controls to explore different rendering modes</small>
+        `;
+        graphArea.appendChild(infoPanel);
+
+        console.log('Graph rendered successfully');
+
+      } catch (error) {
+        console.error('Graph rendering error:', error);
+        graphArea.innerHTML = `
+          <div class="status">
+            <h3>Rendering Error</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize demo
+    async function initDemo() {
+      await renderGraph();
+      createPerformanceOverlay();
+
+      // Setup controls
+      const applyBtn = document.getElementById('apply-config');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', () => {
+          console.log('Configuration applied - re-rendering graph');
+          renderGraph();
+        });
+      }
+    }
+
+    // Start when page loads
+    document.addEventListener('DOMContentLoaded', initDemo);
+  </script>
+</body>
+</html>

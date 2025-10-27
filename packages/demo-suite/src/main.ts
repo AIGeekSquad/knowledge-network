@@ -3,8 +3,8 @@
  * Initializes the application and handles progressive enhancement.
  */
 
-// Import working performance components
-import { PerformanceDemo } from './components/performance/PerformanceDemo.js';
+// Import single showcase demo
+import './showcase-demo.js';
 import { announceToScreenReader } from './shared/utils.js';
 
 /**
@@ -378,10 +378,7 @@ async function main(): Promise<void> {
     // Mark initialization start
     startupMetrics.markStart();
 
-    // Initialize working performance demo
-    await initializeWorkingDemo();
-
-    // Hide loading screen
+    // Hide loading screen - showcase demo will initialize itself
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) {
       loadingScreen.style.opacity = '0';
