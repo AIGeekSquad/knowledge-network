@@ -379,8 +379,15 @@ async function main(): Promise<void> {
     startupMetrics.markStart();
 
     // Initialize working performance demo
-    initializeWorkingDemo();
-    hideLoadingScreen();
+    await initializeWorkingDemo();
+
+    // Hide loading screen
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+      loadingScreen.style.opacity = '0';
+      loadingScreen.style.pointerEvents = 'none';
+      document.body.classList.add('app-loaded');
+    }
 
     // Mark initialization end
     startupMetrics.markEnd();
