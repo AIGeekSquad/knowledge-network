@@ -29,7 +29,7 @@ Follow this process:
 - Ensure high quality standard and clean project structure
 - Commit changes as they progress with actual improvement on build quality and no regression
 - Make commit message that clearly states the work done and the outcome measured
-- When committing make sure to add microsoft/amplifier as co-author and include reference to the amplifer repo in github
+- When committing make sure to add microsoft-amplifier as co-author and include reference to the amplifer repo in github
 - Proceed to next task
 
 ## Key Technologies
