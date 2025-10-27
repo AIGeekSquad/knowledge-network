@@ -3,7 +3,8 @@
  * Initializes the application and handles progressive enhancement.
  */
 
-import { initializeApp } from './app.js';
+// Simple demo for testing
+import './simple-demo.js';
 import { announceToScreenReader } from './shared/utils.js';
 
 /**

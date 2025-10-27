@@ -33,7 +33,7 @@ describe('Performance Demo - Real FPS Calculation', () => {
 
   describe('FPS Calculation', () => {
     it('should calculate real FPS using RequestAnimationFrame timing', async () => {
-      const { FPSCalculator } = await import('../../src/demos/performance/FPSCalculator.js');
+      const { FPSCalculator } = await import('../../src/components/performance/FPSCalculator.js');
 
       const calculator = new FPSCalculator();
 
@@ -60,7 +60,7 @@ describe('Performance Demo - Real FPS Calculation', () => {
     });
 
     it('should show lower FPS with increased computational load', async () => {
-      const { FPSCalculator } = await import('../../src/demos/performance/FPSCalculator.js');
+      const { FPSCalculator } = await import('../../src/components/performance/FPSCalculator.js');
 
       const calculator = new FPSCalculator();
 
@@ -87,7 +87,7 @@ describe('Performance Demo - Real FPS Calculation', () => {
 
   describe('Interactive Elements', () => {
     it('should respond to double-click events', async () => {
-      const { PerformanceOverlay } = await import('../../src/demos/performance/PerformanceOverlay.js');
+      const { PerformanceOverlay } = await import('../../src/components/performance/PerformanceOverlay.js');
 
       const overlay = new PerformanceOverlay(container);
       await overlay.initialize();
@@ -105,7 +105,7 @@ describe('Performance Demo - Real FPS Calculation', () => {
 
   describe('Performance Metrics', () => {
     it('should measure actual render time not return zero', async () => {
-      const { PerformanceDemo } = await import('../../src/demos/performance/PerformanceDemo.js');
+      const { PerformanceDemo } = await import('../../src/components/performance/PerformanceDemo.js');
 
       const demo = new PerformanceDemo(container);
 
@@ -122,7 +122,7 @@ describe('Performance Demo - Real FPS Calculation', () => {
     });
 
     it('should track render time scaling behavior', async () => {
-      const { PerformanceDemo } = await import('../../src/demos/performance/PerformanceDemo.js');
+      const { PerformanceDemo } = await import('../../src/components/performance/PerformanceDemo.js');
 
       const demo = new PerformanceDemo(container);
 

@@ -300,7 +300,7 @@ export class DemoSuiteApp extends EventEmitter<AppEvents> {
 
     // Register performance showcase module
     this.moduleRegistry.registerModule('performance', async () => {
-      const { PerformanceDemo } = await import('./demos/performance/PerformanceDemo.js');
+      const { PerformanceDemo } = await import('./components/performance/PerformanceDemo.js');
       return await createPerformanceModule();
     });
 
