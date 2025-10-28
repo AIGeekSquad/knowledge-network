@@ -23,11 +23,20 @@ export default defineConfig({
     const fixD3Imports = (filePath: string) => {
       try {
         const content = readFileSync(filePath, 'utf8');
-        // Replace all d3X import names with d3
-        const fixed = content
-          .replace(/import \* as d3\d+ from "d3";/g, '')
-          .replace(/\bd3\d+\b/g, 'd3')
-          .replace(/^/, 'import * as d3 from "d3";\n');
+
+        // Check if we already have a proper d3 import at the top
+        const hasProperD3Import = /^import \* as d3 from "d3";/m.test(content);
+
+        // Replace all numbered d3 imports and references
+        let fixed = content
+          .replace(/import \* as d3\d+ from "d3";/g, '') // Remove numbered imports
+          .replace(/\bd3\d+\b/g, 'd3'); // Replace numbered references
+
+        // Only add the import if we don't already have it
+        if (!hasProperD3Import) {
+          fixed = 'import * as d3 from "d3";\n' + fixed;
+        }
+
         writeFileSync(filePath, fixed);
         console.log(`Fixed d3 imports in ${filePath}`);
       } catch (error) {

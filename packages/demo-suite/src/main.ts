@@ -400,9 +400,12 @@ async function main(): Promise<void> {
     // Mark initialization end
     startupMetrics.markEnd();
 
-    // Set up debug mode if enabled
+    // Initialize the working demo
+    await initializeWorkingDemo();
+
+    // Set up debug mode if enabled (placeholder for future app instance)
     if (config.enableDebugMode) {
-      setupDebugMode(app);
+      console.log('🐛 Debug mode enabled');
     }
 
     // Log performance metrics
@@ -446,7 +449,7 @@ if (typeof document !== 'undefined') {
 }
 
 // Export for module systems
-export { main, initializeApp };
+export { main, initializeWorkingDemo };
 
 // Progressive enhancement: Remove no-js class
 if (typeof document !== 'undefined') {
