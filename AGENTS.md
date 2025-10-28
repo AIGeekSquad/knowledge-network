@@ -43,6 +43,39 @@ Follow this process:
 - **Testing**: `Vitest` (`packages/knowledge-network/vitest.config.ts`) with jsdom for DOM testing
 - **Rendering**: HTML5 Canvas and SVG support for different performance needs
 
+## 🚨 CRITICAL DEVELOPMENT RULES
+
+### Single Working Demo Policy
+
+**NEVER create multiple fragmented demo endpoints.** User requires:
+- **ONE working demo** at the main URL (localhost:3000 or 3002)
+- **ALL capabilities visible** in single integrated experience
+- **NO separate test pages** or fragmented demonstrations
+- **NO "working-demo", "test-basic", "simple-test" files** - these are trash
+
+### No Implementation Branding in User Content
+
+**Design hints should NOT appear in user-facing content:**
+- ✅ **Use the styling** - Dark theme, green/blue colors, gaming aesthetics
+- ❌ **Don't mention design inspiration** in demo titles, descriptions, or user interface
+- ❌ **Don't reference implementation details** in user documentation
+
+### Build System Integrity First
+
+**Always fix library build issues before creating demos:**
+- Check compiled output has correct imports (`d3` not `d34` or other corruptions)
+- Ensure TypeScript imports work properly without build corruption
+- Test that library actually imports and works in demo code
+- Fix core library issues before attempting demo functionality
+
+### Clean File Management
+
+**Do not leave trash files behind:**
+- Remove ALL test files, working files, temporary files after use
+- Use proper naming conventions (not "working-demo", "test-basic", etc.)
+- Clean up unused imports and dead code
+- Maintain clean file structure with only production files
+
 ## 💎 CRITICAL: Respect User Time - Test Before Presenting
 
 **The user's time is their most valuable resource.** When you present work as "ready" or "done", you must have:
