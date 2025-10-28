@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/EventEmitter';
 import * as d3 from 'd3';
 import type { RenderingSystem, Transform } from '../rendering/RenderingSystem';
 import type { Point, BoundingBox, NodePosition } from '../layout/LayoutEngine';

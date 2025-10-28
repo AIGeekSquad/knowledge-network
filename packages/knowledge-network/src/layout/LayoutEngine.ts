@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/EventEmitter';
 import * as d3 from 'd3';
 import type { GraphData, Node, Edge } from '../types';
 import { EmbeddingManager, type EmbeddingFunction, type TextEmbeddingFunction } from '../semantic/EmbeddingManager';

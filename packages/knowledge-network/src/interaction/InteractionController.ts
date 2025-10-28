@@ -37,7 +37,7 @@ import { ViewportState, type IViewportState } from './ViewportState';
 import { GestureRecognizer } from './GestureRecognizer';
 import { AnimationSystem } from './AnimationSystem';
 import { SpatialIndexer } from '../spatial/SpatialIndexer';
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/EventEmitter';
 
 export class InteractionController extends EventEmitter {
   private config: InteractionConfig;

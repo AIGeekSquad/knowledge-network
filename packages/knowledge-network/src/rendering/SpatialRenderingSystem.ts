@@ -25,7 +25,7 @@
  * ```
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/EventEmitter';
 import type {
   LayoutResult,
   Point,

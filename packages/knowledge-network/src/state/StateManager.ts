@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/EventEmitter';
 import { LayoutEngineState } from '../types';
 import type { LayoutAlgorithm } from '../layout/LayoutEngine';
 import type { Selection } from '../interaction/InteractionManager';

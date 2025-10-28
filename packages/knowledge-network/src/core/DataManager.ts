@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/EventEmitter';
 import type { GraphData, Node, Edge } from '../types';
 
 export interface ValidationResult {

@@ -10,7 +10,7 @@
  * - Plugin architecture for custom events
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/EventEmitter';
 import type { Point2D } from '../spatial/types';
 import type { PositionedNode } from '../layout/LayoutEngine';
 import type { IRenderer } from '../rendering/IRenderer';

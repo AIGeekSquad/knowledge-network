@@ -19,7 +19,7 @@
  * ```
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/EventEmitter';
 import * as d3 from 'd3';
 import type { Point } from '../layout/LayoutEngine';
 import type { SpatialRenderingSystem, NodeSelectionResult, RegionSelectionResult } from '../rendering/SpatialRenderingSystem';
