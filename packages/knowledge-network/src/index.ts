@@ -23,6 +23,10 @@ export {
   PositionedNode,
   PositionedEdge
 } from './layout/LayoutEngine';
+
+// Utils (including EventEmitter for browser compatibility)
+export { EventEmitter } from './utils';
+export type { EventListener } from './utils';
 export {
   EmbeddingManager,
   EmbeddingUtils,

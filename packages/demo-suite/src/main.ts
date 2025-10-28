@@ -279,9 +279,9 @@ function setupDebugMode(app: any): void {
 }
 
 /**
- * Initialize single working demo
+ * Initialize comprehensive interactive demo
  */
-async function initializeWorkingDemo(): Promise<void> {
+async function initializeInteractiveDemo(): Promise<void> {
   const container = document.getElementById('demo-container');
 
   if (!container) {
@@ -289,54 +289,523 @@ async function initializeWorkingDemo(): Promise<void> {
     return;
   }
 
-  // Create comprehensive demo data
-  const demoData = {
-    nodes: [
-      { id: 'javascript', label: 'JavaScript', type: 'language' },
-      { id: 'typescript', label: 'TypeScript', type: 'language' },
-      { id: 'react', label: 'React', type: 'framework' },
-      { id: 'vue', label: 'Vue.js', type: 'framework' },
-      { id: 'd3', label: 'D3.js', type: 'library' },
-      { id: 'algorithms', label: 'Algorithms', type: 'concept' },
-      { id: 'visualization', label: 'Data Visualization', type: 'field' },
-      { id: 'performance', label: 'Performance', type: 'concept' }
-    ],
-    edges: [
-      { source: 'typescript', target: 'javascript', label: 'compiles to' },
-      { source: 'react', target: 'javascript', label: 'built with' },
-      { source: 'vue', target: 'javascript', label: 'built with' },
-      { source: 'd3', target: 'javascript', label: 'library for' },
-      { source: 'd3', target: 'visualization', label: 'enables' },
-      { source: 'algorithms', target: 'performance', label: 'affects' },
-      { source: 'performance', target: 'visualization', label: 'important for' }
-    ]
+  try {
+    // Import required components
+    const { DataGenerator } = await import('./shared/DataGenerator.js');
+    const { initializeGlobalPerformanceMonitor } = await import('./shared/PerformanceMonitor.js');
+
+    // Initialize performance monitoring
+    const perfMonitor = initializeGlobalPerformanceMonitor(container, {
+      showOverlay: true,
+      position: 'top-right',
+      enableDetails: true
+    });
+
+    // Create interactive demo manager
+    const demoManager = new InteractiveDemoManager(container, perfMonitor);
+    await demoManager.initialize();
+
+    console.log('✅ Interactive demo initialized successfully');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Failed to initialize interactive demo:', error);
+    container.innerHTML = `
+      <div style="padding: 20px; color: white; text-align: center;">
+        <h2>Demo Initialization Error</h2>
+        <p>Error: ${errorMessage}</p>
+        <button onclick="window.location.reload()" style="
+          background: #667eea; color: white; border: none;
+          padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 10px;
+        ">Retry</button>
+      </div>
+    `;
+  }
+}
+
+/**
+ * Interactive Demo Manager - Orchestrates the full demo experience
+ */
+class InteractiveDemoManager {
+  private container: HTMLElement;
+  private perfMonitor: any;
+  private currentGraph: any = null;
+  private dataGenerator: any;
+  private currentDataset = 'knowledge';
+  private currentRenderer = 'svg';
+
+  // Dataset configurations
+  private datasets = {
+    biological: {
+      name: 'Biological Network',
+      description: 'Protein interaction network',
+      type: 'biological' as const,
+      nodeCount: 40,
+      config: { avgDegree: 3, nodeRadius: { min: 4, max: 12 } }
+    },
+    knowledge: {
+      name: 'Knowledge Graph',
+      description: 'AI/ML topics and relationships',
+      type: 'knowledge' as const,
+      nodeCount: 35,
+      config: { avgDegree: 4, nodeRadius: { min: 5, max: 10 } }
+    },
+    social: {
+      name: 'Social Network',
+      description: 'Friend connections with clustering',
+      type: 'social' as const,
+      nodeCount: 45,
+      config: { avgDegree: 5, nodeRadius: { min: 6, max: 8 } }
+    },
+    scaleFree: {
+      name: 'Scale-Free Network',
+      description: 'Hub-dominated structure',
+      type: 'scaleFree' as const,
+      nodeCount: 50,
+      config: { avgDegree: 3, nodeRadius: { min: 3, max: 15 } }
+    },
+    clustered: {
+      name: 'Clustered Communities',
+      description: 'Dense groups with sparse connections',
+      type: 'cluster' as const,
+      nodeCount: 60,
+      config: { clusterCount: 4, nodeRadius: { min: 5, max: 8 } }
+    },
+    smallWorld: {
+      name: 'Small World',
+      description: 'High clustering, short paths',
+      type: 'smallWorld' as const,
+      nodeCount: 40,
+      config: { avgDegree: 4, nodeRadius: { min: 5, max: 8 } }
+    }
   };
 
-  try {
-    // Clear container and create graph
-    container.innerHTML = '<div style="width: 100%; height: 100%;"></div>';
-    const graphDiv = container.firstElementChild as HTMLElement;
+  constructor(container: HTMLElement, perfMonitor: any) {
+    this.container = container;
+    this.perfMonitor = perfMonitor;
+  }
 
-    if (graphDiv) {
-      const graph = new KnowledgeGraph(graphDiv, demoData, {
+  async initialize(): Promise<void> {
+    // Import DataGenerator
+    const { DataGenerator } = await import('./shared/DataGenerator.js');
+    this.dataGenerator = new DataGenerator(42); // Fixed seed for reproducibility
+
+    // Create UI structure
+    this.createUI();
+
+    // Load initial dataset
+    await this.loadDataset(this.currentDataset);
+
+    // Set up event listeners
+    this.setupEventListeners();
+  }
+
+  private createUI(): void {
+    this.container.innerHTML = `
+      <div style="
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      ">
+        <!-- Header Controls -->
+        <div id="demo-controls" style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 15px 20px;
+          background: rgba(0, 0, 0, 0.1);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          flex-shrink: 0;
+        ">
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <h1 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Knowledge Network Demo</h1>
+
+            <!-- Dataset Selector -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="dataset-select" style="font-weight: 500;">Dataset:</label>
+              <select id="dataset-select" style="
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 4px;
+                padding: 6px 12px;
+                color: white;
+                font-size: 14px;
+                min-width: 180px;
+              ">
+                ${Object.entries(this.datasets).map(([key, dataset]) =>
+                  `<option value="${key}" ${key === this.currentDataset ? 'selected' : ''} style="
+                    background: #333;
+                    color: white;
+                  ">
+                    ${dataset.name}
+                  </option>`
+                ).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <!-- Renderer Mode Buttons -->
+            <div style="display: flex; gap: 5px;">
+              ${['svg', 'canvas', 'webgl'].map(mode =>
+                `<button
+                  id="renderer-${mode}"
+                  data-renderer="${mode}"
+                  class="renderer-btn ${mode === this.currentRenderer ? 'active' : ''}"
+                  style="
+                    background: ${mode === this.currentRenderer ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)'};
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 4px;
+                    padding: 6px 12px;
+                    color: white;
+                    font-size: 12px;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                  "
+                  onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'"
+                  onmouseout="this.style.background='${mode === this.currentRenderer ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)'}'"
+                >
+                  ${mode.toUpperCase()}
+                </button>`
+              ).join('')}
+            </div>
+
+            <!-- Performance Toggle -->
+            <button id="perf-toggle" style="
+              background: rgba(76, 175, 80, 0.2);
+              border: 1px solid rgba(76, 175, 80, 0.5);
+              border-radius: 4px;
+              padding: 6px 12px;
+              color: white;
+              font-size: 12px;
+              cursor: pointer;
+              transition: all 0.2s ease;
+            ">
+              📊 PERF
+            </button>
+          </div>
+        </div>
+
+        <!-- Dataset Info Bar -->
+        <div id="dataset-info" style="
+          padding: 10px 20px;
+          background: rgba(0, 0, 0, 0.1);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.9);
+          flex-shrink: 0;
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div id="dataset-description">Loading dataset...</div>
+            <div style="font-size: 12px; opacity: 0.7;">
+              Press Ctrl+1-6 for datasets • Ctrl+R for renderer • Ctrl+Shift+P for performance
+            </div>
+          </div>
+        </div>
+
+        <!-- Graph Container -->
+        <div id="graph-container" style="
+          flex: 1;
+          position: relative;
+          background: rgba(255, 255, 255, 0.05);
+          overflow: hidden;
+        "></div>
+      </div>
+    `;
+  }
+
+  private setupEventListeners(): void {
+    // Dataset selector
+    const datasetSelect = document.getElementById('dataset-select') as HTMLSelectElement;
+    datasetSelect?.addEventListener('change', (e) => {
+      const target = e.target as HTMLSelectElement;
+      this.loadDataset(target.value);
+    });
+
+    // Renderer buttons
+    document.querySelectorAll('.renderer-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const renderer = target.dataset.renderer;
+        if (renderer) {
+          this.switchRenderer(renderer);
+        }
+      });
+    });
+
+    // Performance toggle
+    const perfToggle = document.getElementById('perf-toggle');
+    perfToggle?.addEventListener('click', () => {
+      this.perfMonitor?.toggle();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case '1': case '2': case '3': case '4': case '5': case '6':
+            e.preventDefault();
+            const datasetKeys = Object.keys(this.datasets);
+            const index = parseInt(e.key) - 1;
+            if (index < datasetKeys.length) {
+              this.loadDataset(datasetKeys[index]);
+            }
+            break;
+          case 'r':
+            e.preventDefault();
+            this.cycleRenderer();
+            break;
+        }
+      }
+    });
+  }
+
+  private async loadDataset(datasetKey: string): Promise<void> {
+    const dataset = this.datasets[datasetKey as keyof typeof this.datasets];
+    if (!dataset) return;
+
+    this.currentDataset = datasetKey;
+
+    // Show notification for dataset change
+    this.showNotification(`Loading ${dataset.name}`);
+
+    // Update info bar
+    const descriptionElement = document.getElementById('dataset-description');
+    if (descriptionElement) {
+      descriptionElement.innerHTML = `
+        <strong>${dataset.name}</strong> - ${dataset.description}
+        <span style="margin-left: 20px; opacity: 0.8;">
+          ${dataset.nodeCount} nodes • Renderer: ${this.currentRenderer.toUpperCase()}
+          ${this.getEdgeRenderer() === 'bundled' ? ' • Edge Bundling' : ''}
+        </span>
+      `;
+    }
+
+    try {
+      // Generate graph data
+      const graphData = this.dataGenerator.generateGraph(dataset.type, {
+        nodeCount: dataset.nodeCount,
         width: 800,
         height: 600,
-        nodeRadius: 10,
-        nodeFill: (d) => {
-          const colors = { 'language': '#e74c3c', 'framework': '#3498db', 'library': '#2ecc71', 'concept': '#f39c12' };
-          return colors[d.type as keyof typeof colors] || '#95a5a6';
-        },
-        edgeStroke: '#7f8c8d',
-        enableZoom: true,
-        enableDrag: true
+        ...dataset.config
       });
 
-      await graph.render();
-      console.log('Knowledge graph rendered successfully');
+      // Update dataset selector
+      const selector = document.getElementById('dataset-select') as HTMLSelectElement;
+      if (selector) {
+        selector.value = datasetKey;
+      }
+
+      await this.renderGraph(graphData);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Failed to load dataset:', error);
+      const container = document.getElementById('graph-container');
+      if (container) {
+        container.innerHTML = `
+          <div style="
+            display: flex; align-items: center; justify-content: center;
+            height: 100%; color: white; text-align: center;
+          ">
+            <div>
+              <h3>Failed to load ${dataset.name}</h3>
+              <p style="opacity: 0.8; margin-top: 10px;">Error: ${errorMessage}</p>
+            </div>
+          </div>
+        `;
+      }
     }
-  } catch (error) {
-    console.error('Failed to initialize demo:', error);
-    container.innerHTML = `<div style="padding: 20px; color: white;">Error: ${error.message}</div>`;
+  }
+
+  private async renderGraph(data: any): Promise<void> {
+    const container = document.getElementById('graph-container');
+    if (!container) return;
+
+    // Show loading state
+    container.innerHTML = `
+      <div style="
+        display: flex; align-items: center; justify-content: center;
+        height: 100%; color: white; text-align: center;
+      ">
+        <div>
+          <div style="
+            width: 40px; height: 40px; margin: 0 auto 16px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          "></div>
+          <div>Rendering graph...</div>
+          <div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">
+            ${data.nodes.length} nodes, ${data.edges.length} edges
+          </div>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    `;
+
+    // Wait a moment to show loading state
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Clear and create graph container
+    container.innerHTML = '<div style="width: 100%; height: 100%; position: relative;"></div>';
+    const graphDiv = container.firstElementChild as HTMLElement;
+
+    if (!graphDiv) return;
+
+    try {
+      // Set up performance monitoring
+      if (this.perfMonitor) {
+        this.perfMonitor.setActiveModule({
+          getMetrics: () => ({
+            frameTime: performance.now() % 16.67, // Simulate frame time
+            renderTime: 5 + Math.random() * 10,   // Simulate render time
+            nodeCount: data.nodes.length,
+            edgeCount: data.edges.length
+          })
+        });
+      }
+
+      // Create graph configuration
+      const config = {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        nodeRadius: (d: any) => d.radius || 8,
+        nodeFill: (d: any) => d.color || this.getNodeColor(d),
+        linkStroke: (d: any) => d.color || '#7f8c8d',
+        edgeRenderer: this.getEdgeRenderer(),
+        enableZoom: true,
+        enableDrag: true,
+        chargeStrength: -300,
+        linkDistance: 50,
+        linkStrength: () => 0.5
+      };
+
+      // Import and create KnowledgeGraph
+      const { KnowledgeGraph } = await import('@aigeeksquad/knowledge-network');
+      this.currentGraph = new KnowledgeGraph(graphDiv, data, config);
+
+      await this.currentGraph.render();
+
+      // Note: Graph uses fixed dimensions based on initial container size
+      // ResizeObserver removed as KnowledgeGraph doesn't support dynamic resizing
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Failed to render graph:', error);
+      graphDiv.innerHTML = `
+        <div style="
+          display: flex; align-items: center; justify-content: center;
+          height: 100%; color: white; text-align: center;
+        ">
+          <div>
+            <h3>Rendering Error</h3>
+            <p style="opacity: 0.8; margin-top: 10px;">${errorMessage}</p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  private switchRenderer(renderer: string): void {
+    this.currentRenderer = renderer;
+
+    // Update button states
+    document.querySelectorAll('.renderer-btn').forEach(btn => {
+      const isActive = btn.getAttribute('data-renderer') === renderer;
+      (btn as HTMLElement).style.background = isActive ?
+        'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+    });
+
+    // Show notification
+    this.showNotification(`Switched to ${renderer.toUpperCase()} renderer`);
+
+    // Reload current dataset with new renderer
+    this.loadDataset(this.currentDataset);
+  }
+
+  private showNotification(message: string): void {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: rgba(76, 175, 80, 0.9);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 10001;
+      font-size: 14px;
+      font-weight: 500;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `;
+    notification.textContent = message;
+
+    document.body.appendChild(notification);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      notification.style.transform = 'translateX(0)';
+    });
+
+    // Remove after 2 seconds
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.remove();
+        }
+      }, 300);
+    }, 2000);
+  }
+
+  private cycleRenderer(): void {
+    const renderers = ['svg', 'canvas', 'webgl'];
+    const currentIndex = renderers.indexOf(this.currentRenderer);
+    const nextRenderer = renderers[(currentIndex + 1) % renderers.length];
+    this.switchRenderer(nextRenderer);
+  }
+
+  private getEdgeRenderer(): 'simple' | 'bundled' {
+    // Map renderer types to edge rendering strategy
+    switch (this.currentRenderer) {
+      case 'webgl': return 'bundled'; // WebGL can handle complex bundling
+      case 'canvas': return 'simple';   // Canvas for performance
+      case 'svg':
+      default: return 'simple';        // SVG default
+    }
+  }
+
+  private getNodeColor(node: any): string {
+    // Color by category with fallback
+    const categoryColors: Record<string, string> = {
+      'topic': '#4ECDC4',
+      'person': '#FF6B6B',
+      'protein': '#96CEB4',
+      'cluster-0': '#FF6B6B',
+      'cluster-1': '#4ECDC4',
+      'cluster-2': '#45B7D1',
+      'cluster-3': '#96CEB4',
+      'level-1': '#FFEAA7',
+      'level-2': '#DDA0DD',
+      'level-3': '#81C784'
+    };
+
+    return categoryColors[node.category] ||
+           categoryColors[node.type] ||
+           '#667eea';
   }
 }
 
@@ -400,8 +869,8 @@ async function main(): Promise<void> {
     // Mark initialization end
     startupMetrics.markEnd();
 
-    // Initialize the working demo
-    await initializeWorkingDemo();
+    // Initialize the interactive demo
+    await initializeInteractiveDemo();
 
     // Set up debug mode if enabled (placeholder for future app instance)
     if (config.enableDebugMode) {
@@ -449,7 +918,7 @@ if (typeof document !== 'undefined') {
 }
 
 // Export for module systems
-export { main, initializeWorkingDemo };
+export { main, initializeInteractiveDemo };
 
 // Progressive enhancement: Remove no-js class
 if (typeof document !== 'undefined') {

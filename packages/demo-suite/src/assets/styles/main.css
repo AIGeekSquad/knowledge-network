@@ -8,20 +8,20 @@
    ========================================================================== */
 
 :root {
-  /* Xbox Green Color Palette */
-  --color-primary: #107c10;        /* Xbox Green */
-  --color-primary-dark: #0e6b0e;   /* Xbox Green Dark */
-  --color-primary-light: #c4f0c4;  /* Xbox Green Light */
-  --color-secondary: #00bcf2;      /* Xbox Blue */
-  --color-accent: #ffb900;         /* Xbox Gold/Yellow */
+  /* Demo Primary Color Palette */
+  --color-primary: #107c10;        /* Demo Primary */
+  --color-primary-dark: #0e6b0e;   /* Demo Primary Dark */
+  --color-primary-light: #c4f0c4;  /* Demo Primary Light */
+  --color-secondary: #00bcf2;      /* Demo Secondary */
+  --color-accent: #ffb900;         /* Demo Accent */
 
-  /* Xbox Semantic Colors */
-  --color-success: #107c10;        /* Xbox Green for success */
-  --color-warning: #ff8c00;        /* Xbox Orange for warnings */
-  --color-danger: #e81123;         /* Xbox Red for errors */
-  --color-info: #00bcf2;           /* Xbox Blue for info */
+  /* Demo Color Palette */
+  --color-success: #107c10;        /* Demo Primary for success */
+  --color-warning: #ff8c00;        /* Demo Warning for warnings */
+  --color-danger: #e81123;         /* Demo Danger for errors */
+  --color-info: #00bcf2;           /* Demo Secondary for info */
 
-  /* Xbox Dark Theme Neutral Colors */
+  /* Demo Color Palette */
   --color-white: #ffffff;
   --color-gray-50: #f8f9fa;
   --color-gray-100: #e9ecef;
@@ -32,19 +32,19 @@
   --color-gray-600: #495057;
   --color-gray-700: #343a40;
   --color-gray-800: #212529;
-  --color-gray-900: #1a1d20;       /* Xbox Dark Background */
+  --color-gray-900: #1a1d20;       /* Demo Dark Background */
   --color-black: #000000;
 
-  /* Xbox Text Colors (Dark Theme Default) */
+  /* Demo Color Palette */
   --color-text-primary: var(--color-white);
   --color-text-secondary: var(--color-gray-200);
   --color-text-muted: var(--color-gray-400);
   --color-text-inverse: var(--color-gray-900);
 
-  /* Xbox Background Colors (Dark Theme) */
-  --color-bg-primary: var(--color-gray-900);      /* Xbox Dark Background */
-  --color-bg-secondary: var(--color-gray-800);    /* Xbox Secondary Dark */
-  --color-bg-surface: var(--color-gray-700);      /* Xbox Surface/Card Color */
+  /* Demo Color Palette */
+  --color-bg-primary: var(--color-gray-900);      /* Demo Dark Background */
+  --color-bg-secondary: var(--color-gray-800);    /* Demo Secondary Dark */
+  --color-bg-surface: var(--color-gray-700);      /* Demo Surface Color */
   --color-bg-overlay: rgba(0, 0, 0, 0.85);
 
   /* Border colors */
@@ -300,9 +300,9 @@ svg {
   left: 0;
   right: 0;
   z-index: var(--z-fixed);
-  background: rgba(26, 29, 32, 0.95);     /* Xbox Dark Navigation */
+  background: rgba(26, 29, 32, 0.95);     /* Demo Dark Navigation */
   backdrop-filter: blur(10px);
-  border-bottom: 2px solid var(--color-primary); /* Xbox Green accent */
+  border-bottom: 2px solid var(--color-primary); /* Demo Primary accent */
   padding: var(--space-4) var(--space-6);
 }
 
@@ -445,7 +445,7 @@ svg {
 .ui-button--primary:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
   transform: translateY(-1px);
-  box-shadow: 0 0 20px rgba(16, 124, 16, 0.4); /* Xbox Green glow */
+  box-shadow: 0 0 20px rgba(16, 124, 16, 0.4); /* Demo Primary glow */
 }
 
 .ui-button--secondary {
@@ -457,7 +457,7 @@ svg {
 .ui-button--secondary:hover:not(:disabled) {
   background: var(--color-gray-600);
   transform: translateY(-1px);
-  box-shadow: 0 0 15px rgba(0, 188, 242, 0.3); /* Xbox Blue glow */
+  box-shadow: 0 0 15px rgba(0, 188, 242, 0.3); /* Demo Secondary glow */
 }
 
 .ui-button--danger {
