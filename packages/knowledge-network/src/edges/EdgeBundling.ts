@@ -655,23 +655,16 @@ export class EdgeBundling implements EdgeRenderer {
           const baseX = source.x * (1 - t) + target.x * t;
           const baseY = source.y * (1 - t) + target.y * t;
 
-          // Dramatic initial organic curvature for visual impact (interior points only)
+          // Subtle initial curvature for clean convergence (interior points only)
           if (perpLength > 0) {
-            // Multi-frequency organic initial curve
-            const freq1 = Math.sin(t * Math.PI);
-            const freq2 = Math.sin(t * Math.PI * 2 + Math.PI/4) * 0.3;
-            const freq3 = Math.sin(t * Math.PI * 4 + Math.PI/8) * 0.15;
-            const organicCurve = freq1 + freq2 + freq3;
+            // Simple single-frequency curve for stability
+            const organicCurve = Math.sin(t * Math.PI);
 
-            // Large initial amplitude for dramatic visual effect
-            const initialAmplitude = Math.min(200, length * 0.3); // Scale with edge length
+            // Reduced amplitude for stable convergence (20-30px max)
+            const initialAmplitude = Math.min(25, length * 0.05); // Much smaller scale
 
-            // Add edge-specific variation using edge ID for uniqueness
-            const edgeVariation = Math.sin((source.x + target.x + source.y + target.y) * 0.01) * 0.5 + 0.5;
-            const curveStrength = initialAmplitude * (0.8 + edgeVariation * 0.4);
-
-            // Apply dramatic initial organic curve
-            const curveOffset = organicCurve * curveStrength;
+            // Apply subtle initial curve
+            const curveOffset = organicCurve * initialAmplitude;
 
             points.push({
               x: baseX + (perpX / perpLength) * curveOffset,
@@ -739,8 +732,8 @@ export class EdgeBundling implements EdgeRenderer {
             if (comp < this.config.compatibilityThreshold) continue;
 
             const otherPoints = controlPoints[j];
-            // Handle different subdivision counts gracefully
-            const otherP = Math.min(p, otherPoints.length - 1);
+            // Ensure consistent subdivision mapping
+            const otherP = Math.round((p / (numPoints - 1)) * (otherPoints.length - 1));
             const otherPoint = otherPoints[otherP];
 
             // Calculate force toward the corresponding point on compatible edge
@@ -771,41 +764,22 @@ export class EdgeBundling implements EdgeRenderer {
           forceX += (straightX - point.x) * this.config.stiffness;
           forceY += (straightY - point.y) * this.config.stiffness;
 
-          // Enhanced organic curvature with multiple frequency components
+          // Simple convergent curvature system
           const perpX = -(points[numPoints - 1].y - points[0].y);
           const perpY = points[numPoints - 1].x - points[0].x;
           const length = Math.sqrt(perpX * perpX + perpY * perpY);
 
           if (length > 0) {
-            // Progressive curvature based on iteration progress
+            // Convergent amplitude - decreases over iterations for stability
             const progress = iter / this.config.iterations;
+            const amplitude = 20 * (1 - progress); // Converges to zero
 
-            // Multi-frequency organic curves for natural flow patterns
-            const baseFreq = Math.sin(t * Math.PI);
-            const harmonic1 = Math.sin(t * Math.PI * 2 + Math.PI/3) * 0.4;
-            const harmonic2 = Math.sin(t * Math.PI * 3 + Math.PI/6) * 0.2;
-            const organicCurve = baseFreq + harmonic1 + harmonic2;
+            // Simple curve force based on bundling strength
+            const curveStrength = compatibleCount > 0 ? 0.3 : 0.1; // Less for isolated edges
+            const organicForce = Math.sin(t * Math.PI) * amplitude * curveStrength;
 
-            // Dynamic amplitude that increases with bundling iterations
-            const baseAmplitude = 150; // Increased base amplitude
-            const progressiveAmplitude = baseAmplitude * (1 + progress * 2); // Grows over iterations
-
-            // Adaptive curve factor - stronger for isolated edges, moderate for bundles
-            const adaptiveFactor = compatibleCount > 0 ?
-              (0.8 + Math.sin(progress * Math.PI) * 0.4) :  // Organic variation for bundles
-              (2.5 + Math.sin(progress * Math.PI * 2) * 0.8); // Dramatic curves for isolated edges
-
-            // Apply organic force with natural flow characteristics
-            const organicForce = organicCurve * progressiveAmplitude * adaptiveFactor * 0.12;
             forceX += (perpX / length) * organicForce;
             forceY += (perpY / length) * organicForce;
-
-            // Add slight random perturbation for organic variation
-            const perturbationStrength = 0.05;
-            const randomX = (Math.random() - 0.5) * perturbationStrength * progressiveAmplitude;
-            const randomY = (Math.random() - 0.5) * perturbationStrength * progressiveAmplitude;
-            forceX += randomX;
-            forceY += randomY;
           }
 
           // Apply momentum-based force application
@@ -820,6 +794,18 @@ export class EdgeBundling implements EdgeRenderer {
           point.x += point.vx;
           point.y += point.vy;
         }
+
+        // Enforce endpoint constraints to prevent drift
+        const source = edges[i].source as any;
+        const target = edges[i].target as any;
+        points[0].x = source.x;
+        points[0].y = source.y;
+        points[0].vx = 0;
+        points[0].vy = 0;
+        points[numPoints - 1].x = target.x;
+        points[numPoints - 1].y = target.y;
+        points[numPoints - 1].vx = 0;
+        points[numPoints - 1].vy = 0;
       }
     }
   }
@@ -893,11 +879,23 @@ export class EdgeBundling implements EdgeRenderer {
         const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
         const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
 
+        // Protect against zero-length edges
+        if (len1 < 0.001 || len2 < 0.001) {
+          compatibility[i][j] = 0;
+          compatibility[j][i] = 0;
+          continue;
+        }
+
         const angleComp = Math.abs((v1x * v2x + v1y * v2y) / (len1 * len2));
 
         // 2. Scale compatibility
         const lAvg = (len1 + len2) / 2;
-        const scaleComp = 2 / (lAvg / Math.min(len1, len2) + Math.max(len1, len2) / lAvg);
+        const minLen = Math.min(len1, len2);
+        const maxLen = Math.max(len1, len2);
+
+        // Protect against division by zero
+        const scaleComp = minLen > 0.001 && lAvg > 0.001 ?
+          2 / (lAvg / minLen + maxLen / lAvg) : 0;
 
         // 3. Position compatibility
         const m1x = (s1.x + t1.x) / 2;
@@ -906,19 +904,19 @@ export class EdgeBundling implements EdgeRenderer {
         const m2y = (s2.y + t2.y) / 2;
 
         const mDist = Math.sqrt((m1x - m2x) ** 2 + (m1y - m2y) ** 2);
-        const posComp = lAvg / (lAvg + mDist);
+        const posComp = lAvg > 0.001 ? lAvg / (lAvg + mDist) : 0;
 
         // 4. Visibility compatibility
         // Visibility compatibility – approximate perpendicular distance between edge midpoints.
         // This keeps nearly parallel edges that run close together highly compatible even when
         // their bounding boxes do not overlap (a common case in layered graphs).
         let visComp = 0;
-        if (lAvg > 0) {
+        if (lAvg > 0.001) {
           const normalX = v1y;
           const normalY = -v1x;
           const normalLen = Math.sqrt(normalX * normalX + normalY * normalY);
 
-          if (normalLen > 0) {
+          if (normalLen > 0.001) {
             const diffX = m2x - m1x;
             const diffY = m2y - m1y;
             const perpDist = Math.abs((diffX * normalX + diffY * normalY) / normalLen);

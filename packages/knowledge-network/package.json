@@ -57,6 +57,7 @@
     "@typescript-eslint/parser": "^8.21.0",
     "@vitest/ui": "^2.1.9",
     "d3": "^7.9.0",
+    "d3-selection": "^3.0.0",
     "eslint": "^9.18.0",
     "jsdom": "^27.0.0",
     "tsup": "^8.3.5",
