@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Knowledge Network Demo Suite - Interactive demonstrations of graph visualization, edge bundling, and spatial algorithms">
+
+  <!-- Progressive Enhancement: Core functionality works without JavaScript -->
+  <title>Knowledge Network - Interactive Graph Visualization</title>
+
+  <!-- Preload critical resources -->
+  <link rel="preload" href="/src/assets/styles/main.css" as="style">
+  <link rel="preload" href="/src/main.ts" as="script">
+
+  <!-- Critical CSS (inlined for performance) -->
+  <style>
+    /* Critical above-the-fold styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: 1000;
+      transition: opacity 0.3s ease;
+    }
+
+    .loading-content {
+      text-align: center;
+      color: white;
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #app {
+      width: 100vw;
+      height: 100vh;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .app-loaded #app {
+      opacity: 1;
+    }
+
+    .app-loaded #loading-screen {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Fallback for no-JS */
+    .no-js #loading-screen {
+      display: none;
+    }
+
+    .no-js #app {
+      opacity: 1;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .no-js .fallback-message {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  </style>
+
+  <!-- Main CSS (loaded asynchronously) -->
+  <link rel="stylesheet" href="/src/assets/styles/main.css">
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen" role="status" aria-live="polite">
+    <div class="loading-content">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <h1>Knowledge Network</h1>
+      <p>Loading interactive graph visualization...</p>
+    </div>
+  </div>
+
+  <!-- Main Application Container -->
+  <div id="app">
+    <!-- Fallback content for no-JavaScript users -->
+    <noscript class="fallback-message">
+      <h1>Knowledge Network Demo Suite</h1>
+      <p>
+        This interactive demo suite requires JavaScript to function.
+        Please enable JavaScript in your browser to explore our
+        knowledge graph visualizations and algorithms.
+      </p>
+      <p>
+        <strong>Features you'll be able to explore:</strong>
+      </p>
+      <ul style="text-align: left; margin-top: 1rem;">
+        <li>Interactive graph visualization with real-time manipulation</li>
+        <li>Advanced edge bundling algorithms for clarity</li>
+        <li>Spatial indexing and performance optimizations</li>
+        <li>Node styling and clustering demonstrations</li>
+        <li>Interactive algorithm comparisons</li>
+        <li>Real-time performance monitoring</li>
+      </ul>
+    </noscript>
+
+    <!-- Navigation will be injected here -->
+    <nav id="main-navigation" role="navigation" aria-label="Demo navigation"></nav>
+
+    <!-- Demo content container -->
+    <main id="demo-container" role="main" aria-live="polite"></main>
+
+    <!-- Performance overlay (hidden by default) -->
+    <div id="performance-overlay" role="complementary" aria-label="Performance metrics"></div>
+
+    <!-- Accessibility announcements -->
+    <div id="aria-announcements" role="status" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+  </div>
+
+  <!-- Module script with type="module" for modern browsers -->
+  <script type="module" src="/src/main.ts"></script>
+
+  <!-- Progressive enhancement: Add class to indicate JS is available -->
+  <script>
+    document.documentElement.classList.remove('no-js');
+    document.documentElement.classList.add('js');
+  </script>
+</body>
+</html>

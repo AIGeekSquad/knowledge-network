@@ -1,20 +1,24 @@
 # @aigeeksquad/knowledge-network
 
-A modern TypeScript library extending d3.js for creating interactive knowledge graph visualizations.
+**Complete API Reference and Usage Guide**
 
-## Features
+A modern TypeScript library extending d3.js for creating interactive knowledge graph visualizations with advanced edge bundling, similarity-based clustering, and ontology-aware relationships.
 
-- 🎨 **d3-idiomatic API** - Accessor functions for properties (constant, accessor, or function)
-- 🔄 **Collision detection** - Automatic node overlap prevention
-- 🧲 **Similarity-based clustering** - Vector similarity for intelligent node grouping
-- 🔗 **Ontology-aware links** - Relationship types influence force layout
-- 🌊 **Edge bundling** - Force-directed edge bundling for cleaner visualizations with curved, organic-looking edges
-- 📐 **2D and 3D support** - Layout calculations in multiple dimensions
-- 📦 Modern ESM/CJS module support
-- 🔧 TypeScript support with full type definitions
-- 🎯 Advanced force-directed layout engine
-- 🖱️ Interactive features (zoom, drag, pan)
-- 📱 Responsive and lightweight
+---
+
+## 📋 Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Core API](#core-api)
+- [Configuration Reference](#configuration-reference)
+- [Data Structures](#data-structures)
+- [Advanced Patterns](#advanced-patterns)
+- [Performance Optimization](#performance-optimization)
+- [TypeScript Integration](#typescript-integration)
+- [Related Guides](#related-guides)
+
+---
 
 ## Installation
 
@@ -22,339 +26,619 @@ A modern TypeScript library extending d3.js for creating interactive knowledge g
 npm install @aigeeksquad/knowledge-network d3
 ```
 
-or with pnpm:
+**TypeScript users**: Type definitions included, no additional `@types` packages needed.
 
-```bash
-pnpm add @aigeeksquad/knowledge-network d3
+**CDN usage**:
+```html
+<script type="module">
+  import { KnowledgeGraph } from 'https://cdn.jsdelivr.net/npm/@aigeeksquad/knowledge-network/+esm';
+</script>
 ```
 
-## Visual Examples
+---
 
-### Edge Bundling Comparison
+## Quick Start
 
-The library supports both simple straight edges and advanced force-directed edge bundling for cleaner, more organic visualizations.
-
-#### Simple Edges (Straight Lines)
-![Simple Edges Example](../../../screenshots/simple-edges.png)
-
-#### Edge Bundling (Curved, Bundled Paths)
-![Edge Bundling Example](../../../screenshots/edge-bundling.png)
-
-Edge bundling groups related edges together, creating smooth curved paths that significantly reduce visual clutter in complex graphs.
-
-## Usage
-
-### Basic Example
+### Basic Graph in 30 Seconds
 
 ```typescript
 import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
 
-const container = document.getElementById('graph');
-
+// 1. Create your data
 const data = {
   nodes: [
     { id: 'A', label: 'Node A', type: 'concept' },
     { id: 'B', label: 'Node B', type: 'entity' },
-    { id: 'C', label: 'Node C', type: 'concept' },
+    { id: 'C', label: 'Node C', type: 'concept' }
   ],
   edges: [
     { source: 'A', target: 'B', type: 'is-a' },
-    { source: 'B', target: 'C', type: 'related-to' },
-  ],
+    { source: 'B', target: 'C', type: 'related-to' }
+  ]
 };
 
+// 2. Create and render
+const container = document.getElementById('graph');
 const graph = new KnowledgeGraph(container, data);
 graph.render();
 ```
 
-### d3-Idiomatic Accessor Functions
+### With Edge Bundling
 
 ```typescript
 const graph = new KnowledgeGraph(container, data, {
-  width: 1000,
-  height: 600,
-  
-  // Constant value
-  nodeRadius: 15,
-  
-  // Or accessor function from node data
-  nodeRadius: (d) => d.type === 'concept' ? 20 : 10,
-  
-  // Style nodes by type
-  nodeFill: (d) => d.type === 'concept' ? '#ff6b6b' : '#4ecdc4',
-  
-  // Collision detection with custom radius
-  collisionRadius: (d) => (d.type === 'concept' ? 20 : 10) + 5,
-  
-  enableZoom: true,
-  enableDrag: true,
-});
-
-graph.render();
-```
-
-### Similarity-Based Clustering
-
-```typescript
-const data = {
-  nodes: [
-    { id: 'A', label: 'AI', vector: [1.0, 0.8, 0.6] },
-    { id: 'B', label: 'ML', vector: [0.9, 0.9, 0.7] },
-    { id: 'C', label: 'Art', vector: [0.1, 0.2, 0.9] },
-  ],
-  edges: [],
-};
-
-const graph = new KnowledgeGraph(container, data, {
-  // Attract similar nodes based on vector similarity
-  similarityFunction: (a, b) => {
-    if (!a.vector || !b.vector) return 0;
-    // Cosine similarity calculation
-    const dotProduct = a.vector.reduce((sum, val, i) => sum + val * b.vector[i], 0);
-    const normA = Math.sqrt(a.vector.reduce((sum, val) => sum + val * val, 0));
-    const normB = Math.sqrt(b.vector.reduce((sum, val) => sum + val * val, 0));
-    return dotProduct / (normA * normB);
-  },
-});
-
-graph.render();
-```
-
-### Ontology-Aware Link Forces
-
-```typescript
-const data = {
-  nodes: [
-    { id: 'A', label: 'Animal' },
-    { id: 'B', label: 'Dog' },
-    { id: 'C', label: 'Cat' },
-  ],
-  edges: [
-    { source: 'A', target: 'B', type: 'is-a' },      // Strong hierarchical link
-    { source: 'A', target: 'C', type: 'is-a' },
-    { source: 'B', target: 'C', type: 'similar-to' }, // Weaker associative link
-  ],
-};
-
-const graph = new KnowledgeGraph(container, data, {
-  // Links automatically use ontology types:
-  // 'is-a': 1.5, 'part-of': 1.2, 'related-to': 0.8, 'similar-to': 0.6
-  
-  // Or customize link strength by type
-  linkStrength: (edge) => {
-    if (edge.type === 'is-a') return 2.0;
-    if (edge.type === 'part-of') return 1.5;
-    return 1.0;
-  },
-  
-  // Style links by type
-  linkStroke: (d) => {
-    const colors = {
-      'is-a': '#e74c3c',
-      'part-of': '#3498db',
-      'related-to': '#95a5a6',
-    };
-    return colors[d.type] || '#999';
-  },
-});
-
-graph.render();
-```
-
-### Edge Bundling
-
-Enable force-directed edge bundling for cleaner, more organic-looking visualizations. Edge bundling groups related edges together, creating smooth curved paths that reduce visual clutter in complex graphs with many edges.
-
-**Visual Comparison:**
-
-See the [Visual Examples](#visual-examples) section above for a side-by-side comparison of simple edges vs. bundled edges.
-
-**Basic Usage:**
-
-```typescript
-const graph = new KnowledgeGraph(container, data, {
-  // Enable edge bundling
-  edgeRenderer: 'bundled',
-  
-  // Wait for node layout to stabilize before rendering edges (recommended)
-  waitForStable: true,
-  stabilityThreshold: 0.005,
-  
-  // Configure edge bundling parameters
+  edgeRenderer: 'bundled',      // Enable edge bundling
+  waitForStable: true,          // Wait for layout stability
   edgeBundling: {
-    subdivisions: 60,              // More control points = smoother curves
-    compatibilityThreshold: 0.4,   // Lower = more aggressive bundling
-    iterations: 120,                // More iterations = tighter bundles
-    stepSize: 0.1,                 // Larger steps = more visible bundling
-    stiffness: 0.05,               // Lower = more curvature allowed
-  },
-});
-
-graph.render();
-```
-
-**Edge Renderer Options:**
-- `'simple'` (default): Straight lines between nodes
-- `'bundled'`: Force-directed edge bundling with curved paths
-
-**Configuration Parameters:**
-
-| Parameter | Default | Description | Tips |
-|-----------|---------|-------------|------|
-| `waitForStable` | `false` | Wait for simulation to stabilize before rendering edges | Set to `true` for bundling to ensure stable node positions |
-| `stabilityThreshold` | `0.005` | Alpha value threshold for stability detection | Lower values = wait longer for more stable layout |
-| `subdivisions` | `60` | Number of control points per edge | Higher values (40-60) create smoother curves but slower computation |
-| `compatibilityThreshold` | `0.6` | How similar edges must be to bundle (0-1) | Lower values (0.3-0.5) = more aggressive bundling |
-| `iterations` | `90` | Number of bundling iterations | More iterations (100-150) = tighter, more visible bundles |
-| `stepSize` | `0.04` | Movement step size per iteration | Larger values (0.08-0.15) = more dramatic bundling effect |
-| `stiffness` | `0.1` | Spring force toward straight line | Lower values (0.05-0.08) allow more curvature |
-
-**Tips for Best Results:**
-- Use graphs with multiple parallel edges or edges flowing in similar directions
-- Lower `compatibilityThreshold` and `stiffness` for more dramatic bundling
-- Increase `iterations` and `subdivisions` for smoother, tighter bundles
-- Always set `waitForStable: true` to ensure bundling works on stable layouts
-
-**References:**
-
-This implementation is based on the force-directed edge bundling algorithm:
-- Holten, D., & Van Wijk, J. J. (2009). "Force-Directed Edge Bundling for Graph Visualization". *Computer Graphics Forum*, 28(3), 983-990.
-- [Edge Bundling Tutorial (PDF)](https://lliquid.github.io/homepage/files/ts13_edgebundle.pdf) - Comprehensive guide to edge bundling techniques and applications
-
-#### Custom Edge Compatibility
-
-You can provide a custom compatibility function to control which edges bundle together based on edge properties and metadata:
-
-```typescript
-const graph = new KnowledgeGraph(container, data, {
-  edgeRenderer: 'bundled',
-  waitForStable: true,
-  edgeBundling: {
-    // Custom compatibility based on edge type
-    compatibilityFunction: (edge1, edge2) => {
-      // Only bundle edges of the same type
-      if (edge1.type === edge2.type) return 1.0;
-      
-      // Don't bundle edges of different types
-      return 0.0;
-    },
-  },
+    iterations: 120,            // Smooth, flowing edges
+    compatibilityThreshold: 0.4 // More aggressive bundling
+  }
 });
 ```
 
-The custom compatibility function:
-- Receives two edges as parameters
-- Returns a number between 0 and 1 (0 = no bundling, 1 = maximum bundling)
-- Result is multiplied with geometric compatibility (angle, scale, position, visibility)
-- Can use any edge properties including `type`, `weight`, `metadata`, etc.
-- Allows semantic bundling based on relationship ontology
+---
 
-**Example Use Cases:**
-- Bundle only edges representing the same relationship type
-- Use edge metadata to group related connections
-- Apply different bundling strengths based on edge importance
-- Prevent bundling between conflicting relationship types
+## Core API
 
-### Using CDN
+### KnowledgeGraph Class
 
-```html
-<script type="module">
-  import { KnowledgeGraph } from 'https://cdn.jsdelivr.net/npm/@aigeeksquad/knowledge-network/+esm';
-  
-  // Your code here
-</script>
-```
-
-## API Reference
-
-### `KnowledgeGraph`
-
-Main class for creating knowledge graph visualizations.
+The main class for creating and managing interactive knowledge graph visualizations.
 
 #### Constructor
 
 ```typescript
-new KnowledgeGraph(container: HTMLElement, data: GraphData, config?: GraphConfig)
+new KnowledgeGraph(
+  container: HTMLElement,    // DOM element to render into
+  data: GraphData,          // Graph data (nodes and edges)
+  config?: GraphConfig      // Optional configuration
+)
 ```
 
-#### Methods
+**Parameters:**
+- **`container`** - HTML element that will contain the visualization
+- **`data`** - Graph data structure with nodes and edges
+- **`config`** - Optional configuration object (see [Configuration Reference](#configuration-reference))
 
-- `render()`: Render the graph visualization
-- `updateData(data: GraphData)`: Update the graph with new data
-- `destroy()`: Clean up and remove the graph
+#### Core Methods
 
-### Types
+```typescript
+// Render the graph visualization
+graph.render(): Promise<void>
+
+// Update graph with new data
+graph.updateData(data: GraphData): Promise<void>
+
+// Clean up and remove graph
+graph.destroy(): void
+```
+
+#### Selection and Interaction
+
+```typescript
+// Select a node and highlight neighbors
+graph.selectNode(nodeId: string): void
+
+// Clear current selection
+graph.clearSelection(): void
+
+// Get currently selected node
+graph.getSelectedNodeId(): string | null
+
+// Get neighbor nodes for a given node
+graph.getNeighbors(nodeId: string): string[]
+```
+
+#### Advanced Access
+
+```typescript
+// Access D3 simulation for advanced customization
+graph.getSimulation(): d3.Simulation | null
+
+// Disable animations (for testing or performance)
+graph.disableAnimations(): void
+```
+
+---
+
+## Configuration Reference
+
+### GraphConfig Interface
+
+Complete configuration options following d3.js accessor patterns.
+
+#### Container and Layout
+
+```typescript
+interface GraphConfig {
+  // Dimensions
+  width?: number;           // Default: 800
+  height?: number;          // Default: 600
+
+  // Layout engine
+  dimensions?: 2 | 3;       // Default: 2 (2D layout)
+
+  // Simulation stability
+  waitForStable?: boolean;         // Default: false
+  stabilityThreshold?: number;     // Default: 0.001
+}
+```
+
+#### Node Configuration
+
+All node properties support **d3-style accessors** - either constant values or functions.
+
+```typescript
+// Node visual styling
+nodeRadius?: Accessor<Node, number>;           // Default: 10
+nodeFill?: Accessor<Node, string>;             // Default: '#69b3a2'
+nodeStroke?: Accessor<Node, string>;           // Default: '#fff'
+nodeStrokeWidth?: Accessor<Node, number>;      // Default: 1.5
+
+// Force simulation properties
+chargeStrength?: Accessor<Node, number>;       // Default: -300
+collisionRadius?: Accessor<Node, number>;      // Default: nodeRadius + 2
+
+// Clustering
+similarityFunction?: SimilarityFunction;       // Optional
+similarityThreshold?: number;                  // Default: 0.5
+```
+
+**Accessor Pattern Examples:**
+```typescript
+// Constant values
+nodeRadius: 15,
+nodeFill: '#ff6b6b',
+
+// Data-driven functions
+nodeRadius: (node) => node.type === 'concept' ? 15 : 8,
+nodeFill: (node) => node.metadata?.color || '#69b3a2',
+chargeStrength: (node) => node.metadata?.importance ? -500 : -200
+```
+
+#### Edge Configuration
+
+```typescript
+// Edge visual styling
+linkStroke?: Accessor<Edge, string>;           // Default: '#999'
+linkStrokeWidth?: Accessor<Edge, number>;      // Default: 1.5
+linkDistance?: Accessor<Edge, number>;         // Default: 100
+
+// Force simulation properties
+linkStrength?: LinkStrengthFunction;           // Default: 1.0
+
+// Edge rendering
+edgeRenderer?: 'simple' | 'bundled';          // Default: 'simple'
+edgeBundling?: EdgeBundlingConfig;            // Edge bundling settings
+```
+
+#### Interaction Configuration
+
+```typescript
+// User interaction controls
+enableZoom?: boolean;          // Default: true
+enableDrag?: boolean;          // Default: true
+zoomExtent?: [number, number]; // Default: [0.1, 10]
+fitToViewport?: boolean;       // Default: false
+padding?: number;              // Default: 20 (when fitting to viewport)
+```
+
+#### Callback Configuration
+
+```typescript
+// Progress and state callbacks
+onStateChange?: (state: LayoutEngineState, progress: number) => void;
+onLayoutProgress?: (alpha: number, progress: number) => void;
+onEdgeRenderingProgress?: (rendered: number, total: number) => void;
+onEdgesRendered?: () => void;
+
+// Interaction callbacks
+onNodeSelected?: (nodeId: string, neighbors: string[], edges: string[]) => void;
+onError?: (error: Error, stage: string) => void;
+```
+
+---
+
+## Data Structures
+
+### Node Interface
 
 ```typescript
 interface Node {
-  id: string;
-  label?: string;
-  type?: string;
-  x?: number;
-  y?: number;
-  z?: number; // For 3D support
-  vector?: number[]; // For similarity-based clustering
-  metadata?: Record<string, unknown>;
-}
+  id: string;                        // Required: Unique identifier
+  label?: string;                    // Optional: Display label
+  type?: string;                     // Optional: Node type for styling/grouping
 
-interface Edge {
-  id?: string;
-  source: string | Node;
-  target: string | Node;
-  label?: string;
-  type?: string; // Ontology type affects layout
-  weight?: number;
-  strength?: number; // Link strength for force calculations
-  metadata?: Record<string, unknown>;
-}
+  // Positioning (managed by simulation)
+  x?: number;                        // X coordinate
+  y?: number;                        // Y coordinate
+  z?: number;                        // Z coordinate (3D only)
 
-interface GraphData {
-  nodes: Node[];
-  edges: Edge[];
-}
-
-// Accessor function type - can return value from datum, or be a constant
-type Accessor<T, R> = R | ((d: T, i: number, nodes: T[]) => R);
-
-// Similarity function for node clustering
-type SimilarityFunction = (a: Node, b: Node) => number;
-
-// Link strength function based on edge type
-type LinkStrengthFunction = (edge: Edge, i: number, edges: Edge[]) => number;
-
-interface GraphConfig {
-  width?: number;
-  height?: number;
-  
-  // Node styling - d3 idiomatic accessor pattern
-  nodeRadius?: Accessor<Node, number>;
-  nodeFill?: Accessor<Node, string>;
-  nodeStroke?: Accessor<Node, string>;
-  nodeStrokeWidth?: Accessor<Node, number>;
-  
-  // Link styling - d3 idiomatic accessor pattern
-  linkDistance?: Accessor<Edge, number>;
-  linkStrength?: LinkStrengthFunction;
-  linkStroke?: Accessor<Edge, string>;
-  linkStrokeWidth?: Accessor<Edge, number>;
-  
-  // Force simulation
-  chargeStrength?: Accessor<Node, number>;
-  similarityFunction?: SimilarityFunction; // For clustering based on similarity
-  collisionRadius?: Accessor<Node, number>; // For collision detection
-  
-  // Interaction
-  enableZoom?: boolean;
-  enableDrag?: boolean;
-  
-  // Dimensionality
-  dimensions?: 2 | 3; // Support 2D and 3D layouts
+  // Advanced features
+  vector?: number[];                 // Embedding for similarity clustering
+  metadata?: Record<string, unknown>; // Custom properties
 }
 ```
 
+**Examples:**
+```typescript
+// Basic node
+{ id: 'concept-1', label: 'Machine Learning' }
+
+// Node with type for styling
+{ id: 'concept-1', label: 'ML', type: 'primary' }
+
+// Node with vector for clustering
+{
+  id: 'concept-1',
+  label: 'ML',
+  vector: [0.8, 0.2, 0.5],
+  metadata: { importance: 0.9 }
+}
+
+// Node with fixed position
+{ id: 'center', label: 'Core', x: 400, y: 300 }
+```
+
+### Edge Interface
+
+```typescript
+interface Edge {
+  source: string | Node;             // Source node (ID or object)
+  target: string | Node;             // Target node (ID or object)
+
+  id?: string;                       // Optional: Unique identifier
+  label?: string;                    // Optional: Display label
+  type?: string;                     // Optional: Edge type (affects layout)
+
+  // Advanced properties
+  weight?: number;                   // Edge importance/strength
+  strength?: number;                 // Force simulation strength
+  metadata?: Record<string, unknown>; // Custom properties
+}
+```
+
+**Examples:**
+```typescript
+// Basic edge
+{ source: 'A', target: 'B' }
+
+// Typed edge with weight
+{
+  source: 'A',
+  target: 'B',
+  type: 'dependency',
+  weight: 0.8
+}
+
+// Edge with custom strength and metadata
+{
+  source: 'parent',
+  target: 'child',
+  type: 'hierarchy',
+  strength: 2.0,
+  metadata: { bidirectional: false }
+}
+```
+
+### GraphData Interface
+
+```typescript
+interface GraphData {
+  nodes: Node[];    // Array of all nodes
+  edges: Edge[];    // Array of all edges
+}
+```
+
+**Validation Requirements:**
+- All nodes must have unique `id` values
+- All edge `source`/`target` references must point to existing node `id` values
+- Circular references are allowed and handled correctly
+
+---
+
+## Advanced Patterns
+
+### 1. Similarity-Based Clustering
+
+Create attraction forces between similar nodes using vector embeddings or custom similarity functions.
+
+```typescript
+const data = {
+  nodes: [
+    { id: 'AI', label: 'Artificial Intelligence', vector: [1.0, 0.8, 0.6] },
+    { id: 'ML', label: 'Machine Learning', vector: [0.9, 0.9, 0.7] },
+    { id: 'Art', label: 'Digital Art', vector: [0.1, 0.2, 0.9] }
+  ],
+  edges: []
+};
+
+const graph = new KnowledgeGraph(container, data, {
+  // Attract similar nodes using cosine similarity
+  similarityFunction: (a, b) => {
+    if (!a.vector || !b.vector) return 0;
+
+    const dotProduct = a.vector.reduce((sum, val, i) => sum + val * b.vector[i], 0);
+    const normA = Math.sqrt(a.vector.reduce((sum, val) => sum + val * val, 0));
+    const normB = Math.sqrt(b.vector.reduce((sum, val) => sum + val * val, 0));
+
+    return dotProduct / (normA * normB);
+  },
+  similarityThreshold: 0.7  // Only cluster highly similar nodes
+});
+```
+
+### 2. Ontology-Aware Link Forces
+
+Configure link strength based on relationship types to create semantic layouts.
+
+```typescript
+const graph = new KnowledgeGraph(container, data, {
+  // Stronger forces for hierarchical relationships
+  linkStrength: (edge) => {
+    switch (edge.type) {
+      case 'is-a':       return 2.0;  // Strong hierarchical
+      case 'part-of':    return 1.5;  // Medium structural
+      case 'related-to': return 0.8;  // Weak associative
+      case 'similar-to': return 0.6;  // Weak similarity
+      default:           return 1.0;
+    }
+  },
+
+  // Visual styling by relationship type
+  linkStroke: (edge) => ({
+    'is-a': '#e74c3c',      // Red for hierarchy
+    'part-of': '#3498db',   // Blue for structure
+    'related-to': '#95a5a6' // Gray for association
+  }[edge.type] || '#999')
+});
+```
+
+### 3. Advanced Edge Bundling
+
+Configure edge bundling for complex visualizations with many connections.
+
+#### Basic Edge Bundling
+
+```typescript
+const graph = new KnowledgeGraph(container, data, {
+  edgeRenderer: 'bundled',
+  waitForStable: true,        // Critical for good bundling
+  edgeBundling: {
+    subdivisions: 60,         // Smooth curves (20-60)
+    iterations: 120,          // Tight bundles (90-150)
+    compatibilityThreshold: 0.4, // Aggressive bundling (0.2-0.6)
+    stepSize: 0.08,          // Visible bundling (0.04-0.15)
+    stiffness: 0.05          // More curvature (0.05-0.2)
+  }
+});
+```
+
+#### Custom Edge Compatibility
+
+```typescript
+const graph = new KnowledgeGraph(container, data, {
+  edgeRenderer: 'bundled',
+  edgeBundling: {
+    // Custom bundling rules based on edge properties
+    compatibilityFunction: (edge1, edge2) => {
+      // Bundle edges of same type only
+      if (edge1.type === edge2.type) return 1.0;
+
+      // Partial bundling for related types
+      if (edge1.type === 'is-a' && edge2.type === 'part-of') return 0.6;
+
+      // No bundling for conflicting types
+      return 0.0;
+    }
+  }
+});
+```
+
+### 4. Dynamic Data Updates
+
+```typescript
+// Initialize graph
+const graph = new KnowledgeGraph(container, initialData);
+graph.render();
+
+// Update with new data (efficient - reuses components)
+const newData = {
+  nodes: [...existingNodes, newNode],
+  edges: [...existingEdges, newEdge]
+};
+graph.updateData(newData);
+
+// Clean up when done
+graph.destroy();
+```
+
+### 5. Progress Tracking and State Management
+
+```typescript
+const graph = new KnowledgeGraph(container, data, {
+  onStateChange: (state, progress) => {
+    console.log(`State: ${state}, Progress: ${progress}%`);
+
+    switch (state) {
+      case 'loading':
+        showLoadingSpinner();
+        break;
+      case 'layout_calculating':
+        updateProgressBar(progress);
+        break;
+      case 'ready':
+        hideLoadingIndicators();
+        break;
+      case 'error':
+        showErrorMessage('Failed to render graph');
+        break;
+    }
+  },
+
+  onNodeSelected: (nodeId, neighbors, edges) => {
+    highlightRelatedContent(nodeId, neighbors);
+    showNodeDetails(nodeId);
+  }
+});
+```
+
+---
+
+## Performance Optimization
+
+### Graph Size Guidelines
+
+| Nodes | Edges | Recommended Configuration |
+|-------|-------|---------------------------|
+| < 100 | < 200 | All features enabled, bundling optional |
+| 100-1000 | 200-2000 | Edge bundling recommended, standard settings |
+| 1000-5000 | 2000-10000 | Reduce bundling iterations, fixed styling |
+| 5000+ | 10000+ | Simple edges, minimal styling, consider clustering |
+
+### Large Graph Optimizations
+
+```typescript
+// For graphs with 1000+ nodes
+const largeGraphConfig: GraphConfig = {
+  // Performance rendering
+  edgeRenderer: 'simple',     // Skip bundling for very large graphs
+
+  // Fixed styling (faster than functions)
+  nodeRadius: 5,
+  nodeFill: '#4ecdc4',
+  nodeStroke: '#fff',
+
+  // Optimized forces
+  chargeStrength: -50,        // Weaker repulsion
+  linkDistance: 20,           // Shorter edges
+
+  // Reduced interaction
+  enableDrag: false,          // Disable dragging for performance
+
+  // Stability settings
+  stabilityThreshold: 0.01    // Less precise stability for speed
+};
+```
+
+### Memory Management
+
+```typescript
+// Always clean up when components unmount
+useEffect(() => {
+  const graph = new KnowledgeGraph(container, data);
+  graph.render();
+
+  return () => {
+    graph.destroy();  // Critical: prevents memory leaks
+  };
+}, []);
+
+// Efficient updates (reuse components)
+graph.updateData(newData);  // Better than creating new instances
+```
+
+**📖 Complete performance guidance**: [Performance Guide](../../docs/PERFORMANCE_GUIDE.md)
+
+---
+
+## TypeScript Integration
+
+### Full Type Safety
+
+```typescript
+import {
+  KnowledgeGraph,
+  GraphData,
+  GraphConfig,
+  Node,
+  Edge,
+  LayoutEngineState
+} from '@aigeeksquad/knowledge-network';
+
+// Strongly typed data
+const data: GraphData = {
+  nodes: [
+    { id: 'n1', label: 'Node 1', type: 'concept' }
+  ],
+  edges: [
+    { source: 'n1', target: 'n2', type: 'relationship' }
+  ]
+};
+
+// Type-safe configuration
+const config: GraphConfig = {
+  nodeRadius: (node: Node) => node.type === 'concept' ? 12 : 8,
+  onStateChange: (state: LayoutEngineState, progress: number) => {
+    // Full IntelliSense support
+  }
+};
+```
+
+### Custom Interfaces
+
+Extend base types for domain-specific requirements:
+
+```typescript
+// Custom node with domain properties
+interface ConceptNode extends Node {
+  category: 'technology' | 'process' | 'tool';
+  relevance: number;
+  tags: string[];
+}
+
+// Custom edge with relationship metadata
+interface RelationshipEdge extends Edge {
+  relationshipType: 'dependency' | 'similarity' | 'hierarchy';
+  confidence: number;
+  bidirectional: boolean;
+}
+
+// Use with graph
+const domainData: GraphData = {
+  nodes: conceptNodes as Node[],
+  edges: relationshipEdges as Edge[]
+};
+```
+
+---
+
+## Related Guides
+
+### Interactive Exploration Platform
+
+Experience the API capabilities through hands-on interactive exploration and benchmarking:
+
+- **[🚀 Complete Demo Suite](../demo-suite/README.md)** - Interactive platform with mode switching and benchmarking tools
+- **[🎮 Mode Switching Demo](../demo-suite/)** - Live comparison of SVG, Canvas, WebGL rendering with performance metrics
+- **[📊 Layout Algorithm Explorer](../demo-suite/)** - Interactive comparison of force-directed, circular, grid, hierarchical layouts
+- **[📚 Rich Dataset Library](../demo-suite/src/components/data/)** - Computer science, research, biology, literature knowledge graphs
+
+### Essential Reading
+
+- **[📊 Edge Bundling Guide](../../docs/EDGE_BUNDLING.md)** - Complete guide to edge bundling techniques
+- **[⚡ Performance Guide](../../docs/PERFORMANCE_GUIDE.md)** - Optimization strategies for large datasets
+- **[🔧 Integration Guide](../../docs/INTEGRATION_GUIDE.md)** - React, Vue, Angular integration patterns
+
+### Reference Documentation
+
+- **[❓ Troubleshooting](../../docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[🔄 Migration Guide](../../docs/MIGRATION_GUIDE.md)** - Version upgrade guidance
+- **[📊 Research Documentation](../../docs/EDGE_BUNDLING_RESEARCH.md)** - Academic foundations and theory
+
+### Competitive Analysis
+
+- **[🏆 Competitive Showcase](../../docs/COMPETITIVE_SHOWCASE.md)** - Quantified advantages vs D3.js, Cytoscape.js, vis.js
+- **[🎯 Demo Development Guide](../../docs/DEMO_DEVELOPMENT_GUIDE.md)** - Creating new demonstration modules
+
+---
+
 ## Development
 
-See the [examples package](../examples) for interactive demonstrations.
+**Building from source**: See the [main project README](../../README.md#development) for development setup and build instructions.
+
+**Contributing**: See [Contributing Guide](../../CONTRIBUTING.md) for contribution guidelines and development workflow.
+
+---
 
 ## License
 

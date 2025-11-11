@@ -1,20 +1,111 @@
-import * as d3 from 'd3';
 import type { GraphData, GraphConfig, Node, Accessor } from './types';
-import { EdgeRenderer, EdgeRenderResult, SimpleEdge, EdgeBundling } from './edges';
+import { LayoutEngineState } from './types';
+import {
+  LayoutEngine,
+  type LayoutResult,
+  type NodePosition,
+  type LayoutConfig,
+} from './layout/LayoutEngine';
+import { RenderingSystem } from './rendering/RenderingSystem';
+import { ViewportManager } from './viewport/ViewportManager';
+import { SimpleEdge, EdgeBundling } from './edges';
+import type { EdgeRenderResult } from './edges/EdgeRenderer';
 
 /**
- * Main class for creating and managing knowledge graph visualizations
+ * Main class for creating and managing interactive knowledge graph visualizations.
+ *
+ * @remarks
+ * The KnowledgeGraph class acts as an orchestrator that coordinates layout calculation,
+ * edge generation, rendering, and viewport management through specialized modules.
+ * It follows a clean separation of concerns with proper modular architecture.
+ *
+ * Architecture:
+ * - LayoutEngine: Handles all position calculations
+ * - RenderingSystem: Manages DOM operations and rendering
+ * - ViewportManager: Controls zoom, pan, and viewport transformations
+ * - EdgeRenderer: Generates edge geometries
+ *
+ * Flow: Layout → Edge Generation → Rendering → Viewport
+ *
+ * @example
+ * ```typescript
+ * // Basic usage with minimal configuration
+ * const container = document.getElementById('graph-container');
+ * const data = {
+ *   nodes: [
+ *     { id: 'node1', label: 'Concept A' },
+ *     { id: 'node2', label: 'Concept B' },
+ *     { id: 'node3', label: 'Concept C' }
+ *   ],
+ *   edges: [
+ *     { source: 'node1', target: 'node2' },
+ *     { source: 'node2', target: 'node3' }
+ *   ]
+ * };
+ *
+ * const graph = new KnowledgeGraph(container, data);
+ * graph.render();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Advanced usage with edge bundling and semantic clustering
+ * import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
+ *
+ * const graph = new KnowledgeGraph(container, data, {
+ *   edgeRenderer: 'bundled',
+ *   waitForStable: true,
+ *   edgeBundling: {
+ *     iterations: 120,
+ *     compatibilityThreshold: 0.4
+ *   },
+ *   nodeRadius: (node) => node.type === 'concept' ? 15 : 8,
+ *   nodeFill: (node) => node.metadata?.color || '#69b3a2'
+ * });
+ * ```
+ *
+ * @see {@link GraphData} for data structure specification
+ * @see {@link GraphConfig} for complete configuration options
+ * @see {@link LayoutEngine} for layout calculation details
+ * @see {@link EdgeBundling} for advanced edge bundling features
+ * @see {@link RenderingSystem} for rendering implementation
+ * @since 0.1.0
  */
 export class KnowledgeGraph {
   private container: HTMLElement;
   private data: GraphData;
   private config: GraphConfig;
-  private svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null = null;
-  private simulation: d3.Simulation<d3.SimulationNodeDatum, undefined> | null = null;
-  private edgeRenderer: EdgeRenderer;
-  private edgeRenderResult: EdgeRenderResult | null = null;
-  private linkGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
 
+  // Modular components
+  private layoutEngine: LayoutEngine | null = null;
+  private renderingSystem: RenderingSystem | null = null;
+  private viewportManager: ViewportManager | null = null;
+  private edgeRenderer: SimpleEdge | EdgeBundling | null = null;
+
+  // State management
+  private currentState: LayoutEngineState = LayoutEngineState.INITIAL;
+  private selectedNodeId: string | null = null;
+  private layoutResult: LayoutResult | null = null;
+  private edgeRenderResult: EdgeRenderResult | null = null;
+
+  /**
+   * Creates a new KnowledgeGraph instance.
+   *
+   * @param container - The HTML element that will contain the graph visualization.
+   *                   Should be a div or other block element with defined dimensions.
+   * @param data - The graph data containing nodes and edges to visualize.
+   * @param config - Optional configuration object to customize the graph appearance and behavior.
+   *
+   * @remarks
+   * The constructor initializes all modular components including the layout engine,
+   * rendering system, viewport manager, and edge renderer based on configuration.
+   * No rendering occurs until {@link render} is called.
+   *
+   * @see {@link GraphData} for data structure requirements
+   * @see {@link GraphConfig} for all available configuration options
+   * @see {@link render} to actually display the graph
+   * @since 0.1.0
+   */
   constructor(container: HTMLElement, data: GraphData, config: GraphConfig = {}) {
     this.container = container;
     this.data = data;
@@ -37,291 +128,421 @@ export class KnowledgeGraph {
       waitForStable: config.waitForStable ?? false,
       stabilityThreshold: config.stabilityThreshold ?? 0.01,
       enableZoom: config.enableZoom ?? true,
+      zoomExtent: config.zoomExtent,
       enableDrag: config.enableDrag ?? true,
       dimensions: config.dimensions ?? 2,
+      ...config,
     };
 
-    // Initialize edge renderer
-    this.edgeRenderer = this.createEdgeRenderer();
+    this.initializeComponents();
   }
 
   /**
-   * Create the appropriate edge renderer based on configuration
+   * Initialize all modular components
    */
-  private createEdgeRenderer(): EdgeRenderer {
-    if (this.config.edgeRenderer === 'bundled') {
-      return new EdgeBundling(this.config.edgeBundling);
-    }
-    return new SimpleEdge();
-  }
+  private initializeComponents(): void {
+    // Initialize LayoutEngine
+    const layoutConfig: Partial<LayoutConfig> = {
+      width: this.config.width!,
+      height: this.config.height!,
+      linkDistance: typeof this.config.linkDistance === 'function' ? 100 : this.config.linkDistance,
+      linkStrength:
+        typeof this.config.linkStrength === 'function' ? 1 : (this.config.linkStrength ?? 1),
+      chargeStrength:
+        typeof this.config.chargeStrength === 'function' ? -300 : this.config.chargeStrength,
+      collisionRadius:
+        typeof this.config.collisionRadius === 'function' ? 20 : this.config.collisionRadius,
+      similarityFunction: this.config.similarityFunction,
+      similarityThreshold: this.config.similarityThreshold,
+      alpha: 1,
+      alphaMin: this.config.stabilityThreshold ?? 0.01,
+      dimensions: this.config.dimensions,
+    };
 
-  /**
-   * Convert accessor to a function that can be called
-   */
-  private accessor<T, R>(accessor: Accessor<T, R> | undefined, defaultValue: R): (d: T, i: number, nodes: T[]) => R {
-    if (accessor === undefined) {
-      return () => defaultValue;
-    }
-    if (typeof accessor === 'function') {
-      return accessor as (d: T, i: number, nodes: T[]) => R;
-    }
-    return () => accessor;
-  }
+    this.layoutEngine = new LayoutEngine('force-directed', layoutConfig);
 
-  /**
-   * Render the knowledge graph
-   */
-  render(): void {
-    const width = this.config.width ?? 800;
-    const height = this.config.height ?? 600;
-
-    this.svg = d3.select(this.container)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('viewBox', [0, 0, width, height]);
-
-    const g = this.svg.append('g');
-
-    // Setup zoom if enabled
-    if (this.config.enableZoom) {
-      const zoom = d3.zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.1, 10])
-        .on('zoom', (event) => {
-          g.attr('transform', event.transform);
-        });
-
-      this.svg.call(zoom);
-    }
-
-    // Create accessors
-    const radiusAccessor = this.accessor(this.config.nodeRadius, 10);
-    const fillAccessor = this.accessor(this.config.nodeFill, '#69b3a2');
-    const strokeAccessor = this.accessor(this.config.nodeStroke, '#fff');
-    const strokeWidthAccessor = this.accessor(this.config.nodeStrokeWidth, 1.5);
-    const chargeAccessor = this.accessor(this.config.chargeStrength, -300);
-    
-    const linkDistanceAccessor = this.accessor(this.config.linkDistance, 100);
-    const linkStrokeAccessor = this.accessor(this.config.linkStroke, '#999');
-    const linkStrokeWidthAccessor = this.accessor(this.config.linkStrokeWidth, 1.5);
-
-    // Create force simulation
-    this.simulation = d3.forceSimulation(this.data.nodes as d3.SimulationNodeDatum[])
-      .force('link', d3.forceLink(this.data.edges)
-        .id((d: any) => d.id)
-        .distance((d: any, i) => linkDistanceAccessor(d, i, this.data.edges))
-        .strength(this.config.linkStrength ?? this.createLinkStrengthFunction()))
-      .force('charge', d3.forceManyBody()
-        .strength((d: any, i) => chargeAccessor(d, i, this.data.nodes)))
-      .force('center', d3.forceCenter(width / 2, height / 2));
-
-    // Add collision detection if configured
-    const collisionRadiusAccessor = this.config.collisionRadius 
-      ? this.accessor(this.config.collisionRadius, 10)
-      : radiusAccessor;
-    
-    this.simulation.force('collision', d3.forceCollide()
-      .radius((d: any, i) => collisionRadiusAccessor(d, i, this.data.nodes) + 2));
-
-    // Add similarity-based attraction if configured
-    if (this.config.similarityFunction) {
-      this.simulation.force('similarity', this.createSimilarityForce(this.config.similarityFunction));
-    }
-
-    // Create link group (edges will be rendered later)
-    this.linkGroup = g.append('g').attr('class', 'links');
-
-    // Draw nodes
-    const node = g.append('g')
-      .attr('class', 'nodes')
-      .selectAll('circle')
-      .data(this.data.nodes)
-      .join('circle')
-      .attr('r', (d, i) => radiusAccessor(d, i, this.data.nodes))
-      .attr('fill', (d, i) => fillAccessor(d, i, this.data.nodes))
-      .attr('stroke', (d, i) => strokeAccessor(d, i, this.data.nodes))
-      .attr('stroke-width', (d, i) => strokeWidthAccessor(d, i, this.data.nodes));
-
-    // Setup drag if enabled
-    if (this.config.enableDrag) {
-      const drag = d3.drag<SVGCircleElement, Node>()
-        .on('start', (event, d: any) => {
-          if (!event.active) this.simulation?.alphaTarget(0.3).restart();
-          d.fx = d.x;
-          d.fy = d.y;
-        })
-        .on('drag', (event, d: any) => {
-          d.fx = event.x;
-          d.fy = event.y;
-        })
-        .on('end', (event, d: any) => {
-          if (!event.active) this.simulation?.alphaTarget(0);
-          d.fx = null;
-          d.fy = null;
-        });
-
-      node.call(drag as any);
-    }
-
-    // Add labels
-    const labels = g.append('g')
-      .attr('class', 'labels')
-      .selectAll('text')
-      .data(this.data.nodes)
-      .join('text')
-      .text(d => d.label ?? d.id)
-      .attr('font-size', 12)
-      .attr('dx', 15)
-      .attr('dy', 4);
-
-    // Track if edges have been rendered
-    let edgesRendered = false;
-
-    // Update positions on simulation tick
-    this.simulation.on('tick', () => {
-      // Check if simulation has stabilized and render edges
-      if (!edgesRendered && this.config.waitForStable) {
-        const alpha = this.simulation?.alpha() ?? 1;
-        if (alpha < (this.config.stabilityThreshold ?? 0.01)) {
-          edgesRendered = true;
-          this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
-        }
-      }
-
-      // Update edge positions if already rendered
-      if (edgesRendered && this.edgeRenderResult) {
-        this.edgeRenderer.update(this.edgeRenderResult);
-      }
-
-      node
-        .attr('cx', (d: any) => d.x)
-        .attr('cy', (d: any) => d.y);
-
-      labels
-        .attr('x', (d: any) => d.x)
-        .attr('y', (d: any) => d.y);
+    // Initialize RenderingSystem
+    this.renderingSystem = new RenderingSystem(this.container, {
+      width: this.config.width!,
+      height: this.config.height!,
     });
 
-    // If not waiting for stable, render edges immediately
-    if (!this.config.waitForStable) {
-      this.renderEdges(linkStrokeAccessor, linkStrokeWidthAccessor);
+    // Initialize ViewportManager
+    this.viewportManager = new ViewportManager();
+
+    // Initialize EdgeRenderer
+    if (this.config.edgeRenderer === 'bundled') {
+      this.edgeRenderer = new EdgeBundling(this.config.edgeBundling);
+    } else {
+      this.edgeRenderer = new SimpleEdge();
+    }
+
+    this.setupEventListeners();
+  }
+
+  /**
+   * Setup event listeners for modular components
+   */
+  private setupEventListeners(): void {
+    if (!this.layoutEngine) return;
+
+    // Layout progress events
+    this.layoutEngine.on('layoutProgress', (progress: number) => {
+      if (
+        this.config.onLayoutProgress &&
+        this.currentState === LayoutEngineState.LAYOUT_CALCULATING
+      ) {
+        const simulation = this.layoutEngine?.getSimulation();
+        const alpha = simulation?.alpha() ?? 0;
+        this.config.onLayoutProgress(alpha, progress);
+      }
+    });
+
+    // Layout positions update
+    this.layoutEngine.on('positions', (positions: any) => {
+      if (this.renderingSystem && this.layoutResult) {
+        this.renderingSystem.updateNodePositions(positions.nodes);
+        this.renderingSystem.updateEdgePositions(positions.edges);
+      }
+    });
+
+    // Layout completion
+    this.layoutEngine.on('layoutEnd', (result: LayoutResult) => {
+      this.layoutResult = result;
+      this.onLayoutComplete();
+    });
+
+    // Layout stability for edge rendering
+    this.layoutEngine.on('stable', () => {
+      if (this.config.waitForStable && this.layoutResult) {
+        this.renderEdges();
+      }
+    });
+  }
+
+  /**
+   * Update the state and call the callback if provided
+   */
+  private updateState(state: LayoutEngineState, progress: number = 0): void {
+    this.currentState = state;
+    if (this.config.onStateChange) {
+      try {
+        this.config.onStateChange(state, progress);
+      } catch (error) {
+        console.error('Error in onStateChange callback:', error);
+      }
     }
   }
 
   /**
-   * Render edges using the configured edge renderer
+   * Handle errors with callback
    */
-  private renderEdges(
-    linkStrokeAccessor: (d: any, i: number, nodes: any[]) => string,
-    linkStrokeWidthAccessor: (d: any, i: number, nodes: any[]) => number
-  ): void {
-    if (!this.linkGroup) return;
-
-    this.edgeRenderResult = this.edgeRenderer.render(
-      this.linkGroup,
-      this.data.edges,
-      this.data.nodes,
-      {
-        stroke: (d, i) => linkStrokeAccessor(d, i, this.data.edges),
-        strokeWidth: (d, i) => linkStrokeWidthAccessor(d, i, this.data.edges),
-        strokeOpacity: 0.6,
+  private handleError(error: Error, stage: string): void {
+    this.updateState(LayoutEngineState.ERROR, 0);
+    if (this.config.onError) {
+      try {
+        this.config.onError(error, stage);
+      } catch (callbackError) {
+        console.error('Error in onError callback:', callbackError);
       }
-    );
+    }
+    console.error(`Error in ${stage}:`, error);
   }
 
   /**
-   * Create a link strength function based on edge types (ontology)
+   * Convert accessor to render config format (single parameter function)
    */
-  private createLinkStrengthFunction() {
-    return (edge: any) => {
-      // Default strength, can be overridden by edge.strength
-      if (edge.strength !== undefined) {
-        return edge.strength;
-      }
-      // Type-based strength for ontology relationships
-      if (edge.type) {
-        const typeStrengths: Record<string, number> = {
-          'is-a': 1.5,
-          'part-of': 1.2,
-          'related-to': 0.8,
-          'similar-to': 0.6,
-        };
-        return typeStrengths[edge.type] ?? 1.0;
-      }
-      return 1.0;
-    };
+  private toRenderAccessor<T, R>(
+    accessor: Accessor<T, R> | undefined,
+    defaultValue: R
+  ): R | ((item: T) => R) {
+    if (accessor === undefined) {
+      return defaultValue;
+    }
+    if (typeof accessor === 'function') {
+      return (item: T) => (accessor as (d: T, i: number, nodes: T[]) => R)(item, 0, []);
+    }
+    return accessor;
   }
 
   /**
-   * Create a custom force for similarity-based attraction
+   * Renders the knowledge graph visualization following proper modular flow.
+   *
+   * Flow: Layout → Edge Generation → Rendering → Viewport
    */
-  private createSimilarityForce(similarityFn: (a: Node, b: Node) => number) {
-    return (alpha: number) => {
-      const nodes = this.data.nodes as any[];
-      const strength = 0.1;
-      
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i];
-          const b = nodes[j];
-          
-          // Calculate similarity
-          const similarity = similarityFn(a, b);
-          
-          if (similarity > 0) {
-            // Attract similar nodes
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance > 0) {
-              const force = (similarity * strength * alpha) / distance;
-              const fx = dx * force;
-              const fy = dy * force;
-              
-              a.vx += fx;
-              a.vy += fy;
-              b.vx -= fx;
-              b.vy -= fy;
-            }
-          }
-        }
+  async render(): Promise<void> {
+    try {
+      this.updateState(LayoutEngineState.LOADING, 10);
+
+      // Auto-initialize components if not already initialized (e.g., after destroy)
+      if (!this.layoutEngine || !this.renderingSystem || !this.viewportManager) {
+        this.initializeComponents();
       }
-    };
+
+      // Step 1: Layout Calculation (NO rendering)
+      this.updateState(LayoutEngineState.LAYOUT_CALCULATING, 30);
+      if (!this.layoutEngine) {
+        throw new Error('Layout engine not initialized');
+      }
+      this.layoutResult = await this.layoutEngine.calculateLayout(this.data);
+
+      // Step 2: Setup renderer and render nodes (always happens)
+      this.updateState(LayoutEngineState.LAYOUT_CALCULATING, 60);
+      if (!this.renderingSystem) {
+        throw new Error('Rendering system not initialized');
+      }
+      this.renderingSystem.setRenderer(this.config.renderer || 'svg');
+      await this.renderNodes();
+
+      // Step 3: Edge Generation (using layout data)
+      this.updateState(LayoutEngineState.EDGE_GENERATING, 80);
+      this.onLayoutComplete();
+
+      if (!this.config.waitForStable) {
+        await this.renderEdges();
+      }
+      // If waitForStable is true, renderEdges will be called by the 'stable' event
+    } catch (error) {
+      this.handleError(error as Error, 'render');
+      throw error;
+    }
   }
 
   /**
-   * Update the graph data
+   * Called when layout calculation is complete
    */
-  updateData(data: GraphData): void {
+  private onLayoutComplete(): void {
+    if (!this.layoutResult || !this.viewportManager) return;
+
+    // Update viewport manager with node positions
+    const nodePositions: NodePosition[] = this.layoutResult.nodes.map((node) => ({
+      id: node.id,
+      x: node.x,
+      y: node.y,
+      z: node.z,
+    }));
+
+    this.viewportManager.setNodePositions(nodePositions);
+  }
+
+  /**
+   * Render nodes using layout data
+   */
+  private async renderNodes(): Promise<void> {
+    if (!this.layoutResult || !this.renderingSystem) return;
+
+    try {
+      this.renderingSystem.render(this.layoutResult, {
+        nodeConfig: {
+          radius: this.toRenderAccessor(this.config.nodeRadius, 10),
+          fill: this.toRenderAccessor(this.config.nodeFill, '#69b3a2'),
+          stroke: this.toRenderAccessor(this.config.nodeStroke, '#fff'),
+          strokeWidth: this.toRenderAccessor(this.config.nodeStrokeWidth, 1.5),
+        },
+        edgeConfig: {
+          stroke: this.toRenderAccessor(this.config.linkStroke, '#999'),
+          strokeWidth: this.toRenderAccessor(this.config.linkStrokeWidth, 1.5),
+          curveType: this.config.edgeRenderer === 'bundled' ? 'bundle' : 'straight',
+        },
+        labelConfig: {
+          fontSize: 12,
+          fill: '#000',
+        },
+      });
+
+      this.setupViewport();
+      this.updateState(LayoutEngineState.READY, 100);
+    } catch (error) {
+      this.handleError(error as Error, 'renderNodes');
+    }
+  }
+
+  /**
+   * Render edges using layout data
+   */
+  private async renderEdges(): Promise<void> {
+    if (!this.layoutResult || !this.renderingSystem || !this.edgeRenderer) return;
+
+    try {
+      // Call edge rendering progress callback
+      if (this.config.onEdgeRenderingProgress) {
+        this.config.onEdgeRenderingProgress(0, this.data.edges.length);
+      }
+
+      // Additional edge processing if needed (e.g., edge bundling operations)
+      // The basic edges are already rendered by renderNodes() -> RenderingSystem.render()
+
+      // Call edge rendering completion callback
+      if (this.config.onEdgeRenderingProgress) {
+        this.config.onEdgeRenderingProgress(this.data.edges.length, this.data.edges.length);
+      }
+
+      if (this.config.onEdgesRendered) {
+        this.config.onEdgesRendered();
+      }
+
+      this.updateState(LayoutEngineState.READY, 100);
+    } catch (error) {
+      this.handleError(error as Error, 'renderEdges');
+    }
+  }
+
+  /**
+   * Setup viewport management
+   */
+  private setupViewport(): void {
+    if (!this.viewportManager || !this.renderingSystem) return;
+
+    this.viewportManager.setup(this.container, this.renderingSystem);
+
+    if (this.config.enableZoom) {
+      this.viewportManager.setZoomEnabled(true);
+      if (this.config.zoomExtent) {
+        this.viewportManager.setZoomExtent(this.config.zoomExtent[0], this.config.zoomExtent[1]);
+      }
+    }
+
+    if (this.config.enableDrag) {
+      this.viewportManager.setPanEnabled(true);
+    }
+
+    if (this.config.fitToViewport) {
+      setTimeout(() => {
+        this.viewportManager?.fitToViewport(this.config.padding || 50, true);
+      }, 100);
+    }
+  }
+
+  /**
+   * Updates the graph with new data and re-renders the visualization.
+   */
+  async updateData(data: GraphData): Promise<void> {
     this.data = data;
     this.destroy();
-    this.render();
+    this.initializeComponents();
+    await this.render();
   }
 
   /**
-   * Get the current simulation instance
+   * Gets the D3 force simulation instance for advanced customization.
    */
-  getSimulation(): d3.Simulation<d3.SimulationNodeDatum, undefined> | null {
-    return this.simulation;
+  getSimulation(): any {
+    return this.layoutEngine?.getSimulation() || null;
   }
 
   /**
-   * Destroy the graph and clean up
+   * Gets the currently selected node ID.
+   */
+  getSelectedNodeId(): string | null {
+    return this.selectedNodeId;
+  }
+
+  /**
+   * Selects a node and highlights it along with its neighbors.
+   */
+  selectNode(nodeId: string): void {
+    if (!this.renderingSystem) return;
+
+    this.selectedNodeId = nodeId;
+
+    // Get neighbors
+    const neighbors = this.getNeighbors(nodeId);
+    const connectedEdges: string[] = [];
+
+    // Find connected edges
+    this.data.edges.forEach((edge, index) => {
+      const sourceId = typeof edge.source === 'string' ? edge.source : (edge.source as Node).id;
+      const targetId = typeof edge.target === 'string' ? edge.target : (edge.target as Node).id;
+
+      if (sourceId === nodeId || targetId === nodeId) {
+        connectedEdges.push(edge.id || `edge-${index}`);
+      }
+    });
+
+    // Apply highlighting through rendering system
+    this.renderingSystem.highlightNodes([nodeId, ...neighbors]);
+    this.renderingSystem.highlightEdges(connectedEdges);
+
+    // Call the callback if provided
+    if (this.config.onNodeSelected) {
+      try {
+        this.config.onNodeSelected(nodeId, neighbors, connectedEdges);
+      } catch (error) {
+        console.error('Error in onNodeSelected callback:', error);
+      }
+    }
+  }
+
+  /**
+   * Clears the current node selection.
+   */
+  clearSelection(): void {
+    if (!this.renderingSystem) return;
+
+    this.selectedNodeId = null;
+    this.renderingSystem.clearHighlights();
+  }
+
+  /**
+   * Gets the neighbor node IDs for a given node.
+   */
+  getNeighbors(nodeId: string): string[] {
+    const neighbors: Set<string> = new Set();
+
+    this.data.edges.forEach((edge) => {
+      const sourceId = typeof edge.source === 'string' ? edge.source : (edge.source as Node).id;
+      const targetId = typeof edge.target === 'string' ? edge.target : (edge.target as Node).id;
+
+      if (sourceId === nodeId && targetId !== nodeId) {
+        neighbors.add(targetId);
+      } else if (targetId === nodeId && sourceId !== nodeId) {
+        neighbors.add(sourceId);
+      }
+    });
+
+    return Array.from(neighbors);
+  }
+
+  /**
+   * Disable animations for testing or performance reasons.
+   * Sets animation duration to 0 to make all transitions instant.
+   */
+  disableAnimations(): void {
+    if (this.viewportManager) {
+      this.viewportManager.setAnimationDuration(0);
+    }
+  }
+
+  /**
+   * Destroys the graph visualization and cleans up all resources.
    */
   destroy(): void {
-    if (this.edgeRenderResult) {
+    // Clean up layout engine
+    if (this.layoutEngine) {
+      this.layoutEngine.destroy();
+      this.layoutEngine = null;
+    }
+
+    // Clean up rendering system
+    if (this.renderingSystem) {
+      this.renderingSystem.destroy();
+      this.renderingSystem = null;
+    }
+
+    // Clean up viewport manager
+    if (this.viewportManager) {
+      this.viewportManager.destroy();
+      this.viewportManager = null;
+    }
+
+    // Clean up edge renderer
+    if (this.edgeRenderResult && this.edgeRenderer) {
       this.edgeRenderer.destroy(this.edgeRenderResult);
       this.edgeRenderResult = null;
     }
-    if (this.simulation) {
-      this.simulation.stop();
-      this.simulation = null;
-    }
-    if (this.svg) {
-      this.svg.remove();
-      this.svg = null;
-    }
-    this.linkGroup = null;
+
+    this.edgeRenderer = null;
+    this.layoutResult = null;
+    this.selectedNodeId = null;
   }
 }

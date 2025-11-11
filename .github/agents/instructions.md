@@ -139,7 +139,6 @@ Always run SonarQube analysis after making significant changes to ensure code qu
 - **tsup** (^8.3.5): Build tool for library bundling
 - **Vitest** (^2.1.9): Testing framework
 - **ESLint** (^9.18.0): Linting with TypeScript support
-- **@swc/core** (^1.10.1): Fast TypeScript transpilation for Wallaby.js
 
 ## Important Notes
 
@@ -159,14 +158,6 @@ This is a pnpm workspace with multiple packages:
 ### Known Linting Warnings
 
 The codebase has known ESLint warnings about `@typescript-eslint/no-explicit-any` (29 warnings). These are accepted technical debt related to d3 typings and don't block development.
-
-### Wallaby.js Support
-
-The project includes Wallaby.js configuration for real-time test feedback in IDEs:
-- Root configuration: `wallaby.js`
-- Package configuration: `packages/knowledge-network/wallaby.js`
-
-These files use @swc/core for fast TypeScript transpilation.
 
 ## Contributing
 
