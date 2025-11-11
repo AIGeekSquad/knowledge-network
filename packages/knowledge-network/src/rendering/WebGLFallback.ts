@@ -44,10 +44,10 @@ export interface FallbackResult {
  * Comprehensive fallback system for WebGL rendering
  */
 export class WebGLFallback {
-  private _config: FallbackConfig;
+  private config: FallbackConfig;
   private lastCapabilityCheck: CapabilityCheck | null = null;
 
-  constructor(_config: Partial<FallbackConfig> = {}) {
+  constructor(config: Partial<FallbackConfig> = {}) {
     this.config = {
       enableWebGL1Fallback: true,
       enableCanvasFallback: true,
@@ -55,7 +55,7 @@ export class WebGLFallback {
       maxWebGLInitRetries: 3,
       performanceThreshold: 30, // 30 FPS
       memoryThreshold: 512, // 512 MB
-      ..._config,
+      ...config,
     };
   }
 
@@ -63,8 +63,8 @@ export class WebGLFallback {
    * Attempt to initialize WebGL renderer with fallbacks
    */
   async initializeRenderer(
-    _container: HTMLElement,
-    _config: WebGLRendererConfig
+    container: HTMLElement,
+    config: WebGLRendererConfig
   ): Promise<FallbackResult> {
     // Check browser capabilities
     const capabilities = this.checkCapabilities();
@@ -78,7 +78,7 @@ export class WebGLFallback {
 
         for (let attempt = 1; attempt <= this.config.maxWebGLInitRetries; attempt++) {
           try {
-            renderer.initialize(_container, _config);
+            renderer.initialize(container, config);
             return {
               success: true,
               renderer,
@@ -86,8 +86,8 @@ export class WebGLFallback {
               reason: 'WebGL2 initialization successful',
               capabilities,
             };
-          } catch (_error) {
-            console.warn(`WebGL2 initialization attempt ${attempt} failed:`, _error);
+          } catch (error) {
+            console.warn(`WebGL2 initialization attempt ${attempt} failed:`, error);
 
             if (attempt === this.config.maxWebGLInitRetries) {
               renderer.destroy();
@@ -98,15 +98,15 @@ export class WebGLFallback {
             await new Promise(resolve => setTimeout(resolve, 100 * attempt));
           }
         }
-      } catch (_error) {
-        console.warn('WebGL2 renderer import/creation failed:', _error);
+      } catch (error) {
+        console.warn('WebGL2 renderer import/creation failed:', error);
       }
     }
 
     // Try WebGL1 fallback
     if (this.config.enableWebGL1Fallback && capabilities.webgl1) {
       try {
-        const webgl1Result = await this.initializeWebGL1Fallback(_container, _config);
+        const webgl1Result = await this.initializeWebGL1Fallback(container, config);
         if (webgl1Result.success) {
           return {
             ...webgl1Result,
@@ -115,23 +115,23 @@ export class WebGLFallback {
             capabilities,
           };
         }
-      } catch (_error) {
-        console.warn('WebGL1 fallback failed:', _error);
+      } catch (error) {
+        console.warn('WebGL1 fallback failed:', error);
       }
     }
 
     // Try Canvas 2D fallback
     if (this.config.enableCanvasFallback && capabilities.canvas2d) {
       try {
-        const canvas2dResult = this.initializeCanvas2DFallback(_container, _config);
+        const canvas2dResult = this.initializeCanvas2DFallback(container, config);
         return {
           ...canvas2dResult,
           fallbackLevel: 'canvas2d',
           reason: 'WebGL not available, using Canvas 2D fallback',
           capabilities,
         };
-      } catch (_error) {
-        console.warn('Canvas 2D fallback failed:', _error);
+      } catch (error) {
+        console.warn('Canvas 2D fallback failed:', error);
       }
     }
 
@@ -173,8 +173,8 @@ export class WebGLFallback {
         capabilities.webgl2 = true;
         this.checkWebGLCapabilities(gl2, capabilities);
       }
-    } catch (_error) {
-      console.warn('WebGL2 context creation failed:', _error);
+    } catch (error) {
+      console.warn('WebGL2 context creation failed:', error);
     }
 
     // Check WebGL1
@@ -186,16 +186,16 @@ export class WebGLFallback {
           this.checkWebGLCapabilities(gl1 as WebGLRenderingContext, capabilities);
         }
       }
-    } catch (_error) {
-      console.warn('WebGL1 context creation failed:', _error);
+    } catch (error) {
+      console.warn('WebGL1 context creation failed:', error);
     }
 
     // Check Canvas 2D
     try {
       const ctx2d = canvas.getContext('2d');
       capabilities.canvas2d = !!ctx2d;
-    } catch (_error) {
-      console.warn('Canvas 2D context creation failed:', _error);
+    } catch (error) {
+      console.warn('Canvas 2D context creation failed:', error);
     }
 
     canvas.remove();
@@ -227,12 +227,12 @@ export class WebGLFallback {
       for (const ext of extensions) {
         try {
           capabilities.extensions[ext] = !!gl.getExtension(ext);
-        } catch (_error) {
+        } catch (error) {
           capabilities.extensions[ext] = false;
         }
       }
-    } catch (_error) {
-      console.warn('Error checking WebGL capabilities:', _error);
+    } catch (error) {
+      console.warn('Error checking WebGL capabilities:', error);
     }
   }
 
@@ -240,8 +240,8 @@ export class WebGLFallback {
    * Initialize WebGL1 fallback renderer
    */
   private async initializeWebGL1Fallback(
-    _container: HTMLElement,
-    _config: WebGLRendererConfig
+    container: HTMLElement,
+    config: WebGLRendererConfig
   ): Promise<{ success: boolean; renderer: IRenderer | null }> {
     // For now, return failure since WebGL1 renderer is not implemented
     // In a full implementation, this would create a WebGL1-compatible renderer
@@ -253,15 +253,15 @@ export class WebGLFallback {
    * Initialize Canvas 2D fallback renderer
    */
   private initializeCanvas2DFallback(
-    _container: HTMLElement,
-    _config: RendererConfig
+    container: HTMLElement,
+    config: RendererConfig
   ): { success: boolean; renderer: IRenderer | null } {
     try {
       const renderer = new CanvasRenderer();
-      renderer.initialize(_container, _config);
+      renderer.initialize(container, config);
       return { success: true, renderer };
-    } catch (_error) {
-      console.error('Canvas 2D fallback initialization failed:', _error);
+    } catch (error) {
+      console.error('Canvas 2D fallback initialization failed:', error);
       return { success: false, renderer: null };
     }
   }
@@ -336,8 +336,8 @@ export class WebGLFallback {
           renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || renderer;
         }
       }
-    } catch (_error) {
-      console.warn('Error getting WebGL diagnostics:', _error);
+    } catch (error) {
+      console.warn('Error getting WebGL diagnostics:', error);
     }
 
     canvas.remove();
@@ -355,7 +355,7 @@ export class WebGLFallback {
   /**
    * Create error report for support
    */
-  createErrorReport(_error: Error, context: string): string {
+  createErrorReport(error: Error, context: string): string {
     const diagnostics = this.getDiagnostics();
     const timestamp = new Date().toISOString();
 
@@ -383,8 +383,8 @@ Capabilities: ${JSON.stringify(diagnostics.capabilities, null, 2)}
   /**
    * Update fallback configuration
    */
-  updateConfig(_config: Partial<FallbackConfig>): void {
-    this.config = { ...this._config, ...config };
+  updateConfig(config: Partial<FallbackConfig>): void {
+    this.config = { ...this.config, ...config };
   }
 
   /**

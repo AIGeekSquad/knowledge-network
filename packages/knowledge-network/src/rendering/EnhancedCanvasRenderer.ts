@@ -15,7 +15,7 @@
  * @example
  * ```typescript
  * const renderer = new EnhancedCanvasRenderer();
- * renderer.initialize(container, _config);
+ * renderer.initialize(container, config);
  *
  * // Render with spatial integration
  * renderer.render(layout, renderConfig);
@@ -90,7 +90,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
   private ctx: CanvasRenderingContext2D | null = null;
   private offscreenCanvas: OffscreenCanvas | null = null;
   private offscreenCtx: OffscreenCanvasRenderingContext2D | null = null;
-  private _config: CanvasRenderingConfig | null = null;
+  private config: CanvasRenderingConfig | null = null;
 
   // Spatial integration
   private spatialIndexer: SpatialIndexer;
@@ -132,7 +132,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
 
   // === Lifecycle Methods ===
 
-  initialize(container: HTMLElement, _config: CanvasRenderingConfig): void {
+  initialize(container: HTMLElement, config: CanvasRenderingConfig): void {
     this.config = {
       enableViewportCulling: true,
       enableLevelOfDetail: true,
@@ -144,7 +144,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
       enableMouseInteraction: true,
       selectionTolerance: 10,
       hoverDistance: 15,
-      ..._config,
+      ...config,
     };
 
     // Create main canvas
@@ -197,7 +197,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
 
   // === Core Rendering Methods ===
 
-  render(layout: LayoutResult, _config: RenderConfig): void {
+  render(layout: LayoutResult, config: RenderConfig): void {
     if (!this.ctx || !this.canvas) return;
 
     // Update layout and rebuild spatial index if needed
@@ -249,14 +249,14 @@ export class EnhancedCanvasRenderer implements IRenderer {
     this.renderHighlights();
   }
 
-  renderNodes(_nodes: PositionedNode[], config?: NodeRenderConfig): void {
+  renderNodes(nodes: PositionedNode[], config?: NodeRenderConfig): void {
     if (!this.ctx) return;
 
     const defaultConfig: NodeRenderConfig = {
-      _radius: 10,
+      radius: 10,
       fill: '#69b3a2',
       stroke: '#fff',
-      _strokeWidth: 1.5,
+      strokeWidth: 1.5,
       opacity: 1,
       shape: 'circle',
     };
@@ -276,7 +276,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
 
     const defaultConfig: EdgeRenderConfig = {
       stroke: '#999',
-      _strokeWidth: 1.5,
+      strokeWidth: 1.5,
       opacity: 0.6,
       curveType: 'straight',
     };
@@ -372,7 +372,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
     };
 
     const intersections = this.spatialIndexer.queryRay(ray);
-    return intersections.map(intersection => intersection._node);
+    return intersections.map(intersection => intersection.node);
   }
 
   // === Viewport Control API ===
@@ -411,7 +411,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
     if (!this.currentLayout || !this.canvas) return;
 
     const pad = padding ?? this.fitPadding;
-    const bounds = createBoundingRectangle(this.currentLayout._nodes, pad);
+    const bounds = createBoundingRectangle(this.currentLayout.nodes, pad);
 
     if (bounds.width === 0 || bounds.height === 0) return;
 
@@ -473,13 +473,13 @@ export class EnhancedCanvasRenderer implements IRenderer {
 
   highlightNodes(nodeIds: string[], config?: HighlightConfig): void {
     this.highlightedNodes.clear();
-    nodeIds.forEach(id => this.highlightedNodes.add(_id));
+    nodeIds.forEach(id => this.highlightedNodes.add(id));
     this.requestRender();
   }
 
   highlightEdges(edgeIds: string[], config?: HighlightConfig): void {
     this.highlightedEdges.clear();
-    edgeIds.forEach(id => this.highlightedEdges.add(_id));
+    edgeIds.forEach(id => this.highlightedEdges.add(id));
     this.requestRender();
   }
 
@@ -534,7 +534,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
   // === Private Implementation Methods ===
 
   private setupCanvas(container: HTMLElement): void {
-    if (!this.canvas || !this._config) return;
+    if (!this.canvas || !this.config) return;
 
     this.canvas.width = this.config.width * this.config.pixelDensity!;
     this.canvas.height = this.config.height * this.config.pixelDensity!;
@@ -550,7 +550,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
   }
 
   private setupOffscreenCanvas(): void {
-    if (!this._config) return;
+    if (!this.config) return;
 
     try {
       this.offscreenCanvas = new OffscreenCanvas(
@@ -586,18 +586,18 @@ export class EnhancedCanvasRenderer implements IRenderer {
       const y = event.clientY - rect.top;
 
       const node = this.getNodeAt(x, y);
-      if (_node) {
+      if (node) {
         if (event.ctrlKey || event.metaKey) {
           // Multi-select
-          if (this.selectedNodes.has(node._id)) {
-            this.selectedNodes.delete(node._id);
+          if (this.selectedNodes.has(node.id)) {
+            this.selectedNodes.delete(node.id);
           } else {
-            this.selectedNodes.add(node._id);
+            this.selectedNodes.add(node.id);
           }
         } else {
           // Single select
           this.selectedNodes.clear();
-          this.selectedNodes.add(node._id);
+          this.selectedNodes.add(node.id);
         }
         this.requestRender();
       }
@@ -629,7 +629,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
   private rebuildSpatialIndex(): void {
     if (!this.currentLayout) return;
 
-    this.spatialIndexer.build(this.currentLayout._nodes);
+    this.spatialIndexer.build(this.currentLayout.nodes);
     this.spatialIndexValid = true;
   }
 
@@ -657,10 +657,10 @@ export class EnhancedCanvasRenderer implements IRenderer {
     this.visibleNodes = this.spatialIndexer.queryRegion(this.viewportBounds);
 
     // Filter edges to only those connecting visible nodes
-    const visibleNodeIds = new Set(this.visibleNodes.map(n => n._id));
+    const visibleNodeIds = new Set(this.visibleNodes.map(n => n.id));
     this.visibleEdges = this.currentLayout.edges.filter(edge => {
-      const sourceId = typeof edge.source === 'string' ? edge._source: edge.source.id;
-      const targetId = typeof edge.target === 'string' ? edge._target: edge.target.id;
+      const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+      const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
       return visibleNodeIds.has(sourceId) && visibleNodeIds.has(targetId);
     });
   }
@@ -689,28 +689,28 @@ export class EnhancedCanvasRenderer implements IRenderer {
     );
   }
 
-  private renderNodeBatch(_nodes: PositionedNode[], _config: NodeRenderConfig): void {
+  private renderNodeBatch(nodes: PositionedNode[], config: NodeRenderConfig): void {
     if (!this.ctx) return;
 
-    nodes.forEach((_node) => {
-      const shape = this.accessor(config.shape!, _node);
-      const radius = this.accessor(config.radius!, _node);
-      const fill = this.accessor(config.fill!, _node);
-      const stroke = this.accessor(config.stroke!, _node);
-      const strokeWidth = this.accessor(config.strokeWidth!, _node);
-      const opacity = this.accessor(config.opacity!, _node);
+    nodes.forEach((node) => {
+      const shape = this.accessor(config.shape!, node);
+      const radius = this.accessor(config.radius!, node);
+      const fill = this.accessor(config.fill!, node);
+      const stroke = this.accessor(config.stroke!, node);
+      const strokeWidth = this.accessor(config.strokeWidth!, node);
+      const opacity = this.accessor(config.opacity!, node);
 
       // Apply highlighting/selection effects
       let finalFill = fill;
       let finalStroke = stroke;
       let finalStrokeWidth = strokeWidth;
 
-      if (this.selectedNodes.has(node._id)) {
+      if (this.selectedNodes.has(node.id)) {
         finalStroke = '#ff6b35';
         finalStrokeWidth = strokeWidth * 2;
-      } else if (this.highlightedNodes.has(node._id)) {
+      } else if (this.highlightedNodes.has(node.id)) {
         finalFill = '#ffd23f';
-      } else if (this.hoveredNode?.id === node._id) {
+      } else if (this.hoveredNode?.id === node.id) {
         finalStroke = '#ff9500';
         finalStrokeWidth = strokeWidth * 1.5;
       }
@@ -724,21 +724,21 @@ export class EnhancedCanvasRenderer implements IRenderer {
 
       switch (shape) {
         case 'circle':
-          this.ctx!.arc(node.x, node.y, _radius, 0, 2 * Math.PI);
+          this.ctx!.arc(node.x, node.y, radius, 0, 2 * Math.PI);
           break;
         case 'square':
-          this.ctx!.rect(node.x - _radius, node.y - _radius, radius * 2, radius * 2);
+          this.ctx!.rect(node.x - radius, node.y - radius, radius * 2, radius * 2);
           break;
         case 'diamond':
-          this.ctx!.moveTo(node.x, node.y - _radius);
-          this.ctx!.lineTo(node.x + _radius, node.y);
-          this.ctx!.lineTo(node.x, node.y + _radius);
-          this.ctx!.lineTo(node.x - _radius, node.y);
+          this.ctx!.moveTo(node.x, node.y - radius);
+          this.ctx!.lineTo(node.x + radius, node.y);
+          this.ctx!.lineTo(node.x, node.y + radius);
+          this.ctx!.lineTo(node.x - radius, node.y);
           this.ctx!.closePath();
           break;
         case 'triangle':
           const h = (radius * Math.sqrt(3)) / 2;
-          this.ctx!.moveTo(node.x, node.y - _radius);
+          this.ctx!.moveTo(node.x, node.y - radius);
           this.ctx!.lineTo(node.x + h, node.y + radius / 2);
           this.ctx!.lineTo(node.x - h, node.y + radius / 2);
           this.ctx!.closePath();
@@ -750,7 +750,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
     });
   }
 
-  private renderEdgeBatch(edges: PositionedEdge[], _config: EdgeRenderConfig): void {
+  private renderEdgeBatch(edges: PositionedEdge[], config: EdgeRenderConfig): void {
     if (!this.ctx) return;
 
     edges.forEach((edge) => {
@@ -763,7 +763,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
       let finalStrokeWidth = strokeWidth;
       let finalOpacity = opacity;
 
-      if (this.highlightedEdges.has(edge._id)) {
+      if (this.highlightedEdges.has(edge.id)) {
         finalStroke = '#ff6b35';
         finalStrokeWidth = strokeWidth * 2;
         finalOpacity = Math.min(1, opacity * 1.5);
@@ -783,17 +783,17 @@ export class EnhancedCanvasRenderer implements IRenderer {
     });
   }
 
-  private renderLabelsFromNodes(_nodes: PositionedNode[], config?: LabelRenderConfig): void {
+  private renderLabelsFromNodes(nodes: PositionedNode[], config?: LabelRenderConfig): void {
     const labels: LabelItem[] = nodes
-      .filter((_node) => node._label)
-      .map((_node) => ({
-        _id: node._id,
+      .filter((node) => node.label)
+      .map((node) => ({
+        id: node.id,
         text: node.label!,
         position: { x: node.x, y: node.y },
         anchor: 'middle',
       }));
 
-    this.renderLabels(labels, _config);
+    this.renderLabels(labels, config);
   }
 
   private renderHighlights(): void {

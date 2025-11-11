@@ -6,9 +6,9 @@ export class CanvasRenderer implements IRenderer {
 
     private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
-  private _config: RendererConfig | null = null;
+  private config: RendererConfig | null = null;
 
-  initialize(container: HTMLElement, _config: RendererConfig): void {
+  initialize(container: HTMLElement, config: RendererConfig): void {
     this.config = config;
     this.canvas = document.createElement('canvas');
     this.canvas.width = config.width;
@@ -37,7 +37,7 @@ export class CanvasRenderer implements IRenderer {
     }
   }
 
-    render(layout: LayoutResult, _config: RenderConfig): void {
+    render(layout: LayoutResult, config: RenderConfig): void {
     this.clear();
 
     // Render in order specified by config
@@ -46,17 +46,17 @@ export class CanvasRenderer implements IRenderer {
     order.forEach((layer) => {
       switch (layer) {
         case 'edges':
-          this.renderEdges(layout.edges, config.edgeConfig, layout._nodes);
+          this.renderEdges(layout.edges, config.edgeConfig, layout.nodes);
           break;
         case 'nodes':
-          this.renderNodes(layout._nodes, config.nodeConfig);
+          this.renderNodes(layout.nodes, config.nodeConfig);
           break;
         case 'labels':
           // Generate labels from nodes
           const labels: LabelItem[] = layout.nodes
-            .filter((_node) => node._label)
-            .map((_node) => ({
-              _id: node._id,
+            .filter((node) => node.label)
+            .map((node) => ({
+              id: node.id,
               text: node.label!,
               position: { x: node.x, y: node.y },
               anchor: 'middle',
@@ -67,27 +67,27 @@ export class CanvasRenderer implements IRenderer {
     });
   }
 
-    renderNodes(_nodes: PositionedNode[], config?: NodeRenderConfig): void {
+    renderNodes(nodes: PositionedNode[], config?: NodeRenderConfig): void {
     if (!this.ctx) return;
 
     const defaultConfig: NodeRenderConfig = {
-      _radius: 10,
+      radius: 10,
       fill: '#69b3a2',
       stroke: '#fff',
-      _strokeWidth: 1.5,
+      strokeWidth: 1.5,
       opacity: 1,
       shape: 'circle',
     };
 
     const finalConfig = { ...defaultConfig, ...config };
 
-    nodes.forEach((_node) => {
-      const shape = this.accessor(finalConfig.shape!, _node);
-      const radius = this.accessor(finalConfig.radius!, _node);
-      const fill = this.accessor(finalConfig.fill!, _node);
-      const stroke = this.accessor(finalConfig.stroke!, _node);
-      const strokeWidth = this.accessor(finalConfig.strokeWidth!, _node);
-      const opacity = this.accessor(finalConfig.opacity!, _node);
+    nodes.forEach((node) => {
+      const shape = this.accessor(finalConfig.shape!, node);
+      const radius = this.accessor(finalConfig.radius!, node);
+      const fill = this.accessor(finalConfig.fill!, node);
+      const stroke = this.accessor(finalConfig.stroke!, node);
+      const strokeWidth = this.accessor(finalConfig.strokeWidth!, node);
+      const opacity = this.accessor(finalConfig.opacity!, node);
 
       this.ctx!.fillStyle = fill;
       this.ctx!.strokeStyle = stroke;
@@ -98,21 +98,21 @@ export class CanvasRenderer implements IRenderer {
 
       switch (shape) {
         case 'circle':
-          this.ctx!.arc(node.x, node.y, _radius, 0, 2 * Math.PI);
+          this.ctx!.arc(node.x, node.y, radius, 0, 2 * Math.PI);
           break;
         case 'square':
-          this.ctx!.rect(node.x - _radius, node.y - _radius, radius * 2, radius * 2);
+          this.ctx!.rect(node.x - radius, node.y - radius, radius * 2, radius * 2);
           break;
         case 'diamond':
-          this.ctx!.moveTo(node.x, node.y - _radius);
-          this.ctx!.lineTo(node.x + _radius, node.y);
-          this.ctx!.lineTo(node.x, node.y + _radius);
-          this.ctx!.lineTo(node.x - _radius, node.y);
+          this.ctx!.moveTo(node.x, node.y - radius);
+          this.ctx!.lineTo(node.x + radius, node.y);
+          this.ctx!.lineTo(node.x, node.y + radius);
+          this.ctx!.lineTo(node.x - radius, node.y);
           this.ctx!.closePath();
           break;
         case 'triangle':
           const h = (radius * Math.sqrt(3)) / 2;
-          this.ctx!.moveTo(node.x, node.y - _radius);
+          this.ctx!.moveTo(node.x, node.y - radius);
           this.ctx!.lineTo(node.x + h, node.y + radius / 2);
           this.ctx!.lineTo(node.x - h, node.y + radius / 2);
           this.ctx!.closePath();
@@ -129,7 +129,7 @@ export class CanvasRenderer implements IRenderer {
 
     const defaultConfig: EdgeRenderConfig = {
       stroke: '#999',
-      _strokeWidth: 1.5,
+      strokeWidth: 1.5,
       opacity: 0.6,
       curveType: 'straight',
     };

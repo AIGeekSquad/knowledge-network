@@ -15,7 +15,9 @@ import type { Point2D } from '../spatial/types';
 import type { PositionedNode } from '../layout/LayoutEngine';
 import type {
   InteractionController,
-  ViewportState, InteractionConfig, GestureEvent,
+  ViewportState,
+  InteractionConfig,
+  GestureEvent,
 } from './index';
 
 // === Mobile Optimization ===
@@ -176,7 +178,7 @@ export class MobileOptimizer {
 
     return nodes.map(node => {
       const screenRadius = (node.radius || 10) * scale;
-      const enhancedRadius = Math.max(screenRadius, minSize / 2 / _scale);
+      const enhancedRadius = Math.max(screenRadius, minSize / 2 / scale);
 
       return {
         ...node,
@@ -267,7 +269,7 @@ export class MobileOptimizer {
       // Update viewport if needed
       setTimeout(() => {
         const container = this.interactionController.getViewportState();
-        if (_container) {
+        if (container) {
           // Trigger viewport resize
           this.interactionController.updateConfig({
             viewport: {

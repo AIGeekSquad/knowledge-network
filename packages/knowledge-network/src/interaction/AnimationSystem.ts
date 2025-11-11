@@ -14,6 +14,7 @@ import type { Point2D } from '../spatial/types';
 import type {
   ViewportState as IViewportState,
   AnimationConfig,
+  ViewportAnimation,
   EasingFunction,
 } from './types';
 import { EASING_FUNCTIONS, clamp } from './types';
@@ -50,7 +51,7 @@ interface ActiveAnimation {
   id: string;
   type: 'viewport' | 'custom';
   startTime: number;
-  _config: AnimationConfig;
+  config: AnimationConfig;
   onUpdate: (progress: number, value: any) => void;
   onComplete: () => void;
   startValue: any;
@@ -59,7 +60,7 @@ interface ActiveAnimation {
 }
 
 export class AnimationSystem {
-  private _config: AnimationSystemConfig;
+  private config: AnimationSystemConfig;
   private activeAnimations = new Map<string, ActiveAnimation>();
   private animationFrame: number | null = null;
   private isRunning = false;
@@ -73,15 +74,15 @@ export class AnimationSystem {
   // Motion preference detection
   private prefersReducedMotion = false;
 
-  constructor(_config: Partial<AnimationSystemConfig> = {}) {
+  constructor(config: Partial<AnimationSystemConfig> = {}) {
     this.config = { ...DEFAULT_ANIMATION_CONFIG, ...config };
     this.detectMotionPreferences();
   }
 
   // === Configuration ===
 
-  updateConfig(_config: Partial<AnimationSystemConfig>): void {
-    this.config = { ...this._config, ...config };
+  updateConfig(config: Partial<AnimationSystemConfig>): void {
+    this.config = { ...this.config, ...config };
   }
 
   getConfig(): AnimationSystemConfig {
@@ -97,7 +98,7 @@ export class AnimationSystem {
     viewport: ViewportState,
     targetZoom: number,
     center?: Point2D,
-    _config: Partial<AnimationConfig>
+    config?: Partial<AnimationConfig>
   ): Promise<void> {
     const startZoom = viewport.getZoom();
     const clampedTarget = clamp(targetZoom, 0.1, 10); // Use viewport limits
@@ -106,7 +107,7 @@ export class AnimationSystem {
       return Promise.resolve();
     }
 
-    const animConfig = this.createAnimationConfig(_config);
+    const animConfig = this.createAnimationConfig(config);
 
     return new Promise((resolve) => {
       this.startAnimation(
@@ -128,7 +129,7 @@ export class AnimationSystem {
   animatePan(
     viewport: ViewportState,
     targetPan: Point2D,
-    _config: Partial<AnimationConfig>
+    config?: Partial<AnimationConfig>
   ): Promise<void> {
     const startPan = viewport.getPan();
 
@@ -139,7 +140,7 @@ export class AnimationSystem {
       return Promise.resolve();
     }
 
-    const animConfig = this.createAnimationConfig(_config);
+    const animConfig = this.createAnimationConfig(config);
 
     return new Promise((resolve) => {
       this.startAnimation(
@@ -162,13 +163,13 @@ export class AnimationSystem {
     viewport: ViewportState,
     contentBounds: { minX: number; minY: number; maxX: number; maxY: number },
     padding = 50,
-    _config: Partial<AnimationConfig>
+    config?: Partial<AnimationConfig>
   ): Promise<void> {
     // Calculate target viewport state
     const targetViewport = viewport.clone();
     targetViewport.fitToBounds(contentBounds, padding);
 
-    return this.animateToViewport(viewport, targetViewport.getState(), _config);
+    return this.animateToViewport(viewport, targetViewport.getState(), config);
   }
 
   /**
@@ -178,14 +179,14 @@ export class AnimationSystem {
     viewport: ViewportState,
     initialZoom = 1,
     initialPan: Point2D = { x: 0, y: 0 },
-    _config: Partial<AnimationConfig>
+    config?: Partial<AnimationConfig>
   ): Promise<void> {
     const targetState: Partial<IViewportState> = {
       zoom: initialZoom,
       pan: initialPan,
     };
 
-    return this.animateToViewport(viewport, targetState, _config);
+    return this.animateToViewport(viewport, targetState, config);
   }
 
   /**
@@ -194,10 +195,10 @@ export class AnimationSystem {
   animateToViewport(
     viewport: ViewportState,
     targetState: Partial<IViewportState>,
-    _config: Partial<AnimationConfig>
+    config?: Partial<AnimationConfig>
   ): Promise<void> {
     const currentState = viewport.getState();
-    const animConfig = this.createAnimationConfig(_config);
+    const animConfig = this.createAnimationConfig(config);
 
     // Combine all viewport changes into a single animation
     return new Promise((resolve) => {
@@ -228,11 +229,11 @@ export class AnimationSystem {
     id: string,
     startValue: T,
     targetValue: T,
-    _config: AnimationConfig,
+    config: AnimationConfig,
     onUpdate: (progress: number, value: T) => void
   ): Promise<void> {
     return new Promise((resolve) => {
-      this.startAnimation(id, startValue, targetValue, _config, onUpdate, resolve);
+      this.startAnimation(id, startValue, targetValue, config, onUpdate, resolve);
     });
   }
 
@@ -243,10 +244,10 @@ export class AnimationSystem {
     id: string,
     startValue: number,
     targetValue: number,
-    _config: Partial<AnimationConfig>,
+    config: Partial<AnimationConfig>,
     onUpdate: (value: number) => void
   ): Promise<void> {
-    const animConfig = this.createAnimationConfig(_config);
+    const animConfig = this.createAnimationConfig(config);
 
     return new Promise((resolve) => {
       this.startAnimation(id, startValue, targetValue, animConfig, onUpdate, resolve);
@@ -260,10 +261,10 @@ export class AnimationSystem {
     id: string,
     startPoint: Point2D,
     targetPoint: Point2D,
-    _config: Partial<AnimationConfig>,
+    config: Partial<AnimationConfig>,
     onUpdate: (point: Point2D) => void
   ): Promise<void> {
-    const animConfig = this.createAnimationConfig(_config);
+    const animConfig = this.createAnimationConfig(config);
 
     return new Promise((resolve) => {
       this.startAnimation(id, startPoint, targetPoint, animConfig, onUpdate, resolve);
@@ -351,7 +352,7 @@ export class AnimationSystem {
     id: string,
     startValue: T,
     targetValue: T,
-    _config: AnimationConfig,
+    config: AnimationConfig,
     onUpdate: (progress: number, value: T) => void,
     onComplete: () => void
   ): void {
@@ -373,7 +374,7 @@ export class AnimationSystem {
       id,
       type: 'custom',
       startTime: performance.now(),
-      _config,
+      config,
       onUpdate,
       onComplete,
       startValue,
@@ -586,14 +587,15 @@ export class AnimationSystem {
     return (t: number) => {
       if (t === 1) return 1;
 
-      const n = bounces;
-      const a = decay;
+      let n = bounces;
+      let a = decay;
       let sum = 0;
 
       for (let i = 0; i < n; i++) {
         sum += Math.pow(a, i);
       }
 
+      let currentBounce = 0;
       let currentTime = 0;
 
       for (let i = 0; i < n; i++) {

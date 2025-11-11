@@ -149,40 +149,40 @@ function setupEventForwarding(
   eventSystem: InteractionEventSystem
 ): void {
   // Forward controller events to event system
-  controller.on('viewportChange', (_event: ViewportChangeEvent) => {
-    eventSystem.emitInteractionEvent('viewport:change', _event);
+  controller.on('viewportChange', (event: ViewportChangeEvent) => {
+    eventSystem.emitInteractionEvent('viewport:change', event);
 
     // Emit specific viewport events
     switch (event.reason) {
       case 'pan':
-        eventSystem.emitInteractionEvent('viewport:pan', _event);
+        eventSystem.emitInteractionEvent('viewport:pan', event);
         break;
       case 'zoom':
-        eventSystem.emitInteractionEvent('viewport:zoom', _event);
+        eventSystem.emitInteractionEvent('viewport:zoom', event);
         break;
       case 'reset':
-        eventSystem.emitInteractionEvent('viewport:reset', _event);
+        eventSystem.emitInteractionEvent('viewport:reset', event);
         break;
       case 'fit':
-        eventSystem.emitInteractionEvent('viewport:fit', _event);
+        eventSystem.emitInteractionEvent('viewport:fit', event);
         break;
     }
   });
 
-  controller.on('selectionChange', (_event: SelectionChangeEvent) => {
-    eventSystem.emitInteractionEvent('selection:change', _event);
+  controller.on('selectionChange', (event: SelectionChangeEvent) => {
+    eventSystem.emitInteractionEvent('selection:change', event);
 
     if (event.selectedNodes.length === 0) {
-      eventSystem.emitInteractionEvent('selection:clear', _event);
+      eventSystem.emitInteractionEvent('selection:clear', event);
     }
   });
 
-  controller.on('nodeClick', (_event: NodeInteractionEvent) => {
-    eventSystem.emitInteractionEvent('node:click', _event);
+  controller.on('nodeClick', (event: NodeInteractionEvent) => {
+    eventSystem.emitInteractionEvent('node:click', event);
   });
 
-  controller.on('nodeHover', (_event: NodeInteractionEvent) => {
-    eventSystem.emitInteractionEvent('node:hover', _event);
+  controller.on('nodeHover', (event: NodeInteractionEvent) => {
+    eventSystem.emitInteractionEvent('node:hover', event);
   });
 }
 
@@ -224,25 +224,25 @@ export class InteractionExampleApp {
 
   private setupEventHandlers(): void {
     // Viewport change handling
-    this.eventSystem.on('viewport:change', (_event) => {
+    this.eventSystem.on('viewport:change', (event) => {
       console.log('Viewport changed:', event.viewport);
       this.updateUI(event.viewport);
     });
 
     // Selection handling
-    this.eventSystem.on('selection:change', (_event) => {
+    this.eventSystem.on('selection:change', (event) => {
       console.log('Selection changed:', event.selectedNodes.length, 'nodes');
       this.updateSelection(event.selectedNodes);
     });
 
     // Node interaction handling
-    this.eventSystem.on('node:click', (_event) => {
+    this.eventSystem.on('node:click', (event) => {
       console.log('Node clicked:', event.node.id);
       this.handleNodeClick(event.node);
     });
 
     // Performance monitoring
-    this.eventSystem.on('performance:warning', (_event) => {
+    this.eventSystem.on('performance:warning', (event) => {
       console.warn('Performance warning:', event.warning, event.details);
     });
   }
@@ -339,19 +339,19 @@ export class InteractionExampleApp {
     onViewportChange?: (viewport: any) => void;
   }): void {
     if (handlers.onNodeClick) {
-      this.eventSystem.on('node:click', (_event) => {
+      this.eventSystem.on('node:click', (event) => {
         handlers.onNodeClick!(event.node);
       });
     }
 
     if (handlers.onSelectionChange) {
-      this.eventSystem.on('selection:change', (_event) => {
+      this.eventSystem.on('selection:change', (event) => {
         handlers.onSelectionChange!(event.selectedNodes);
       });
     }
 
     if (handlers.onViewportChange) {
-      this.eventSystem.on('viewport:change', (_event) => {
+      this.eventSystem.on('viewport:change', (event) => {
         handlers.onViewportChange!(event.viewport);
       });
     }
@@ -434,7 +434,7 @@ export class InteractionExampleApp {
 export function createKnowledgeNetworkInteraction(
   container: HTMLElement,
   nodes: PositionedNode[] = [],
-  _options: {
+  options?: {
     preset?: keyof typeof INTERACTION_PRESETS;
     enableMobile?: boolean;
     enableAccessibility?: boolean;

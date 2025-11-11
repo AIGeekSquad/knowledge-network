@@ -262,7 +262,7 @@ export class ViewportManager extends EventEmitter {
             d3.zoomIdentity.translate(newX, newY).scale(clampedScale)
           );
       }
-    } catch (_error) {
+    } catch (error) {
       // Fallback to direct transform update if d3 operations fail (e.g., in test environment)
       const newTransform = {
         x: this.transform.x,
@@ -477,7 +477,7 @@ export class ViewportManager extends EventEmitter {
       } else {
         d3Svg.call(this.zoomBehavior.transform, d3Transform);
       }
-    } catch (_error) {
+    } catch (error) {
       this.transform = transform;
       this.updateTransform(transform);
     }

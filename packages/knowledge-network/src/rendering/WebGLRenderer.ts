@@ -1,7 +1,7 @@
 /**
  * WebGL Renderer for GPU-accelerated graph rendering
  *
- * Provides high-performance rendering of massive graphs (10,000+ _nodes) using WebGL2.
+ * Provides high-performance rendering of massive graphs (10,000+ nodes) using WebGL2.
  * Features spatial indexing integration, viewport management, and GPU-based picking.
  */
 
@@ -18,7 +18,7 @@ import type {
   HighlightConfig,
   Transform,
   LabelItem,
-  _NodeShape,
+  NodeShape,
 } from './RenderingSystem';
 import type {
   LayoutResult,
@@ -114,7 +114,7 @@ export class WebGLRenderer implements IRenderer {
   // Core WebGL
   private canvas: HTMLCanvasElement | null = null;
   private gl: WebGL2RenderingContext | null = null;
-  private _config: WebGLRendererConfig | null = null;
+  private config: WebGLRendererConfig | null = null;
 
   // WebGL state
   private state: WebGLState = {
@@ -149,7 +149,7 @@ export class WebGLRenderer implements IRenderer {
   private lastError: Error | null = null;
 
   // Rendering data
-  private _nodes: PositionedNode[] = [];
+  private nodes: PositionedNode[] = [];
   private edges: PositionedEdge[] = [];
   private nodeCount = 0;
   private edgeCount = 0;
@@ -186,10 +186,10 @@ export class WebGLRenderer implements IRenderer {
   /**
    * Initialize the WebGL renderer
    */
-  initialize(container: HTMLElement, _config: RendererConfig): void {
+  initialize(container: HTMLElement, config: RendererConfig): void {
     this.config = {
-      _maxNodes: 50000,
-      _maxEdges: 100000,
+      maxNodes: 50000,
+      maxEdges: 100000,
       enablePicking: true,
       enableLOD: true,
       enableFrustumCulling: true,
@@ -199,7 +199,7 @@ export class WebGLRenderer implements IRenderer {
       fallbackToCanvas: true,
       enableErrorRecovery: true,
       maxRenderErrors: 5,
-      ..._config,
+      ...config,
     } as WebGLRendererConfig;
 
     // Create canvas
@@ -732,11 +732,11 @@ export class WebGLRenderer implements IRenderer {
   /**
    * Main render method - implements optimized rendering pipeline with LOD and batching
    */
-  render(layout: LayoutResult, _config: RenderConfig): void {
+  render(layout: LayoutResult, config: RenderConfig): void {
     if (!this.gl || !this.performanceManager || !this.canvas) return;
 
     try {
-      this.renderInternal(layout, _config);
+      this.renderInternal(layout, config);
     } catch (error) {
       this.handleRenderError(error as Error);
     }
@@ -745,7 +745,7 @@ export class WebGLRenderer implements IRenderer {
   /**
    * Internal render method with comprehensive error handling
    */
-  private renderInternal(layout: LayoutResult, _config: RenderConfig): void {
+  private renderInternal(layout: LayoutResult, config: RenderConfig): void {
 
     const startTime = performance.now();
 
@@ -755,7 +755,7 @@ export class WebGLRenderer implements IRenderer {
 
     // Update spatial index if available
     if (this.spatialIndex) {
-      this.spatialIndex.build(layout._nodes);
+      this.spatialIndex.build(layout.nodes);
     }
 
     // Calculate optimal LOD level based on zoom and performance
@@ -868,7 +868,7 @@ export class WebGLRenderer implements IRenderer {
     if (batch.nodes.length === 0) return;
 
     // Update GPU buffers for this batch
-    this.bufferManager.updateNodes(batch._nodes, config || {});
+    this.bufferManager.updateNodes(batch.nodes, config || {});
 
     // Use node shader program
     this.gl.useProgram(this.state.programs.node.program);
@@ -994,7 +994,7 @@ export class WebGLRenderer implements IRenderer {
 
   // === Rendering Methods ===
 
-  renderNodes(_nodes: PositionedNode[], config?: NodeRenderConfig): void {
+  renderNodes(nodes: PositionedNode[], config?: NodeRenderConfig): void {
     if (!this.gl || !this.bufferManager || !this.state.programs.node) return;
 
     // Filter visible nodes
@@ -1121,7 +1121,7 @@ export class WebGLRenderer implements IRenderer {
       const pickResult = this.pickingSystem.pickNode(
         screenX,
         screenY,
-        this._nodes,
+        this.nodes,
         this.viewMatrix,
         { width: this.canvas.width, height: this.canvas.height }
       );
@@ -1154,7 +1154,7 @@ export class WebGLRenderer implements IRenderer {
         screenBounds.y,
         screenBounds.x + screenBounds.width,
         screenBounds.y + screenBounds.height,
-        this._nodes,
+        this.nodes,
         this.viewMatrix,
         { width: this.canvas.width, height: this.canvas.height }
       );
@@ -1320,35 +1320,35 @@ export class WebGLRenderer implements IRenderer {
 
   // === Other IRenderer Methods ===
 
-  updateNodePositions(_positions: NodePosition[]): void {
+  updateNodePositions(positions: NodePosition[]): void {
     if (this.batchingEnabled) {
       this.pendingUpdates.nodePositions = [...(this.pendingUpdates.nodePositions || []), ...positions];
     } else {
-      this.applyNodePositionUpdates(_positions);
+      this.applyNodePositionUpdates(positions);
     }
   }
 
-  updateEdgePositions(_positions: EdgePosition[]): void {
+  updateEdgePositions(positions: EdgePosition[]): void {
     if (this.batchingEnabled) {
       this.pendingUpdates.edgePositions = [...(this.pendingUpdates.edgePositions || []), ...positions];
     } else {
-      this.applyEdgePositionUpdates(_positions);
+      this.applyEdgePositionUpdates(positions);
     }
   }
 
-  updateNodeStyles(_updates: NodeStyleUpdate[]): void {
+  updateNodeStyles(updates: NodeStyleUpdate[]): void {
     if (this.batchingEnabled) {
       this.pendingUpdates.nodeStyles = [...(this.pendingUpdates.nodeStyles || []), ...updates];
     } else {
-      this.applyNodeStyleUpdates(_updates);
+      this.applyNodeStyleUpdates(updates);
     }
   }
 
-  updateEdgeStyles(_updates: EdgeStyleUpdate[]): void {
+  updateEdgeStyles(updates: EdgeStyleUpdate[]): void {
     if (this.batchingEnabled) {
       this.pendingUpdates.edgeStyles = [...(this.pendingUpdates.edgeStyles || []), ...updates];
     } else {
-      this.applyEdgeStyleUpdates(_updates);
+      this.applyEdgeStyleUpdates(updates);
     }
   }
 
@@ -1363,7 +1363,7 @@ export class WebGLRenderer implements IRenderer {
 
     // Create style updates for highlighted nodes
     const styleUpdates: NodeStyleUpdate[] = nodeIds.map(nodeId => ({
-      _nodeId,
+      nodeId,
       style: {
         fill: highlightColor,
         opacity: highlightOpacity,
@@ -1382,7 +1382,7 @@ export class WebGLRenderer implements IRenderer {
     const highlightScale = config?.scale || 2.0;
 
     const styleUpdates: EdgeStyleUpdate[] = edgeIds.map(edgeId => ({
-      _edgeId,
+      edgeId,
       style: {
         stroke: highlightColor,
         opacity: highlightOpacity,
@@ -1401,12 +1401,12 @@ export class WebGLRenderer implements IRenderer {
     this.bufferManager.markDirty(['nodes', 'edges']);
   }
 
-  getNodeElement(_nodeId: string): Element | null {
+  getNodeElement(nodeId: string): Element | null {
     // WebGL doesn't have DOM elements
     return null;
   }
 
-  getEdgeElement(_edgeId: string): Element | null {
+  getEdgeElement(edgeId: string): Element | null {
     // WebGL doesn't have DOM elements
     return null;
   }
@@ -1445,12 +1445,12 @@ export class WebGLRenderer implements IRenderer {
 
   // === Private Implementation Methods ===
 
-  private applyNodePositionUpdates(_positions: NodePosition[]): void {
+  private applyNodePositionUpdates(positions: NodePosition[]): void {
     if (!this.bufferManager) return;
 
     // Update positions in node array
-    for (const pos of _positions) {
-      const nodeIndex = this.nodes.findIndex(n => n.id === pos._nodeId);
+    for (const pos of positions) {
+      const nodeIndex = this.nodes.findIndex(n => n.id === pos.nodeId);
       if (nodeIndex >= 0) {
         this.nodes[nodeIndex].x = pos.x;
         this.nodes[nodeIndex].y = pos.y;
@@ -1464,7 +1464,7 @@ export class WebGLRenderer implements IRenderer {
     this.bufferManager.markDirty(['nodes', 'picking']);
   }
 
-  private applyEdgePositionUpdates(_positions: EdgePosition[]): void {
+  private applyEdgePositionUpdates(positions: EdgePosition[]): void {
     if (!this.bufferManager) return;
 
     // Edge positions are derived from node positions
@@ -1472,7 +1472,7 @@ export class WebGLRenderer implements IRenderer {
     this.bufferManager.markDirty(['edges']);
   }
 
-  private applyNodeStyleUpdates(_updates: NodeStyleUpdate[]): void {
+  private applyNodeStyleUpdates(updates: NodeStyleUpdate[]): void {
     if (!this.bufferManager) return;
 
     // Style updates require full node buffer update with new styles
@@ -1480,7 +1480,7 @@ export class WebGLRenderer implements IRenderer {
     this.bufferManager.markDirty(['nodes']);
   }
 
-  private applyEdgeStyleUpdates(_updates: EdgeStyleUpdate[]): void {
+  private applyEdgeStyleUpdates(updates: EdgeStyleUpdate[]): void {
     if (!this.bufferManager) return;
 
     // Style updates require full edge buffer update
@@ -1658,9 +1658,9 @@ export class WebGLRenderer implements IRenderer {
   }
 
   /**
-   * Handle WebGL context loss (browser _event)
+   * Handle WebGL context loss (browser event)
    */
-  private handleContextLoss = (_event: Event): void => {
+  private handleContextLoss = (event: Event): void => {
     event.preventDefault();
     console.warn('WebGL context lost');
 
@@ -1669,9 +1669,9 @@ export class WebGLRenderer implements IRenderer {
   };
 
   /**
-   * Handle WebGL context restore (browser _event)
+   * Handle WebGL context restore (browser event)
    */
-  private handleContextRestore = (_event: Event): void => {
+  private handleContextRestore = (event: Event): void => {
     // WebGL context restored, reinitializing
 
     try {

@@ -16,7 +16,10 @@ import type { IRenderer } from '../rendering/IRenderer';
 import type { Transform } from '../rendering/RenderingSystem';
 import type {
   ViewportState,
-  InteractionEventHandlers, ViewportChangeEvent, SelectionChangeEvent, NodeInteractionEvent,
+  InteractionEventHandlers,
+  ViewportChangeEvent,
+  SelectionChangeEvent,
+  NodeInteractionEvent,
 } from './types';
 
 // === Enhanced Renderer Interface ===
@@ -37,7 +40,7 @@ export interface IInteractiveRenderer extends IRenderer {
   // Spatial queries
   getNodeAt(screenX: number, screenY: number): PositionedNode | null;
   getNodesInRegion(region: Rectangle): PositionedNode[];
-  isNodeVisible(_node: PositionedNode): boolean;
+  isNodeVisible(node: PositionedNode): boolean;
 
   // Event handling
   setInteractionHandlers(handlers: Partial<InteractionEventHandlers>): void;
@@ -156,11 +159,11 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
   get supportsViewportCulling() { return this.capabilities.supportsViewportCulling; }
   get supportsHardwareAcceleration() { return this.capabilities.supportsHardwareAcceleration; }
 
-  initialize(container: HTMLElement, _config: any): void {
+  initialize(container: HTMLElement, config: any): void {
     const rect = container.getBoundingClientRect();
     this.viewportDimensions = { width: rect.width, height: rect.height };
 
-    this.renderer.initialize(container, _config);
+    this.renderer.initialize(container, config);
   }
 
   destroy(): void {
@@ -172,9 +175,9 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
     this.renderer.clear();
   }
 
-  render(layout: any, _config: any): void {
+  render(layout: any, config: any): void {
     this.startFrameTiming();
-    this.renderer.render(layout, _config);
+    this.renderer.render(layout, config);
     this.endFrameTiming();
   }
 
@@ -184,7 +187,7 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
       nodes = this.cullNodes(nodes);
     }
 
-    this.renderer.renderNodes(nodes, _config);
+    this.renderer.renderNodes(nodes, config);
   }
 
   renderEdges(edges: any[], config?: any, nodes?: PositionedNode[]): void {
@@ -193,11 +196,11 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
       edges = this.cullEdges(edges);
     }
 
-    this.renderer.renderEdges(edges, _config, nodes);
+    this.renderer.renderEdges(edges, config, nodes);
   }
 
   renderLabels(items: any[], config?: any): void {
-    this.renderer.renderLabels(items, _config);
+    this.renderer.renderLabels(items, config);
   }
 
   updateNodePositions(positions: any[]): void {
@@ -217,11 +220,11 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
   }
 
   highlightNodes(nodeIds: string[], config?: any): void {
-    this.renderer.highlightNodes(nodeIds, _config);
+    this.renderer.highlightNodes(nodeIds, config);
   }
 
   highlightEdges(edgeIds: string[], config?: any): void {
-    this.renderer.highlightEdges(edgeIds, _config);
+    this.renderer.highlightEdges(edgeIds, config);
   }
 
   clearHighlights(): void {
@@ -329,7 +332,7 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
     return [];
   }
 
-  isNodeVisible(_node: PositionedNode): boolean {
+  isNodeVisible(node: PositionedNode): boolean {
     // Transform node position to screen coordinates
     const screenX = node.x * this.currentTransform.scale + this.currentTransform.x;
     const screenY = node.y * this.currentTransform.scale + this.currentTransform.y;
@@ -384,7 +387,7 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
       return nodes;
     }
 
-    return nodes.filter(node => this.isNodeVisible(_node));
+    return nodes.filter(node => this.isNodeVisible(node));
   }
 
   private cullEdges(edges: any[]): any[] {
@@ -481,14 +484,14 @@ export function createOptimizedRenderer(
   edgeCount: number
 ): {
   renderer: IInteractiveRenderer;
-  _config: any;
+  config: any;
   recommendations: string[];
 } {
   // This would create the actual renderer instance
   // For now, return configuration recommendations
 
   const recommendations: string[] = [];
-  const _config: any = {};
+  let config: any = {};
 
   if (nodeCount > 1000) {
     recommendations.push('Enable viewport culling for better performance');
@@ -515,7 +518,7 @@ export function createOptimizedRenderer(
 
   return {
     renderer: mockRenderer,
-    _config,
+    config,
     recommendations,
   };
 }
