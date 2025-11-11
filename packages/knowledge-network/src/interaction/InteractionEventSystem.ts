@@ -19,8 +19,7 @@ import type {
   ViewportChangeEvent,
   SelectionChangeEvent,
   NodeInteractionEvent,
-  GestureEvent,
-  ViewportState,
+  GestureEvent, ViewportState,
 } from './types';
 
 // === Event Type Registry ===
@@ -54,12 +53,12 @@ export interface InteractionEventMap {
   'selection:remove': SelectionChangeEvent;
 
   // Gesture events
-  'gesture:tap': GestureEvent;
-  'gesture:doubletap': GestureEvent;
-  'gesture:longpress': GestureEvent;
-  'gesture:pan': GestureEvent;
-  'gesture:pinch': GestureEvent;
-  'gesture:swipe': GestureEvent;
+  '_gesture:tap': GestureEvent;
+  '_gesture:doubletap': GestureEvent;
+  '_gesture:longpress': GestureEvent;
+  '_gesture:pan': GestureEvent;
+  '_gesture:pinch': GestureEvent;
+  '_gesture:swipe': GestureEvent;
 
   // Interaction mode events
   'interaction:mode:change': InteractionModeChangeEvent;
@@ -164,8 +163,8 @@ export class InteractionEventSystem extends EventEmitter {
         'viewport:pan',
         'viewport:zoom',
         'node:hover',
-        'gesture:pan',
-        'gesture:pinch',
+        '_gesture:pan',
+        '_gesture:pinch',
         'performance:frame',
       ],
       ...batchingConfig,

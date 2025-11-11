@@ -5,7 +5,7 @@
  * Supports mouse, touch, and keyboard interactions with gesture recognition.
  */
 
-import type { Point2D, Point3D, Point } from '../spatial/types';
+import type { Point2D, Point3D, Point} from '../spatial/types';
 import type { PositionedNode } from '../layout/LayoutEngine';
 
 // === Core Interaction Types ===

@@ -13,9 +13,7 @@ import type { Point2D } from '../spatial/types';
 import type {
   GestureType,
   GestureData,
-  GestureEvent,
-  TouchPoint,
-  InteractionConfig,
+  GestureEvent, TouchPoint, InteractionConfig,
 } from './types';
 import { calculateDistance, throttle } from './types';
 
@@ -77,7 +75,7 @@ export class GestureRecognizer {
   private config: GestureRecognizerConfig;
   private activeTouches = new Map<number, ActiveTouch>();
   private gestureState: GestureState;
-  private eventCallbacks = new Map<GestureType, ((event: GestureEvent) => void)[]>();
+  private eventCallbacks = new Map<GestureType, ((_event: GestureEvent) => void)[]>();
 
   // Timing and state tracking
   private lastTapTime = 0;
@@ -121,14 +119,14 @@ export class GestureRecognizer {
 
   // === Event Handlers Registration ===
 
-  on(gestureType: GestureType, callback: (event: GestureEvent) => void): void {
+  on(gestureType: GestureType, callback: (_event: GestureEvent) => void): void {
     if (!this.eventCallbacks.has(gestureType)) {
       this.eventCallbacks.set(gestureType, []);
     }
     this.eventCallbacks.get(gestureType)!.push(callback);
   }
 
-  off(gestureType: GestureType, callback?: (event: GestureEvent) => void): void {
+  off(gestureType: GestureType, callback?: (_event: GestureEvent) => void): void {
     if (!callback) {
       this.eventCallbacks.delete(gestureType);
       return;
@@ -145,7 +143,7 @@ export class GestureRecognizer {
 
   // === Touch Event Handling ===
 
-  handleTouchStart(event: TouchEvent): void {
+  handleTouchStart(_event: TouchEvent): void {
     event.preventDefault();
 
     const currentTime = Date.now();
@@ -170,7 +168,7 @@ export class GestureRecognizer {
     this.processGestureStart(currentTime);
   }
 
-  handleTouchMove(event: TouchEvent): void {
+  handleTouchMove(_event: TouchEvent): void {
     event.preventDefault();
 
     const currentTime = Date.now();
@@ -195,7 +193,7 @@ export class GestureRecognizer {
     }
   }
 
-  handleTouchEnd(event: TouchEvent): void {
+  handleTouchEnd(_event: TouchEvent): void {
     event.preventDefault();
 
     const currentTime = Date.now();
@@ -208,13 +206,13 @@ export class GestureRecognizer {
     this.processGestureEnd(currentTime);
   }
 
-  handleTouchCancel(event: TouchEvent): void {
+  handleTouchCancel(_event: TouchEvent): void {
     this.cancelAllGestures();
   }
 
   // === Mouse Event Handling ===
 
-  handleMouseDown(event: MouseEvent): void {
+  handleMouseDown(_event: MouseEvent): void {
     const position = { x: event.clientX, y: event.clientY };
     const currentTime = Date.now();
 
@@ -237,7 +235,7 @@ export class GestureRecognizer {
     this.processGestureStart(currentTime);
   }
 
-  handleMouseMove(event: MouseEvent): void {
+  handleMouseMove(_event: MouseEvent): void {
     if (!this.mouseDown) return;
 
     const position = { x: event.clientX, y: event.clientY };
@@ -253,7 +251,7 @@ export class GestureRecognizer {
     }
   }
 
-  handleMouseUp(event: MouseEvent): void {
+  handleMouseUp(_event: MouseEvent): void {
     if (!this.mouseDown) return;
 
     const currentTime = Date.now();
@@ -263,7 +261,7 @@ export class GestureRecognizer {
     this.processGestureEnd(currentTime);
   }
 
-  handleMouseWheel(event: WheelEvent): void {
+  handleMouseWheel(_event: WheelEvent): void {
     // Wheel events are handled directly by InteractionController
     // but could be processed here for gesture combinations
   }
@@ -657,7 +655,7 @@ export class GestureRecognizer {
   }
 
   private fireGestureEvent(gesture: GestureType, data: GestureData): void {
-    const event: GestureEvent = {
+    const _event: GestureEvent = {
       type: 'gesture',
       gesture,
       data,
@@ -669,7 +667,7 @@ export class GestureRecognizer {
     if (callbacks) {
       callbacks.forEach(callback => {
         try {
-          callback(event);
+          callback(_event);
         } catch (error) {
           console.error('Error in gesture callback:', error);
         }

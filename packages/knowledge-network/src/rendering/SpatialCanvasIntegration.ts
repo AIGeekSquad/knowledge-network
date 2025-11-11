@@ -10,7 +10,7 @@
 
 import { EnhancedCanvasRenderer, type CanvasRenderingConfig } from './EnhancedCanvasRenderer';
 import { CanvasRenderer } from './CanvasRenderer';
-import type { IRenderer, RendererConfig } from './IRenderer';
+import type { _IRenderer, RendererConfig } from './IRenderer';
 import type { SpatialIndexConfig } from '../spatial/types';
 
 /**
@@ -19,7 +19,7 @@ import type { SpatialIndexConfig } from '../spatial/types';
 export interface PerformancePreset {
   name: string;
   description: string;
-  config: CanvasRenderingConfig;
+  _config: CanvasRenderingConfig;
   spatialConfig: Partial<SpatialIndexConfig>;
 }
 
@@ -30,7 +30,7 @@ export const PERFORMANCE_PRESETS: Record<string, PerformancePreset> = {
   fast: {
     name: 'Fast',
     description: 'Optimized for speed with reduced visual fidelity',
-    config: {
+    _config: {
       width: 800,
       height: 600,
       enableViewportCulling: true,
@@ -52,7 +52,7 @@ export const PERFORMANCE_PRESETS: Record<string, PerformancePreset> = {
   balanced: {
     name: 'Balanced',
     description: 'Good balance of performance and visual quality',
-    config: {
+    _config: {
       width: 800,
       height: 600,
       enableViewportCulling: true,
@@ -74,7 +74,7 @@ export const PERFORMANCE_PRESETS: Record<string, PerformancePreset> = {
   highQuality: {
     name: 'High Quality',
     description: 'Maximum visual fidelity, may be slower on large graphs',
-    config: {
+    _config: {
       width: 800,
       height: 600,
       enableViewportCulling: true,
@@ -98,7 +98,7 @@ export const PERFORMANCE_PRESETS: Record<string, PerformancePreset> = {
   largeGraph: {
     name: 'Large Graph',
     description: 'Optimized for graphs with 1000+ nodes',
-    config: {
+    _config: {
       width: 800,
       height: 600,
       enableViewportCulling: true,
@@ -138,7 +138,7 @@ export class SpatialCanvasFactory {
   /**
    * Create renderer with custom configuration
    */
-  static createCustom(config: CanvasRenderingConfig): EnhancedCanvasRenderer {
+  static createCustom(_config: CanvasRenderingConfig): EnhancedCanvasRenderer {
     const renderer = new EnhancedCanvasRenderer();
     return renderer;
   }
@@ -147,7 +147,7 @@ export class SpatialCanvasFactory {
    * Create renderer optimized for mobile devices
    */
   static createMobile(): EnhancedCanvasRenderer {
-    const mobileConfig: CanvasRenderingConfig = {
+    const _mobileConfig: CanvasRenderingConfig = {
       width: Math.min(window.innerWidth, 800),
       height: Math.min(window.innerHeight, 600),
       enableViewportCulling: true,
@@ -166,7 +166,7 @@ export class SpatialCanvasFactory {
    * Create renderer for development/debugging
    */
   static createDebug(): EnhancedCanvasRenderer {
-    const debugConfig: CanvasRenderingConfig = {
+    const _debugConfig: CanvasRenderingConfig = {
       width: 800,
       height: 600,
       enableViewportCulling: false, // Show all nodes for debugging
@@ -192,7 +192,7 @@ export class CanvasRendererMigration {
    * Create enhanced renderer that matches basic renderer behavior
    */
   static createCompatible(basicConfig: RendererConfig): EnhancedCanvasRenderer {
-    const enhancedConfig: CanvasRenderingConfig = {
+    const _enhancedConfig: CanvasRenderingConfig = {
       ...basicConfig,
       enableViewportCulling: false, // Match basic renderer behavior
       enableLevelOfDetail: false,
@@ -207,7 +207,7 @@ export class CanvasRendererMigration {
   /**
    * Gradually enable spatial features
    */
-  static enableSpatialFeatures(renderer: EnhancedCanvasRenderer): void {
+  static enableSpatialFeatures(_renderer: EnhancedCanvasRenderer): void {
     // This would update renderer configuration to enable spatial features
     // In a real implementation, this might involve configuration updates
     // Enabling spatial features on renderer
@@ -217,9 +217,9 @@ export class CanvasRendererMigration {
    * Compare performance between basic and enhanced renderers
    */
   static async performanceTest(
-    basicRenderer: CanvasRenderer,
-    enhancedRenderer: EnhancedCanvasRenderer,
-    testData: any
+    _basicRenderer: CanvasRenderer,
+    _enhancedRenderer: EnhancedCanvasRenderer,
+    _testData: any
   ): Promise<{
     basic: { renderTime: number; memory: number };
     enhanced: { renderTime: number; memory: number };
@@ -241,7 +241,7 @@ export class SpatialInteractionHelpers {
    * Setup common mouse interactions
    */
   static setupMouseInteractions(
-    renderer: EnhancedCanvasRenderer,
+    _renderer: EnhancedCanvasRenderer,
     options: {
       enableHover?: boolean;
       enableSelection?: boolean;
@@ -259,7 +259,7 @@ export class SpatialInteractionHelpers {
       enableZooming = true,
       onNodeHover,
       onNodeClick,
-      onSelectionChange,
+      _onSelectionChange,
     } = options;
 
     const container = renderer.getContainer() as HTMLCanvasElement;
@@ -351,7 +351,7 @@ export class SpatialInteractionHelpers {
    * Setup region selection with drag
    */
   static setupRegionSelection(
-    renderer: EnhancedCanvasRenderer,
+    _renderer: EnhancedCanvasRenderer,
     onRegionSelect: (nodes: any[]) => void
   ): () => void {
     const container = renderer.getContainer() as HTMLCanvasElement;
@@ -415,7 +415,7 @@ export class SpatialInteractionHelpers {
    * Setup keyboard shortcuts for common operations
    */
   static setupKeyboardShortcuts(
-    renderer: EnhancedCanvasRenderer,
+    _renderer: EnhancedCanvasRenderer,
     shortcuts: {
       resetView?: string; // Default: 'r'
       fitView?: string;   // Default: 'f'
@@ -444,16 +444,18 @@ export class SpatialInteractionHelpers {
           renderer.fitToViewport();
           event.preventDefault();
           break;
-        case zoomIn:
+        case zoomIn: {
           const currentZoom = renderer.getTransform().scale;
           renderer.setZoom(currentZoom * 1.2);
           event.preventDefault();
           break;
-        case zoomOut:
+        }
+        case zoomOut: {
           const currentZoom2 = renderer.getTransform().scale;
           renderer.setZoom(currentZoom2 / 1.2);
           event.preventDefault();
           break;
+        }
       }
     };
 
@@ -486,11 +488,11 @@ export class PerformanceMonitor {
   /**
    * Start monitoring renderer performance
    */
-  monitor(renderer: EnhancedCanvasRenderer): () => void {
+  monitor(_renderer: EnhancedCanvasRenderer): () => void {
     let frameCount = 0;
     let lastFpsTime = performance.now();
 
-    const originalRender = renderer.render.bind(renderer);
+    const originalRender = renderer.render.bind(_renderer);
     renderer.render = (...args) => {
       const startTime = performance.now();
       const result = originalRender(...args);
@@ -510,7 +512,7 @@ export class PerformanceMonitor {
       return result;
     };
 
-    const originalGetNodeAt = renderer.getNodeAt.bind(renderer);
+    const originalGetNodeAt = renderer.getNodeAt.bind(_renderer);
     renderer.getNodeAt = (...args) => {
       const startTime = performance.now();
       const result = originalGetNodeAt(...args);

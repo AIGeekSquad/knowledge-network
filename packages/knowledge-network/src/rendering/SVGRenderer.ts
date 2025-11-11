@@ -27,7 +27,7 @@ import { SimpleEdge, EdgeBundling } from '../edges';
  * SVG-based renderer for graph visualization.
  *
  * @remarks
- * The SVGRenderer uses D3.js to create and manage SVG elements for nodes,
+ * The SVGRenderer uses D3.js to create and manage SVG elements for _nodes,
  * edges, and labels. It supports various node shapes, edge styles, and
  * interactive features like highlighting and selection.
  *
@@ -35,7 +35,7 @@ import { SimpleEdge, EdgeBundling } from '../edges';
  * ```typescript
  * const renderer = new SVGRenderer();
  * renderer.initialize(container, { width: 800, height: 600 });
- * renderer.renderNodes(nodes, { radius: 10, fill: '#69b3a2' });
+ * renderer.renderNodes(_nodes, { radius: 10, fill: '#69b3a2' });
  * renderer.renderEdges(edges, { stroke: '#999' });
  * ```
  */
@@ -48,7 +48,7 @@ export class SVGRenderer implements IRenderer {
   private nodeGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
   private labelGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
   private container: HTMLElement | null = null;
-  private config: RendererConfig | null = null;
+  private _config: RendererConfig | null = null;
   private transform: Transform = { x: 0, y: 0, scale: 1 };
   private edgeRenderer: EdgeRenderer | null = null;
   private edgeRenderResult: EdgeRenderResult | null = null;
@@ -72,7 +72,7 @@ export class SVGRenderer implements IRenderer {
   /**
    * Initialize the SVG renderer
    */
-  initialize(container: HTMLElement, config: RendererConfig): void {
+  initialize(container: HTMLElement, _config: RendererConfig): void {
     this.container = container;
     this.config = config;
 
@@ -137,7 +137,7 @@ export class SVGRenderer implements IRenderer {
   /**
    * Render complete layout
    */
-  render(layout: LayoutResult, config: RenderConfig): void {
+  render(layout: LayoutResult, _config: RenderConfig): void {
     const operation = () => {
       // Clear previous rendering
       this.clear();
@@ -148,23 +148,23 @@ export class SVGRenderer implements IRenderer {
       order.forEach((layer) => {
         switch (layer) {
           case 'edges':
-            this.renderEdges(layout.edges, config.edgeConfig, layout.nodes);
+            this.renderEdges(layout.edges, config.edgeConfig, layout._nodes);
             break;
           case 'nodes':
-            this.renderNodes(layout.nodes, config.nodeConfig);
+            this.renderNodes(layout._nodes, config.nodeConfig);
             break;
           case 'labels':
-            // Generate labels from nodes (use labelConfig.text function if provided, otherwise node.label or node.id)
+            // Generate labels from nodes (use labelConfig.text function if provided, otherwise node.label or node._id)
             const labels: LabelItem[] = layout.nodes
-              .map((node) => {
+              .map((_node) => {
                 const text = config.labelConfig?.text ?
                   (typeof config.labelConfig.text === 'function' ?
-                    config.labelConfig.text(node) :
+                    config.labelConfig.text(_node) :
                     config.labelConfig.text)
-                  : (node.label || node.id);
+                  : (node.label || node._id);
 
                 return {
-                  id: node.id,
+                  _id: node._id,
                   text: text,
                   position: { x: node.x, y: node.y },
                   anchor: 'middle' as const,
@@ -187,7 +187,7 @@ export class SVGRenderer implements IRenderer {
   /**
    * Render nodes
    */
-  renderNodes(nodes: PositionedNode[], config?: NodeRenderConfig): void {
+  renderNodes(_nodes: PositionedNode[], config?: NodeRenderConfig): void {
     if (!this.nodeGroup) return;
 
     const operation = () => {
@@ -195,7 +195,7 @@ export class SVGRenderer implements IRenderer {
         radius: 10,
         fill: '#69b3a2',
         stroke: '#fff',
-        strokeWidth: 1.5,
+        _strokeWidth: 1.5,
         opacity: 1,
         shape: 'circle',
       };
@@ -204,9 +204,8 @@ export class SVGRenderer implements IRenderer {
 
       // Data join with key function
       const nodeSelection = this.nodeGroup!.selectAll<SVGElement, PositionedNode>('.node').data(
-        nodes,
-        (d: PositionedNode) => d.id
-      );
+        _nodes,
+        (d: PositionedNode) => d._id);
 
       // Exit
       nodeSelection.exit().remove();
@@ -216,7 +215,7 @@ export class SVGRenderer implements IRenderer {
         .enter()
         .append('g')
         .attr('class', 'node')
-        .attr('data-node-id', (d) => d.id);
+        .attr('data-node-id', (d) => d._id);
 
       // Merge enter and update selections
       const nodeMerged = nodeEnter.merge(nodeSelection as any);
@@ -228,7 +227,7 @@ export class SVGRenderer implements IRenderer {
       nodeMerged.selectAll('*').remove();
 
       // Add shapes based on config
-      nodeMerged.each((d, i, nodes) => {
+      nodeMerged.each((d, i, _nodes) => {
         const group = d3.select(nodes[i]);
         const shape = this.accessor(finalConfig.shape!, d);
 
@@ -323,7 +322,7 @@ export class SVGRenderer implements IRenderer {
     const operation = () => {
       const defaultConfig: EdgeRenderConfig = {
         stroke: '#999',
-        strokeWidth: 1.5,
+        _strokeWidth: 1.5,
         opacity: 0.6,
         curveType: 'straight',
       };
@@ -336,28 +335,28 @@ export class SVGRenderer implements IRenderer {
       // First try to get nodes from edges if they're already positioned node objects
       edges.forEach((edge) => {
         if (typeof edge.source !== 'string') {
-          nodeMap.set(edge.source.id, edge.source);
+          nodeMap.set(edge.source._id, edge._source);
         }
         if (typeof edge.target !== 'string') {
-          nodeMap.set(edge.target.id, edge.target);
+          nodeMap.set(edge.target._id, edge._target);
         }
       });
 
       // If we have explicit nodes parameter, use those (they should be positioned)
-      if (nodes) {
-        nodes.forEach((node) => {
-          nodeMap.set(node.id, node);
+      if (_nodes) {
+        nodes.forEach((_node) => {
+          nodeMap.set(node._id, _node);
         });
       }
 
       const processedEdges = edges.map((edge) => {
-        const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
-        const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+        const sourceId = typeof edge.source === 'string' ? edge._source: edge.source.id;
+        const targetId = typeof edge.target === 'string' ? edge._target: edge.target.id;
 
         return {
           ...edge,
-          source: nodeMap.get(sourceId) || { id: sourceId, x: 0, y: 0 },
-          target: nodeMap.get(targetId) || { id: targetId, x: 0, y: 0 },
+          _source: nodeMap.get(sourceId) || { _id: sourceId, x: 0, y: 0 },
+          _target: nodeMap.get(targetId) || { _id: targetId, x: 0, y: 0 },
         };
       });
 
@@ -373,10 +372,9 @@ export class SVGRenderer implements IRenderer {
             typeof finalConfig.stroke === 'function'
               ? finalConfig.stroke
               : (d: any, i: number) => finalConfig.stroke as string,
-          strokeWidth:
+          _strokeWidth:
             typeof finalConfig.strokeWidth === 'function'
-              ? finalConfig.strokeWidth
-              : (d: any, i: number) => finalConfig.strokeWidth as number,
+              ? finalConfig._strokeWidth: (d: any, i: number) => finalConfig.strokeWidth as number,
           strokeOpacity: finalConfig.opacity,
         };
 
@@ -430,8 +428,7 @@ export class SVGRenderer implements IRenderer {
       // Data join
       const labelSelection = this.labelGroup!.selectAll<SVGTextElement, LabelItem>('.label').data(
         items,
-        (d: LabelItem) => d.id
-      );
+        (d: LabelItem) => d._id);
 
       // Exit
       labelSelection.exit().remove();
@@ -441,7 +438,7 @@ export class SVGRenderer implements IRenderer {
         .enter()
         .append('text')
         .attr('class', 'label')
-        .attr('data-label-id', (d) => d.id);
+        .attr('data-label-id', (d) => d._id);
 
       const labelMerged = labelEnter.merge(labelSelection);
 
@@ -478,10 +475,10 @@ export class SVGRenderer implements IRenderer {
     if (!this.nodeGroup) return;
 
     const operation = () => {
-      const positionMap = new Map(positions.map((p) => [p.id, p]));
+      const positionMap = new Map(positions.map((p) => [p._id, p]));
 
-      this.nodeGroup!.selectAll<SVGGElement, any>('.node').each((d, i, nodes) => {
-        const position = positionMap.get(d.id);
+      this.nodeGroup!.selectAll<SVGGElement, any>('.node').each((d, i, _nodes) => {
+        const position = positionMap.get(d._id);
         if (position) {
           this.applyWithTransition(d3.select(nodes[i]), 200)
             .attr('transform', `translate(${position.x},${position.y})`);
@@ -532,8 +529,8 @@ export class SVGRenderer implements IRenderer {
     const operation = () => {
       const styleMap = new Map(updates.map((u) => [u.nodeId, u.style]));
 
-      this.nodeGroup!.selectAll<SVGGElement, any>('.node').each((d, i, nodes) => {
-        const style = styleMap.get(d.id);
+      this.nodeGroup!.selectAll<SVGGElement, any>('.node').each((d, i, _nodes) => {
+        const style = styleMap.get(d._id);
         if (style) {
           const selection = d3.select(nodes[i]).select('circle, rect, polygon');
 
@@ -614,11 +611,11 @@ export class SVGRenderer implements IRenderer {
       const finalConfig = { ...defaultConfig, ...config };
       const idSet = new Set(nodeIds);
 
-      this.nodeGroup!.selectAll<SVGGElement, any>('.node').each((d, i, nodes) => {
+      this.nodeGroup!.selectAll<SVGGElement, any>('.node').each((d, i, _nodes) => {
         const element = d3.select(nodes[i]);
         const shape = element.select('circle, rect, polygon');
 
-        if (idSet.has(d.id)) {
+        if (idSet.has(d._id)) {
           // Highlight
           this.applyWithTransition(shape, finalConfig.duration!)
             .attr('stroke', finalConfig.color!)
@@ -797,7 +794,7 @@ export class SVGRenderer implements IRenderer {
   private getNodeData(nodeOrId: PositionedNode | string): any {
     if (typeof nodeOrId === 'string') {
       // For string IDs, return a minimal object
-      return { id: nodeOrId, x: 0, y: 0 };
+      return { _id: nodeOrId, x: 0, y: 0 };
     }
     return nodeOrId;
   }
@@ -805,7 +802,7 @@ export class SVGRenderer implements IRenderer {
   /**
    * Add arrow heads to edges
    */
-  private addArrowHeads(config: boolean | any): void {
+  private addArrowHeads(_config: boolean | any): void {
     if (!this.svg) return;
 
     const arrowConfig = config === true ? {} : config;

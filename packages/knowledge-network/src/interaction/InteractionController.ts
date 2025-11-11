@@ -14,16 +14,14 @@ import type { Point2D, Rectangle } from '../spatial/types';
 import type { PositionedNode } from '../layout/LayoutEngine';
 import type { IRenderer } from '../rendering/IRenderer';
 import type {
-  InteractionConfig,
-  InteractionFeatures,
+  InteractionConfig, InteractionFeatures,
   InteractionState,
   InteractionEventHandlers,
   ViewportChangeEvent,
   SelectionChangeEvent,
   NodeInteractionEvent,
   GestureEvent,
-  SelectionRegion,
-  SelectionMode,
+  SelectionRegion, SelectionMode,
   ViewportState as IViewportState,
 } from './types';
 import {
@@ -416,11 +414,11 @@ export class InteractionController extends EventEmitter {
 
   // === Mouse Event Handlers ===
 
-  handleMouseDown(event: MouseEvent): void {
+  handleMouseDown(_event: MouseEvent): void {
     if (!this.container) return;
 
     event.preventDefault();
-    const point = this.getEventPoint(event);
+    const point = this.getEventPoint(_event);
 
     this.state.lastPointerPosition = point;
     this.state.panStartPosition = point;
@@ -428,25 +426,25 @@ export class InteractionController extends EventEmitter {
     // Check for node interaction
     const node = this.getNodeAt(point.x, point.y);
     if (node && this.eventHandlers.onNodeClick) {
-      this.emitNodeEvent('nodeClick', node, point, event);
+      this.emitNodeEvent('nodeClick', node, point, _event);
       return;
     }
 
     // Start pan or selection based on modifiers
-    if (this.shouldStartSelection(event)) {
+    if (this.shouldStartSelection(_event)) {
       this.startRegionSelection(point);
     } else if (this.config.features.panWithMouse) {
       this.state.isPanning = true;
     }
 
     // Pass to gesture recognizer
-    this.gestureRecognizer.handleMouseDown(event);
+    this.gestureRecognizer.handleMouseDown(_event);
   }
 
-  handleMouseMove(event: MouseEvent): void {
+  handleMouseMove(_event: MouseEvent): void {
     if (!this.container) return;
 
-    const point = this.getEventPoint(event);
+    const point = this.getEventPoint(_event);
     const deltaX = point.x - this.state.lastPointerPosition.x;
     const deltaY = point.y - this.state.lastPointerPosition.y;
 
@@ -455,7 +453,7 @@ export class InteractionController extends EventEmitter {
     if (hoveredNode !== this.state.hoveredNode) {
       this.state.hoveredNode = hoveredNode;
       if (hoveredNode && this.eventHandlers.onNodeHover) {
-        this.emitNodeEvent('nodeHover', hoveredNode, point, event);
+        this.emitNodeEvent('nodeHover', hoveredNode, point, _event);
       }
     }
 
@@ -469,13 +467,13 @@ export class InteractionController extends EventEmitter {
     this.state.lastPointerPosition = point;
 
     // Pass to gesture recognizer
-    this.gestureRecognizer.handleMouseMove(event);
+    this.gestureRecognizer.handleMouseMove(_event);
   }
 
-  handleMouseUp(event: MouseEvent): void {
+  handleMouseUp(_event: MouseEvent): void {
     if (!this.container) return;
 
-    const point = this.getEventPoint(event);
+    const point = this.getEventPoint(_event);
 
     // Finalize selection
     if (this.isSelecting) {
@@ -487,15 +485,15 @@ export class InteractionController extends EventEmitter {
     this.isSelecting = false;
 
     // Pass to gesture recognizer
-    this.gestureRecognizer.handleMouseUp(event);
+    this.gestureRecognizer.handleMouseUp(_event);
   }
 
-  handleWheel(event: WheelEvent): void {
+  handleWheel(_event: WheelEvent): void {
     if (!this.container || !this.config.features.mouseWheelZoom) return;
 
     event.preventDefault();
 
-    const point = this.getEventPoint(event);
+    const point = this.getEventPoint(_event);
     const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1;
 
     this.zoom(scaleFactor, point);
@@ -503,27 +501,27 @@ export class InteractionController extends EventEmitter {
 
   // === Touch Event Handlers ===
 
-  handleTouchStart(event: TouchEvent): void {
+  handleTouchStart(_event: TouchEvent): void {
     if (!this.config.features.touchEnabled) return;
 
-    this.gestureRecognizer.handleTouchStart(event);
+    this.gestureRecognizer.handleTouchStart(_event);
   }
 
-  handleTouchMove(event: TouchEvent): void {
+  handleTouchMove(_event: TouchEvent): void {
     if (!this.config.features.touchEnabled) return;
 
-    this.gestureRecognizer.handleTouchMove(event);
+    this.gestureRecognizer.handleTouchMove(_event);
   }
 
-  handleTouchEnd(event: TouchEvent): void {
+  handleTouchEnd(_event: TouchEvent): void {
     if (!this.config.features.touchEnabled) return;
 
-    this.gestureRecognizer.handleTouchEnd(event);
+    this.gestureRecognizer.handleTouchEnd(_event);
   }
 
   // === Keyboard Event Handlers ===
 
-  handleKeyboard(event: KeyboardEvent): void {
+  handleKeyboard(_event: KeyboardEvent): void {
     if (!this.config.features.keyboardNavigation) return;
 
     const key = event.key.toLowerCase();
@@ -590,7 +588,7 @@ export class InteractionController extends EventEmitter {
   // === Internal Event Handling ===
 
   private setupGestureHandlers(): void {
-    this.gestureRecognizer.on('tap', (event: GestureEvent) => {
+    this.gestureRecognizer.on('tap', (_event: GestureEvent) => {
       const node = this.getNodeAt(event.data.currentPosition.x, event.data.currentPosition.y);
 
       if (node) {
@@ -607,13 +605,13 @@ export class InteractionController extends EventEmitter {
       }
     });
 
-    this.gestureRecognizer.on('doubleTap', (event: GestureEvent) => {
+    this.gestureRecognizer.on('doubleTap', (_event: GestureEvent) => {
       if (this.config.features.doubleClickZoom) {
         this.zoom(2, event.data.currentPosition);
       }
     });
 
-    this.gestureRecognizer.on('pinch', (event: GestureEvent) => {
+    this.gestureRecognizer.on('pinch', (_event: GestureEvent) => {
       if (this.config.features.pinchZoom && event.data.scale) {
         this.viewport.setZoom(
           this.viewport.getZoom() * event.data.scale,
@@ -623,13 +621,13 @@ export class InteractionController extends EventEmitter {
       }
     });
 
-    this.gestureRecognizer.on('pan', (event: GestureEvent) => {
+    this.gestureRecognizer.on('pan', (_event: GestureEvent) => {
       if (event.data.deltaPosition) {
         this.pan(event.data.deltaPosition.x, event.data.deltaPosition.y);
       }
     });
 
-    this.gestureRecognizer.on('twoFingerPan', (event: GestureEvent) => {
+    this.gestureRecognizer.on('twoFingerPan', (_event: GestureEvent) => {
       if (event.data.deltaPosition) {
         this.pan(event.data.deltaPosition.x, event.data.deltaPosition.y);
       }
@@ -679,7 +677,7 @@ export class InteractionController extends EventEmitter {
     this.isAttached = false;
   }
 
-  private getEventPoint(event: MouseEvent | Touch): Point2D {
+  private getEventPoint(_event: MouseEvent | Touch): Point2D {
     if (!this.container) return { x: 0, y: 0 };
 
     const rect = this.container.getBoundingClientRect();
@@ -689,7 +687,7 @@ export class InteractionController extends EventEmitter {
     };
   }
 
-  private shouldStartSelection(event: MouseEvent): boolean {
+  private shouldStartSelection(_event: MouseEvent): boolean {
     return (
       this.config.features.regionSelect &&
       (event.shiftKey || event.ctrlKey || event.metaKey)
@@ -781,12 +779,12 @@ export class InteractionController extends EventEmitter {
 
   private emitViewportChangeEvent(reason: ViewportChangeEvent['reason']): void {
     const currentState = this.viewport.getState();
-    const event: ViewportChangeEvent = {
+    const _event: ViewportChangeEvent = {
       type: 'viewportChange',
       viewport: currentState,
       previousViewport: this.previousViewportState || currentState,
       reason,
-      timestamp: Date.now(),
+      _timestamp: Date.now(),
       cancelled: false,
     };
 
@@ -794,10 +792,10 @@ export class InteractionController extends EventEmitter {
     this.previousViewportState = currentState;
 
     if (this.eventHandlers.onViewportChange) {
-      this.eventHandlers.onViewportChange(event);
+      this.eventHandlers.onViewportChange(_event);
     }
 
-    this.emit('viewportChange', event);
+    this.emit('viewportChange', _event);
   }
 
   private emitSelectionChangeEvent(previousSelection: Set<string>): void {
@@ -807,20 +805,20 @@ export class InteractionController extends EventEmitter {
     const addedNodes = selectedNodes.filter(n => !previousSelection.has(n.id));
     const removedNodes = previousNodes.filter(n => !this.state.selectedNodes.has(n.id));
 
-    const event: SelectionChangeEvent = {
+    const _event: SelectionChangeEvent = {
       type: 'selectionChange',
       selectedNodes,
       addedNodes,
       removedNodes,
-      timestamp: Date.now(),
+      _timestamp: Date.now(),
       cancelled: false,
     };
 
     if (this.eventHandlers.onSelectionChange) {
-      this.eventHandlers.onSelectionChange(event);
+      this.eventHandlers.onSelectionChange(_event);
     }
 
-    this.emit('selectionChange', event);
+    this.emit('selectionChange', _event);
   }
 
   private emitNodeEvent(
@@ -829,12 +827,12 @@ export class InteractionController extends EventEmitter {
     position: Point2D,
     originalEvent: MouseEvent | TouchEvent
   ): void {
-    const event: NodeInteractionEvent = {
+    const _event: NodeInteractionEvent = {
       type: eventType,
       node,
       position,
       originalEvent,
-      timestamp: Date.now(),
+      _timestamp: Date.now(),
       cancelled: false,
     };
 
@@ -843,10 +841,10 @@ export class InteractionController extends EventEmitter {
       : this.eventHandlers.onNodeHover;
 
     if (handler) {
-      handler(event);
+      handler(_event);
     }
 
-    this.emit(eventType, event);
+    this.emit(eventType, _event);
   }
 
   // === Public State Access ===
