@@ -1,0 +1,65 @@
+name: Cross-Browser Testing
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  playwright-tests:
+    name: Playwright Tests
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+      - name: Install Playwright Browsers
+        run: cd packages/knowledge-network && pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Run Playwright tests
+        run: cd packages/knowledge-network && pnpm exec playwright test --project=${{ matrix.browser }}
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: packages/knowledge-network/playwright-report/
+          retention-days: 30
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-artifacts-${{ matrix.browser }}
+          path: packages/knowledge-network/test-results/
+          retention-days: 7

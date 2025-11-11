@@ -116,9 +116,87 @@ pnpm format
 4. Add tests for new features
 5. Ensure all tests pass: `pnpm test`
 6. Ensure code is linted: `pnpm lint`
-7. Commit your changes with a clear message
-8. Push to your fork
-9. Create a Pull Request
+7. Ensure code is formatted: `pnpm format`
+8. Commit your changes with a clear message following [Conventional Commits](https://www.conventionalcommits.org/)
+9. Push to your fork
+10. Create a Pull Request
+
+### Commit Message Format
+
+We follow the Conventional Commits specification:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+- `perf`: Performance improvements
+- `ci`: CI/CD changes
+
+**Examples:**
+```
+feat(core): add support for custom node shapes
+fix(bundling): resolve edge bundling crash on large graphs
+docs: update installation instructions
+test(layout): add tests for force layout engine
+ci: add SonarQube integration
+```
+
+## CI/CD Pipeline
+
+### Automated Checks
+
+All pull requests automatically run through our CI/CD pipeline:
+
+**✅ Required Checks:**
+- Linting and code formatting
+- Multi-version Node.js testing (18, 20, 22)
+- Full test suite execution
+- Bundle size verification
+- Security vulnerability scanning
+
+**📊 Quality Gates:**
+- Test coverage must be ≥80%
+- All tests must pass
+- No linting errors
+- Bundle size within limits (300KB)
+
+### Preview Deployments
+
+Pull requests automatically get preview deployments:
+- Demo site deployed to unique URL
+- Updated on every commit
+- Commented on PR for easy access
+
+### Branch Protection
+
+The `main` branch is protected and requires:
+- All CI checks to pass
+- At least one approving review
+- Branch to be up-to-date with main
+
+### Release Process
+
+Releases are automated using semantic versioning:
+
+1. **Manual Trigger**: Use "Semantic Versioning" workflow
+2. **Choose Version**: patch, minor, major, or prerelease
+3. **Auto-Generated**: Changelog and release notes
+4. **NPM Publish**: Automatic on tag creation
+5. **GitHub Release**: Created with artifacts
+
+For more details, see [.github/README.md](.github/README.md)
 
 ## License
 

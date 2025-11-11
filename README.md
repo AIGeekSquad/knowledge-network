@@ -3,6 +3,8 @@
 A powerful TypeScript library for creating stunning, interactive knowledge graph visualizations with advanced edge bundling capabilities. Built on d3.js, it transforms complex network data into clean, comprehensible visual stories.
 
 [![npm version](https://img.shields.io/npm/v/@aigeeksquad/knowledge-network.svg)](https://www.npmjs.com/package/@aigeeksquad/knowledge-network)
+[![CI](https://github.com/AIGeekSquad/knowledge-network/workflows/CI/badge.svg)](https://github.com/AIGeekSquad/knowledge-network/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/AIGeekSquad/knowledge-network/branch/main/graph/badge.svg)](https://codecov.io/gh/AIGeekSquad/knowledge-network)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)](https://www.typescriptlang.org/)
 
