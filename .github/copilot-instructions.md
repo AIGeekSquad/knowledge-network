@@ -1,0 +1,461 @@
+# Copilot Instructions for Knowledge Network
+
+This file provides instructions for GitHub Copilot coding agent when working with the Knowledge Network repository.
+
+## Project Overview
+
+Knowledge Network is a TypeScript library for creating stunning, interactive knowledge graph visualizations with advanced edge bundling capabilities. Built on d3.js v7, it transforms complex network data into clean, comprehensible visual stories.
+
+**Key Features:**
+
+- Force-directed edge bundling for reduced visual clutter
+- GPU-accelerated rendering (Canvas/SVG/WebGL support)
+- Semantic AI integration with embedding-based clustering
+- Mobile-first design with touch gestures and haptic feedback
+- WCAG AAA accessibility compliance
+- Extensible plugin architecture
+
+## Repository Structure
+
+This is a **pnpm workspace monorepo** with the following structure:
+
+```
+knowledge-network/
+├── packages/
+│   ├── knowledge-network/          # Core library (@aigeeksquad/knowledge-network)
+│   │   ├── src/                    # Source code
+│   │   │   ├── KnowledgeGraph.ts   # Main orchestration class
+│   │   │   ├── types.ts            # TypeScript definitions
+│   │   │   ├── core/               # Data management
+│   │   │   ├── edges/              # Edge rendering & bundling
+│   │   │   ├── layout/             # Layout engines (d3-force)
+│   │   │   ├── rendering/          # Canvas/SVG renderers
+│   │   │   ├── state/              # State management
+│   │   │   └── viewport/           # Viewport controls
+│   │   ├── tests/                  # Test suite (Vitest)
+│   │   ├── dist/                   # Build output (gitignored)
+│   │   ├── tsup.config.ts          # Build configuration
+│   │   └── vitest.config.ts        # Test configuration
+│   └── demo-suite/                 # Interactive demonstration platform
+│       ├── src/                    # Demo source code
+│       └── vite.config.ts          # Vite configuration
+├── docs/                           # Documentation & research
+│   ├── EDGE_BUNDLING.md            # User guide for edge bundling
+│   ├── EDGE_BUNDLING_RESEARCH.md   # Academic research
+│   └── SEMANTIC_SPACETIME_RESEARCH.md  # Semantic spacetime approaches
+├── ai_working/                     # Temporary analysis files
+├── .github/
+│   ├── workflows/                  # CI/CD workflows
+│   └── agents/                     # Agent-specific instructions
+└── README.md                       # Main documentation
+```
+
+## Package Manager: pnpm
+
+**CRITICAL:** This project uses **pnpm 8+** exclusively. Always use `pnpm` commands, never `npm` or `yarn`.
+
+```bash
+# Install pnpm globally if needed
+npm install -g pnpm
+```
+
+## Development Workflow
+
+### 1. Initial Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/AIGeekSquad/knowledge-network.git
+cd knowledge-network
+
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+```
+
+### 2. Common Commands
+
+#### Root Level (Workspace)
+
+```bash
+# Install dependencies across all packages
+pnpm install
+
+# Build all packages (excludes examples)
+pnpm build
+
+# Start development mode (all packages in parallel)
+pnpm dev
+
+# Run all tests across packages
+pnpm test
+
+# Lint all packages
+pnpm lint
+
+# Format all code with Prettier
+pnpm format
+
+# Check formatting without modifying files
+pnpm format:check
+
+# Clean build artifacts and node_modules
+pnpm clean
+```
+
+#### Core Library (`packages/knowledge-network/`)
+
+```bash
+cd packages/knowledge-network
+
+# Build library with tsup
+pnpm build
+
+# Watch mode development
+pnpm dev
+
+# Run tests once
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run specific test file
+pnpm test EdgeBundling.test.ts
+
+# Open interactive test UI
+pnpm exec vitest --ui
+
+# Lint TypeScript files
+pnpm lint
+
+# Clean dist folder
+pnpm clean
+```
+
+#### Demo Suite (`packages/demo-suite/`)
+
+```bash
+cd packages/demo-suite
+
+# Start development server (typically on localhost:3000)
+pnpm dev
+
+# Build examples
+pnpm build
+
+# Preview built examples
+pnpm preview
+```
+
+## Build System
+
+### Core Library Build
+
+- **Tool:** [tsup](https://tsup.egoist.dev/) - Fast TypeScript bundler
+- **Output Formats:** ESM (`dist/index.js`), CJS (`dist/index.cjs`)
+- **Type Definitions:** Generated automatically (`dist/index.d.ts`, `dist/index.d.cts`)
+- **Configuration:** `packages/knowledge-network/tsup.config.ts`
+- **Target:** ES2022
+
+### Demo Suite Build
+
+- **Tool:** [Vite](https://vitejs.dev/) - Modern web development server
+- **Configuration:** `packages/demo-suite/vite.config.ts`
+- **Local Development:** Hot Module Replacement (HMR) enabled
+
+### Important Build Notes
+
+- The `dist/` directory is gitignored and generated by the build process
+- **Never commit build artifacts**
+- Always run `pnpm build` before publishing or testing integration
+- Check compiled output for correct imports (e.g., `d3` not corrupted variations)
+
+## Testing
+
+### Framework: Vitest
+
+- **Location:** `packages/knowledge-network/tests/`
+- **Environment:** jsdom for DOM testing
+- **Configuration:** `packages/knowledge-network/vitest.config.ts`
+
+### Test Coverage Areas
+
+- Initialization and data management
+- Edge bundling algorithms
+- Rendering systems (Canvas/SVG)
+- User interactions (zoom, pan, drag)
+- Error handling
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+cd packages/knowledge-network && pnpm test:watch
+
+# Run specific test file
+cd packages/knowledge-network && pnpm test EdgeBundling.test.ts
+
+# Open interactive test UI
+cd packages/knowledge-network && pnpm exec vitest --ui
+```
+
+### Writing Tests
+
+- Tests should be located in `tests/` directory
+- Mock DOM elements when testing visualization components
+- Test both static values and accessor functions for d3-idiomatic APIs
+- Follow existing test patterns and naming conventions
+
+## Code Style and Guidelines
+
+### TypeScript
+
+- **Strict mode enabled** - All type checks are enforced
+- **Target:** ES2022 with modern JavaScript features
+- **Style:** PascalCase for classes/interfaces, camelCase for functions/variables, kebab-case for files
+
+### d3.js Integration
+
+- **Version:** d3.js v7 with modern ES modules
+- **Pattern:** Use d3-idiomatic accessor functions (can be values or functions)
+- **Simulation:** d3-force for physics-based layouts
+
+### Code Quality
+
+```bash
+# Lint code (ESLint with TypeScript support)
+pnpm lint
+
+# Format code (Prettier)
+pnpm format
+
+# Check formatting
+pnpm format:check
+```
+
+### Known Linting Warnings
+
+The codebase has accepted linting warnings about `@typescript-eslint/no-explicit-any` (approximately 29 warnings) related to d3 typings. These are known technical debt and don't block development.
+
+## Architecture
+
+### Modular Design
+
+1. **KnowledgeGraph** (`src/KnowledgeGraph.ts`) - Main orchestration class
+2. **Layout Engine** (`src/layout/ForceLayoutEngine.ts`) - Force-directed layout using d3-force
+3. **Edge Rendering System** - Pluggable renderers:
+   - `SimpleEdge` (`src/edges/SimpleEdge.ts`) - Basic straight line edges
+   - `EdgeBundling` (`src/edges/EdgeBundling.ts`) - Advanced force-directed edge bundling
+   - **Edge Smoothing:** Laplacian, Gaussian, Bilateral strategies
+4. **Types** (`src/types.ts`) - Comprehensive TypeScript definitions
+
+### Key Design Patterns
+
+- **Configuration-Driven:** `GraphConfig` interface provides extensive customization
+- **Pluggable Renderers:** Switch between 'simple' or 'bundled' edge strategies
+- **Workspace Dependencies:** Demo Suite uses `workspace:*` to depend on local core library
+
+## Development Best Practices
+
+### When Making Changes
+
+1. **Understand the Issue:** Fully read the issue/task before starting
+2. **Explore First:** Review related files and understand the current implementation
+3. **Build & Test Current State:** Run `pnpm build && pnpm test` to establish baseline
+4. **Make Minimal Changes:** Only modify what's necessary to address the issue
+5. **Test Frequently:** Build and test after each logical change
+6. **Lint & Format:** Run `pnpm lint && pnpm format` before committing
+7. **Manual Verification:** If UI changes, start dev server and verify visually
+8. **Clean Up:** Remove temporary files, debugging code, or mark TODOs clearly
+
+### Critical Rules
+
+#### Single Working Demo Policy
+
+- **ONE working demo** at main URL (localhost:3000)
+- **ALL capabilities** visible in single integrated experience
+- **NO fragmented test pages** or separate endpoints
+- **NO "working-demo", "test-basic", "simple-test" files** - these are trash
+
+#### Build System Integrity First
+
+- Fix library build issues before creating demos
+- Verify compiled output has correct imports
+- Test that library imports work in demo code
+- Fix core library issues before attempting demo functionality
+
+#### Clean File Management
+
+- Remove ALL test/working/temporary files after use
+- Use proper naming conventions
+- Clean up unused imports and dead code
+- Maintain production-ready file structure
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:** feat, fix, docs, style, refactor, test, chore, perf, ci
+
+**Examples:**
+
+```
+feat(core): add support for custom node shapes
+fix(bundling): resolve edge bundling crash on large graphs
+docs: update installation instructions
+test(layout): add tests for force layout engine
+```
+
+## Key Dependencies
+
+### Production Dependencies
+
+- **d3** (^7.9.0) - Peer dependency for visualization (not bundled)
+
+### Development Dependencies
+
+- **TypeScript** (^5.9.3) - Language and type checking
+- **tsup** (^8.5.0) - Build tool for library bundling
+- **Vitest** (^2.1.9) - Testing framework
+- **ESLint** (^9.36.0) - Linting with TypeScript support
+- **Prettier** (^3.6.2) - Code formatting
+- **happy-dom/jsdom** - DOM testing environments
+
+## CI/CD Pipeline
+
+### Required Checks (PR must pass)
+
+- ✅ Linting and code formatting
+- 🏗️ Multi-version Node.js testing (18, 20, 22)
+- 🧪 Full test suite execution
+- 📦 Bundle size verification
+- 🔒 Security vulnerability scanning
+
+### Quality Gates
+
+- Test coverage ≥ 80%
+- All tests must pass
+- No linting errors
+- Bundle size within limits (300KB)
+
+### Branch Protection
+
+The `main` branch requires:
+
+- All CI checks to pass
+- At least one approving review
+- Branch up-to-date with main
+
+## Documentation
+
+### User-Facing Documentation
+
+- **README.md** - Project overview and quick start
+- **packages/knowledge-network/README.md** - Complete API documentation
+- **docs/EDGE_BUNDLING.md** - Edge bundling user guide
+- **CONTRIBUTING.md** - Contribution guidelines
+
+### Research Documentation
+
+- **docs/EDGE_BUNDLING_RESEARCH.md** - Academic research on bundling
+- **docs/SEMANTIC_SPACETIME_RESEARCH.md** - Semantic spacetime approaches
+
+### AI Context Files
+
+- **AGENTS.md** - General AI assistant guidance (primary reference)
+- **CLAUDE.md** - Claude-specific context
+- **GEMINI.md** - Gemini-specific context
+- **.github/agents/instructions.md** - Agent-specific instructions
+
+## Working with Temporary Files
+
+Use the `ai_working/` directory for:
+
+- Temporary analysis files
+- Working documents
+- Debugging artifacts
+- Files that should NOT be committed
+
+**Always clean up `ai_working/` when done with a task.**
+
+## Troubleshooting
+
+### Build Issues
+
+```bash
+# Clean and rebuild
+pnpm clean
+pnpm install
+pnpm build
+```
+
+### Test Failures
+
+```bash
+# Run tests with verbose output
+cd packages/knowledge-network
+pnpm test --reporter=verbose
+
+# Run specific test file
+pnpm test EdgeBundling.test.ts
+```
+
+### Linting Errors
+
+```bash
+# Check linting issues
+pnpm lint
+
+# Auto-fix linting issues
+pnpm lint --fix
+
+# Format code
+pnpm format
+```
+
+### pnpm Issues
+
+```bash
+# Clear pnpm cache
+pnpm store prune
+
+# Reinstall dependencies
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+```
+
+## Resources
+
+- **GitHub Repository:** https://github.com/AIGeekSquad/knowledge-network
+- **npm Package:** https://www.npmjs.com/package/@aigeeksquad/knowledge-network
+- **d3.js Documentation:** https://d3js.org/
+- **Vitest Documentation:** https://vitest.dev/
+- **tsup Documentation:** https://tsup.egoist.dev/
+
+## Getting Help
+
+If you encounter issues:
+
+1. Check this documentation first
+2. Review related files and existing implementations
+3. Search for similar issues in the repository
+4. Check CI/CD logs for automated test feedback
+5. Consult the research documentation for theoretical background
+
+---
+
+**Note:** Always prioritize minimal, surgical changes that directly address the issue. Avoid refactoring unrelated code or introducing unnecessary changes.
