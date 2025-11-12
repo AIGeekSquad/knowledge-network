@@ -478,6 +478,7 @@ export class ViewportManager extends EventEmitter {
         d3Svg.call(this.zoomBehavior.transform, d3Transform);
       }
     } catch (_error) {
+      // Fallback to direct transform update if d3 operations fail (e.g., in test environment)
       this.transform = transform;
       this.updateTransform(transform);
     }

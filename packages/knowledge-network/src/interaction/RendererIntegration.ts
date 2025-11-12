@@ -15,11 +15,7 @@ import type { PositionedNode } from '../layout/LayoutEngine';
 import type { IRenderer } from '../rendering/IRenderer';
 import type { Transform } from '../rendering/RenderingSystem';
 import type {
-  _ViewportState,
   InteractionEventHandlers,
-  _ViewportChangeEvent,
-  _SelectionChangeEvent,
-  _NodeInteractionEvent,
 } from './types';
 
 // === Enhanced Renderer Interface ===
