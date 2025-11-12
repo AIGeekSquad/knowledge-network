@@ -33,7 +33,7 @@
 
 import type { IRenderer, RendererType, RendererConfig, RenderConfig, NodeRenderConfig, EdgeRenderConfig, LabelRenderConfig, NodeStyleUpdate, EdgeStyleUpdate, HighlightConfig, Transform, LabelItem } from './IRenderer';
 import type { LayoutResult, PositionedNode, PositionedEdge, NodePosition, EdgePosition } from '../layout/LayoutEngine';
-import type { Point2D, Point3D, Point, Rectangle, Ray, RayIntersection, Vector2D } from '../spatial/types';
+import type { Point2D, Point, Rectangle, Ray, Vector2D } from '../spatial/types';
 import { SpatialIndexer } from '../spatial/SpatialIndexer';
 import { createBoundingRectangle, distance2D } from '../spatial/types';
 
@@ -271,7 +271,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
     }
   }
 
-  renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig, nodes?: PositionedNode[]): void {
+  renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig, _nodes?: PositionedNode[]): void {
     if (!this.ctx) return;
 
     const defaultConfig: EdgeRenderConfig = {
@@ -454,30 +454,30 @@ export class EnhancedCanvasRenderer implements IRenderer {
 
   // === IRenderer Interface Implementation ===
 
-  updateNodePositions(positions: NodePosition[]): void {
+  updateNodePositions(_positions: NodePosition[]): void {
     // Implementation for incremental position updates
     // Would update spatial index incrementally for performance
   }
 
-  updateEdgePositions(positions: EdgePosition[]): void {
+  updateEdgePositions(_positions: EdgePosition[]): void {
     // Implementation for incremental edge position updates
   }
 
-  updateNodeStyles(updates: NodeStyleUpdate[]): void {
+  updateNodeStyles(_updates: NodeStyleUpdate[]): void {
     // Implementation for style updates without full re-render
   }
 
-  updateEdgeStyles(updates: EdgeStyleUpdate[]): void {
+  updateEdgeStyles(_updates: EdgeStyleUpdate[]): void {
     // Implementation for edge style updates
   }
 
-  highlightNodes(nodeIds: string[], config?: HighlightConfig): void {
+  highlightNodes(nodeIds: string[], _config?: HighlightConfig): void {
     this.highlightedNodes.clear();
     nodeIds.forEach(id => this.highlightedNodes.add(id));
     this.requestRender();
   }
 
-  highlightEdges(edgeIds: string[], config?: HighlightConfig): void {
+  highlightEdges(edgeIds: string[], _config?: HighlightConfig): void {
     this.highlightedEdges.clear();
     edgeIds.forEach(id => this.highlightedEdges.add(id));
     this.requestRender();
@@ -489,12 +489,12 @@ export class EnhancedCanvasRenderer implements IRenderer {
     this.requestRender();
   }
 
-  getNodeElement(nodeId: string): Element | null {
+  getNodeElement(_nodeId: string): Element | null {
     // Canvas doesn't have individual elements
     return null;
   }
 
-  getEdgeElement(edgeId: string): Element | null {
+  getEdgeElement(_edgeId: string): Element | null {
     // Canvas doesn't have individual elements
     return null;
   }
@@ -503,7 +503,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
     return this.canvas!;
   }
 
-  enableBatching(enabled: boolean): void {
+  enableBatching(_enabled: boolean): void {
     // Implementation for batching control
   }
 
@@ -558,7 +558,7 @@ export class EnhancedCanvasRenderer implements IRenderer {
         this.config.height * this.config.pixelDensity!
       );
       this.offscreenCtx = this.offscreenCanvas.getContext('2d');
-    } catch (error) {
+    } catch (_error) {
       console.warn('OffscreenCanvas not supported, falling back to regular canvas');
     }
   }

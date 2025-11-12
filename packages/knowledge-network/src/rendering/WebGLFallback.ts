@@ -227,7 +227,7 @@ export class WebGLFallback {
       for (const ext of extensions) {
         try {
           capabilities.extensions[ext] = !!gl.getExtension(ext);
-        } catch (error) {
+        } catch (_error) {
           capabilities.extensions[ext] = false;
         }
       }
@@ -240,8 +240,8 @@ export class WebGLFallback {
    * Initialize WebGL1 fallback renderer
    */
   private async initializeWebGL1Fallback(
-    container: HTMLElement,
-    config: WebGLRendererConfig
+    _container: HTMLElement,
+    _config: WebGLRendererConfig
   ): Promise<{ success: boolean; renderer: IRenderer | null }> {
     // For now, return failure since WebGL1 renderer is not implemented
     // In a full implementation, this would create a WebGL1-compatible renderer

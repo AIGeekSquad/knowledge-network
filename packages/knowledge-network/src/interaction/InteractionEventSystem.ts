@@ -11,8 +11,8 @@
  */
 
 import { EventEmitter } from '../utils/EventEmitter';
-import type { Point2D } from '../spatial/types';
-import type { PositionedNode } from '../layout/LayoutEngine';
+import type { _Point2D } from '../spatial/types';
+import type { _PositionedNode } from '../layout/LayoutEngine';
 import type { IRenderer } from '../rendering/IRenderer';
 import type {
   InteractionEvent,
@@ -20,7 +20,7 @@ import type {
   SelectionChangeEvent,
   NodeInteractionEvent,
   GestureEvent,
-  ViewportState,
+  _ViewportState,
 } from './types';
 
 // === Event Type Registry ===
@@ -555,7 +555,7 @@ export class InteractionEventSystem extends EventEmitter {
   private notifyRenderer(
     renderer: IRenderer,
     eventType: keyof InteractionEventMap,
-    event: InteractionEvent
+    _event: InteractionEvent
   ): void {
     try {
       // Renderer-specific event handling could be implemented here

@@ -372,11 +372,11 @@ export class SVGRenderer implements IRenderer {
           stroke:
             typeof finalConfig.stroke === 'function'
               ? finalConfig.stroke
-              : (d: any, i: number) => finalConfig.stroke as string,
+              : (_d: any, _i: number) => finalConfig.stroke as string,
           strokeWidth:
             typeof finalConfig.strokeWidth === 'function'
               ? finalConfig.strokeWidth
-              : (d: any, i: number) => finalConfig.strokeWidth as number,
+              : (_d: any, _i: number) => finalConfig.strokeWidth as number,
           strokeOpacity: finalConfig.opacity,
         };
 

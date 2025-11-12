@@ -109,7 +109,7 @@ export class WebGLPicking {
     nodes: PositionedNode[],
     viewMatrix: Float32Array,
     viewport: { width: number; height: number },
-    config: PickingConfig = { tolerance: 0, enableMultiSelect: false, enableAreaSelect: false }
+    _config: PickingConfig = { tolerance: 0, enableMultiSelect: false, enableAreaSelect: false }
   ): PickingResult {
     if (!this.pickingFramebuffer || !this.pickingProgram) {
       return { node: null, worldPosition: { x: screenX, y: screenY }, screenPosition: { x: screenX, y: screenY } };

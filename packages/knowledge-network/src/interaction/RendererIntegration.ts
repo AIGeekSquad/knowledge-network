@@ -15,11 +15,11 @@ import type { PositionedNode } from '../layout/LayoutEngine';
 import type { IRenderer } from '../rendering/IRenderer';
 import type { Transform } from '../rendering/RenderingSystem';
 import type {
-  ViewportState,
+  _ViewportState,
   InteractionEventHandlers,
-  ViewportChangeEvent,
-  SelectionChangeEvent,
-  NodeInteractionEvent,
+  _ViewportChangeEvent,
+  _SelectionChangeEvent,
+  _NodeInteractionEvent,
 } from './types';
 
 // === Enhanced Renderer Interface ===
@@ -301,7 +301,7 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
     this.setTransform({ x: 0, y: 0, scale: 1 });
   }
 
-  fitToViewport(padding = 50): void {
+  fitToViewport(_padding = 50): void {
     // This would need access to node data to calculate bounds
     // Implementation depends on renderer type and data source
     console.warn('fitToViewport not implemented - requires node data access');
@@ -309,8 +309,8 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
 
   getNodeAt(screenX: number, screenY: number): PositionedNode | null {
     // Transform screen coordinates to world coordinates
-    const worldX = (screenX - this.currentTransform.x) / this.currentTransform.scale;
-    const worldY = (screenY - this.currentTransform.y) / this.currentTransform.scale;
+    const _worldX = (screenX - this.currentTransform.x) / this.currentTransform.scale;
+    const _worldY = (screenY - this.currentTransform.y) / this.currentTransform.scale;
 
     // This would need spatial indexing or renderer-specific hit testing
     // Implementation depends on available spatial indexer
@@ -320,7 +320,7 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
 
   getNodesInRegion(region: Rectangle): PositionedNode[] {
     // Transform screen region to world coordinates
-    const worldRegion = {
+    const _worldRegion = {
       x: (region.x - this.currentTransform.x) / this.currentTransform.scale,
       y: (region.y - this.currentTransform.y) / this.currentTransform.scale,
       width: region.width / this.currentTransform.scale,
@@ -356,13 +356,13 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
     this.interactionHandlers = {};
   }
 
-  enableViewportCulling(enabled: boolean): void {
+  enableViewportCulling(_enabled: boolean): void {
     // Store viewport culling preference
     // Implementation depends on renderer type
     // Viewport culling feature configured
   }
 
-  setLevelOfDetail(enabled: boolean): void {
+  setLevelOfDetail(_enabled: boolean): void {
     // Store level of detail preference
     // Implementation depends on renderer type
     // Level of detail feature configured
@@ -397,7 +397,7 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
 
     // For edges, we need to check if either endpoint is visible
     // or if the edge crosses the viewport
-    return edges.filter(edge => {
+    return edges.filter(_edge => {
       // This would need access to source/target node positions
       // Simplified implementation for now
       return true;
@@ -413,7 +413,7 @@ export class RendererIntegrationAdapter implements IInteractiveRenderer {
   private endFrameTiming(): void {
     if (this.frameStartTime === 0) return;
 
-    const frameTime = performance.now() - this.frameStartTime;
+    const _frameTime = performance.now() - this.frameStartTime;
     this.frameCount++;
 
     // Calculate FPS every second
@@ -491,7 +491,7 @@ export function createOptimizedRenderer(
   // For now, return configuration recommendations
 
   const recommendations: string[] = [];
-  let config: any = {};
+  const config: any = {};
 
   if (nodeCount > 1000) {
     recommendations.push('Enable viewport culling for better performance');
