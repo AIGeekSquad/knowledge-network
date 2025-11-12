@@ -15,7 +15,7 @@ import type { PositionedNode } from '../layout/LayoutEngine';
 import type { IRenderer } from '../rendering/IRenderer';
 import type {
   InteractionConfig,
-  InteractionFeatures,
+  _InteractionFeatures,
   InteractionState,
   InteractionEventHandlers,
   ViewportChangeEvent,
@@ -23,7 +23,7 @@ import type {
   NodeInteractionEvent,
   GestureEvent,
   SelectionRegion,
-  SelectionMode,
+  _SelectionMode,
   ViewportState as IViewportState,
 } from './types';
 import {
@@ -475,7 +475,7 @@ export class InteractionController extends EventEmitter {
   handleMouseUp(event: MouseEvent): void {
     if (!this.container) return;
 
-    const point = this.getEventPoint(event);
+    const _point = this.getEventPoint(event);
 
     // Finalize selection
     if (this.isSelecting) {

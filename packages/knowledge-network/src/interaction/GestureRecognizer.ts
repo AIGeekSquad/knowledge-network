@@ -251,7 +251,7 @@ export class GestureRecognizer {
     }
   }
 
-  handleMouseUp(event: MouseEvent): void {
+  handleMouseUp(_event: MouseEvent): void {
     if (!this.mouseDown) return;
 
     const currentTime = Date.now();

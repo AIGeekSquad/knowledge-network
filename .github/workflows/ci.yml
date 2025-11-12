@@ -12,13 +12,10 @@ concurrency:
 
 jobs:
   build-and-test:
-    name: Build & Test (Node ${{ matrix.node-version }})
+    name: Build & Test (Node 20 LTS)
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,10 +25,10 @@ jobs:
         with:
           version: 8
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -55,12 +52,10 @@ jobs:
           CI: true
 
       - name: Generate coverage
-        if: matrix.node-version == 20
         run: cd packages/knowledge-network && pnpm exec vitest run --coverage
         continue-on-error: true
 
       - name: Upload coverage
-        if: matrix.node-version == 20
         uses: codecov/codecov-action@v4
         with:
           files: ./packages/knowledge-network/coverage/lcov.info
@@ -68,7 +63,6 @@ jobs:
         continue-on-error: true
 
       - name: Check bundle size
-        if: matrix.node-version == 20
         run: |
           echo "## 📦 Bundle Size" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

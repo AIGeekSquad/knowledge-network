@@ -18,7 +18,7 @@ import type {
   HighlightConfig,
   Transform,
   LabelItem,
-  NodeShape,
+  _NodeShape,
 } from './RenderingSystem';
 import type {
   LayoutResult,
@@ -44,7 +44,7 @@ import {
   type ShaderProgram,
 } from './shaders/WebGLShaders';
 import { WebGLBufferManager } from './WebGLBufferManager';
-import { WebGLPicking, type PickingResult } from './WebGLPicking';
+import { WebGLPicking, type _PickingResult } from './WebGLPicking';
 import { WebGLPerformance, type PerformanceConfig, type RenderBatch } from './WebGLPerformance';
 import { WebGLFallback, type FallbackConfig } from './WebGLFallback';
 
@@ -359,8 +359,8 @@ export class WebGLRenderer implements IRenderer {
   private initializeBuffers(): void {
     if (!this.gl) return;
 
-    const maxNodes = this.config!.maxNodes!;
-    const maxEdges = this.config!.maxEdges!;
+    const _maxNodes = this.config!.maxNodes!;
+    const _maxEdges = this.config!.maxEdges!;
 
     // Create buffers
     this.state.buffers.nodePositions = this.gl.createBuffer();
@@ -1039,7 +1039,7 @@ export class WebGLRenderer implements IRenderer {
     this.gl.bindVertexArray(null);
   }
 
-  renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig, nodes?: PositionedNode[]): void {
+  renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig, _nodes?: PositionedNode[]): void {
     if (!this.gl || !this.bufferManager || !this.state.programs.edge) return;
 
     // Filter visible edges
@@ -1084,7 +1084,7 @@ export class WebGLRenderer implements IRenderer {
     this.gl.bindVertexArray(null);
   }
 
-  renderLabels(items: LabelItem[], config?: LabelRenderConfig): void {
+  renderLabels(items: LabelItem[], _config?: LabelRenderConfig): void {
     // Labels typically rendered with Canvas overlay for text quality
     // WebGL text rendering is complex and often not worth the performance trade-off
     // This could be implemented as a Canvas 2D overlay or using texture atlases
@@ -1401,12 +1401,12 @@ export class WebGLRenderer implements IRenderer {
     this.bufferManager.markDirty(['nodes', 'edges']);
   }
 
-  getNodeElement(nodeId: string): Element | null {
+  getNodeElement(_nodeId: string): Element | null {
     // WebGL doesn't have DOM elements
     return null;
   }
 
-  getEdgeElement(edgeId: string): Element | null {
+  getEdgeElement(_edgeId: string): Element | null {
     // WebGL doesn't have DOM elements
     return null;
   }
@@ -1464,7 +1464,7 @@ export class WebGLRenderer implements IRenderer {
     this.bufferManager.markDirty(['nodes', 'picking']);
   }
 
-  private applyEdgePositionUpdates(positions: EdgePosition[]): void {
+  private applyEdgePositionUpdates(_positions: EdgePosition[]): void {
     if (!this.bufferManager) return;
 
     // Edge positions are derived from node positions
@@ -1472,7 +1472,7 @@ export class WebGLRenderer implements IRenderer {
     this.bufferManager.markDirty(['edges']);
   }
 
-  private applyNodeStyleUpdates(updates: NodeStyleUpdate[]): void {
+  private applyNodeStyleUpdates(_updates: NodeStyleUpdate[]): void {
     if (!this.bufferManager) return;
 
     // Style updates require full node buffer update with new styles
@@ -1480,7 +1480,7 @@ export class WebGLRenderer implements IRenderer {
     this.bufferManager.markDirty(['nodes']);
   }
 
-  private applyEdgeStyleUpdates(updates: EdgeStyleUpdate[]): void {
+  private applyEdgeStyleUpdates(_updates: EdgeStyleUpdate[]): void {
     if (!this.bufferManager) return;
 
     // Style updates require full edge buffer update
@@ -1671,7 +1671,7 @@ export class WebGLRenderer implements IRenderer {
   /**
    * Handle WebGL context restore (browser event)
    */
-  private handleContextRestore = (event: Event): void => {
+  private handleContextRestore = (_event: Event): void => {
     // WebGL context restored, reinitializing
 
     try {

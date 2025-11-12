@@ -10,7 +10,7 @@
 
 import { EnhancedCanvasRenderer, type CanvasRenderingConfig } from './EnhancedCanvasRenderer';
 import { CanvasRenderer } from './CanvasRenderer';
-import type { IRenderer, RendererConfig } from './IRenderer';
+import type { _IRenderer, RendererConfig } from './IRenderer';
 import type { SpatialIndexConfig } from '../spatial/types';
 
 /**
@@ -138,7 +138,7 @@ export class SpatialCanvasFactory {
   /**
    * Create renderer with custom configuration
    */
-  static createCustom(config: CanvasRenderingConfig): EnhancedCanvasRenderer {
+  static createCustom(_config: CanvasRenderingConfig): EnhancedCanvasRenderer {
     const renderer = new EnhancedCanvasRenderer();
     return renderer;
   }
@@ -147,7 +147,7 @@ export class SpatialCanvasFactory {
    * Create renderer optimized for mobile devices
    */
   static createMobile(): EnhancedCanvasRenderer {
-    const mobileConfig: CanvasRenderingConfig = {
+    const _mobileConfig: CanvasRenderingConfig = {
       width: Math.min(window.innerWidth, 800),
       height: Math.min(window.innerHeight, 600),
       enableViewportCulling: true,
@@ -166,7 +166,7 @@ export class SpatialCanvasFactory {
    * Create renderer for development/debugging
    */
   static createDebug(): EnhancedCanvasRenderer {
-    const debugConfig: CanvasRenderingConfig = {
+    const _debugConfig: CanvasRenderingConfig = {
       width: 800,
       height: 600,
       enableViewportCulling: false, // Show all nodes for debugging
@@ -192,7 +192,7 @@ export class CanvasRendererMigration {
    * Create enhanced renderer that matches basic renderer behavior
    */
   static createCompatible(basicConfig: RendererConfig): EnhancedCanvasRenderer {
-    const enhancedConfig: CanvasRenderingConfig = {
+    const _enhancedConfig: CanvasRenderingConfig = {
       ...basicConfig,
       enableViewportCulling: false, // Match basic renderer behavior
       enableLevelOfDetail: false,
@@ -207,7 +207,7 @@ export class CanvasRendererMigration {
   /**
    * Gradually enable spatial features
    */
-  static enableSpatialFeatures(renderer: EnhancedCanvasRenderer): void {
+  static enableSpatialFeatures(_renderer: EnhancedCanvasRenderer): void {
     // This would update renderer configuration to enable spatial features
     // In a real implementation, this might involve configuration updates
     // Enabling spatial features on renderer
@@ -217,9 +217,9 @@ export class CanvasRendererMigration {
    * Compare performance between basic and enhanced renderers
    */
   static async performanceTest(
-    basicRenderer: CanvasRenderer,
-    enhancedRenderer: EnhancedCanvasRenderer,
-    testData: any
+    _basicRenderer: CanvasRenderer,
+    _enhancedRenderer: EnhancedCanvasRenderer,
+    _testData: any
   ): Promise<{
     basic: { renderTime: number; memory: number };
     enhanced: { renderTime: number; memory: number };
@@ -256,10 +256,10 @@ export class SpatialInteractionHelpers {
       enableHover = true,
       enableSelection = true,
       enablePanning = true,
-      enableZooming = true,
+      _enableZooming = true,
       onNodeHover,
       onNodeClick,
-      onSelectionChange,
+      _onSelectionChange,
     } = options;
 
     const container = renderer.getContainer() as HTMLCanvasElement;

@@ -6,7 +6,7 @@
  */
 
 import {
-  createAutoInteractionController,
+  _createAutoInteractionController,
   createCompleteInteractionSystem,
   InteractionEventSystem,
   InteractionController,
@@ -434,7 +434,7 @@ export class InteractionExampleApp {
 export function createKnowledgeNetworkInteraction(
   container: HTMLElement,
   nodes: PositionedNode[] = [],
-  options?: {
+  _options?: {
     preset?: keyof typeof INTERACTION_PRESETS;
     enableMobile?: boolean;
     enableAccessibility?: boolean;

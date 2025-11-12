@@ -124,7 +124,7 @@ export class CanvasRenderer implements IRenderer {
     });
   }
 
-    renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig, nodes?: PositionedNode[]): void {
+    renderEdges(edges: PositionedEdge[], config?: EdgeRenderConfig, _nodes?: PositionedNode[]): void {
     if (!this.ctx) return;
 
     const defaultConfig: EdgeRenderConfig = {
@@ -180,25 +180,25 @@ export class CanvasRenderer implements IRenderer {
     });
   }
 
-  updateNodePositions(positions: NodePosition[]): void {}
+  updateNodePositions(_positions: NodePosition[]): void {}
 
-  updateEdgePositions(positions: EdgePosition[]): void {}
+  updateEdgePositions(_positions: EdgePosition[]): void {}
 
-  updateNodeStyles(updates: NodeStyleUpdate[]): void {}
+  updateNodeStyles(_updates: NodeStyleUpdate[]): void {}
 
-  updateEdgeStyles(updates: EdgeStyleUpdate[]): void {}
+  updateEdgeStyles(_updates: EdgeStyleUpdate[]): void {}
 
-  highlightNodes(nodeIds: string[], config?: HighlightConfig): void {}
+  highlightNodes(_nodeIds: string[], _config?: HighlightConfig): void {}
 
-  highlightEdges(edgeIds: string[], config?: HighlightConfig): void {}
+  highlightEdges(_edgeIds: string[], _config?: HighlightConfig): void {}
 
   clearHighlights(): void {}
 
-  getNodeElement(nodeId: string): Element | null {
+  getNodeElement(_nodeId: string): Element | null {
     return null;
   }
 
-  getEdgeElement(edgeId: string): Element | null {
+  getEdgeElement(_edgeId: string): Element | null {
     return null;
   }
 
@@ -206,7 +206,7 @@ export class CanvasRenderer implements IRenderer {
     return this.canvas!;
   }
 
-  enableBatching(enabled: boolean): void {}
+  enableBatching(_enabled: boolean): void {}
 
   flush(): void {}
 
