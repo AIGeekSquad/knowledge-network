@@ -14,8 +14,6 @@ import type {
   GestureType,
   GestureData,
   GestureEvent,
-  TouchPoint,
-  InteractionConfig,
 } from './types';
 import { calculateDistance, throttle } from './types';
 
@@ -208,7 +206,7 @@ export class GestureRecognizer {
     this.processGestureEnd(currentTime);
   }
 
-  handleTouchCancel(event: TouchEvent): void {
+  handleTouchCancel(_event: TouchEvent): void {
     this.cancelAllGestures();
   }
 
@@ -263,7 +261,7 @@ export class GestureRecognizer {
     this.processGestureEnd(currentTime);
   }
 
-  handleMouseWheel(event: WheelEvent): void {
+  handleMouseWheel(_event: WheelEvent): void {
     // Wheel events are handled directly by InteractionController
     // but could be processed here for gesture combinations
   }
@@ -359,7 +357,7 @@ export class GestureRecognizer {
     const startDistance = calculateDistance(touch1.startPosition, touch2.startPosition);
 
     const scale = currentDistance / startDistance;
-    const deltaScale = currentDistance / previousDistance;
+    const _deltaScale = currentDistance / previousDistance;
 
     // Calculate center point
     const center: Point2D = {

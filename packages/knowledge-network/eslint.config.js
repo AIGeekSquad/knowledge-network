@@ -12,13 +12,14 @@ export default tseslint.config(
       },
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['warn', { 
+      '@typescript-eslint/no-unused-vars': ['error', { 
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_|^error$'
+        caughtErrorsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_'
       }],
       '@typescript-eslint/no-explicit-any': 'warn',
-      'no-case-declarations': 'warn',
+      'no-case-declarations': 'off',
     },
   },
   {

@@ -4,7 +4,6 @@
 
 import { describe, test, expect, beforeEach } from 'vitest';
 import { ViewportState } from '../ViewportState';
-import type { InteractionConfig } from '../types';
 
 describe('ViewportState', () => {
   let viewport: ViewportState;

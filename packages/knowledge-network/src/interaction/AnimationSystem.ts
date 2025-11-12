@@ -14,7 +14,6 @@ import type { Point2D } from '../spatial/types';
 import type {
   ViewportState as IViewportState,
   AnimationConfig,
-  ViewportAnimation,
   EasingFunction,
 } from './types';
 import { EASING_FUNCTIONS, clamp } from './types';
@@ -595,7 +594,7 @@ export class AnimationSystem {
         sum += Math.pow(a, i);
       }
 
-      const currentBounce = 0;
+      const _currentBounce = 0;
       let currentTime = 0;
 
       for (let i = 0; i < n; i++) {
