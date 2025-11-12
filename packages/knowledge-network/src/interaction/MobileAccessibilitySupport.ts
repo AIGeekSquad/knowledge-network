@@ -16,8 +16,6 @@ import type { PositionedNode } from '../layout/LayoutEngine';
 import type {
   InteractionController,
   ViewportState,
-  _InteractionConfig,
-  _GestureEvent,
 } from './index';
 
 // === Mobile Optimization ===

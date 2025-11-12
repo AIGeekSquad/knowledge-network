@@ -11,8 +11,6 @@
  */
 
 import { EventEmitter } from '../utils/EventEmitter';
-import type { _Point2D } from '../spatial/types';
-import type { _PositionedNode } from '../layout/LayoutEngine';
 import type { IRenderer } from '../rendering/IRenderer';
 import type {
   InteractionEvent,
@@ -20,7 +18,6 @@ import type {
   SelectionChangeEvent,
   NodeInteractionEvent,
   GestureEvent,
-  _ViewportState,
 } from './types';
 
 // === Event Type Registry ===

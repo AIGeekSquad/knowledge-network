@@ -180,19 +180,33 @@ export class CanvasRenderer implements IRenderer {
     });
   }
 
-  updateNodePositions(_positions: NodePosition[]): void {}
+  updateNodePositions(_positions: NodePosition[]): void {
+    // Not implemented in basic CanvasRenderer - use EnhancedCanvasRenderer for incremental updates
+  }
 
-  updateEdgePositions(_positions: EdgePosition[]): void {}
+  updateEdgePositions(_positions: EdgePosition[]): void {
+    // Not implemented in basic CanvasRenderer - use EnhancedCanvasRenderer for incremental updates
+  }
 
-  updateNodeStyles(_updates: NodeStyleUpdate[]): void {}
+  updateNodeStyles(_updates: NodeStyleUpdate[]): void {
+    // Not implemented in basic CanvasRenderer - use EnhancedCanvasRenderer for style updates
+  }
 
-  updateEdgeStyles(_updates: EdgeStyleUpdate[]): void {}
+  updateEdgeStyles(_updates: EdgeStyleUpdate[]): void {
+    // Not implemented in basic CanvasRenderer - use EnhancedCanvasRenderer for style updates
+  }
 
-  highlightNodes(_nodeIds: string[], _config?: HighlightConfig): void {}
+  highlightNodes(_nodeIds: string[], _config?: HighlightConfig): void {
+    // Not implemented in basic CanvasRenderer - use EnhancedCanvasRenderer for highlighting
+  }
 
-  highlightEdges(_edgeIds: string[], _config?: HighlightConfig): void {}
+  highlightEdges(_edgeIds: string[], _config?: HighlightConfig): void {
+    // Not implemented in basic CanvasRenderer - use EnhancedCanvasRenderer for highlighting
+  }
 
-  clearHighlights(): void {}
+  clearHighlights(): void {
+    // Not implemented in basic CanvasRenderer - use EnhancedCanvasRenderer for highlighting
+  }
 
   getNodeElement(_nodeId: string): Element | null {
     return null;
@@ -206,9 +220,13 @@ export class CanvasRenderer implements IRenderer {
     return this.canvas!;
   }
 
-  enableBatching(_enabled: boolean): void {}
+  enableBatching(_enabled: boolean): void {
+    // Not implemented in basic CanvasRenderer - rendering is immediate
+  }
 
-  flush(): void {}
+  flush(): void {
+    // Not implemented in basic CanvasRenderer - no batching support
+  }
 
       private transform: Transform = { x: 0, y: 0, scale: 1 };
 

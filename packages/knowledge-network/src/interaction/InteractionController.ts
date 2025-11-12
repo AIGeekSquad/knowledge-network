@@ -15,7 +15,6 @@ import type { PositionedNode } from '../layout/LayoutEngine';
 import type { IRenderer } from '../rendering/IRenderer';
 import type {
   InteractionConfig,
-  _InteractionFeatures,
   InteractionState,
   InteractionEventHandlers,
   ViewportChangeEvent,
@@ -23,7 +22,6 @@ import type {
   NodeInteractionEvent,
   GestureEvent,
   SelectionRegion,
-  _SelectionMode,
   ViewportState as IViewportState,
 } from './types';
 import {
