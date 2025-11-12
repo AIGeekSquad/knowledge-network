@@ -587,15 +587,15 @@ export class AnimationSystem {
     return (t: number) => {
       if (t === 1) return 1;
 
-      let n = bounces;
-      let a = decay;
+      const n = bounces;
+      const a = decay;
       let sum = 0;
 
       for (let i = 0; i < n; i++) {
         sum += Math.pow(a, i);
       }
 
-      let currentBounce = 0;
+      const currentBounce = 0;
       let currentTime = 0;
 
       for (let i = 0; i < n; i++) {

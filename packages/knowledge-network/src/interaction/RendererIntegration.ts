@@ -491,7 +491,7 @@ export function createOptimizedRenderer(
   // For now, return configuration recommendations
 
   const recommendations: string[] = [];
-  let config: any = {};
+  const config: any = {};
 
   if (nodeCount > 1000) {
     recommendations.push('Enable viewport culling for better performance');

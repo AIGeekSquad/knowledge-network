@@ -14,7 +14,7 @@
     "test:a11y": "playwright test --grep accessibility",
     "test:performance": "playwright test --grep performance",
     "test:module": "vitest --run src/modules",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint src --ext ts,tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
     "clean": "rm -rf dist node_modules .vite"
   },

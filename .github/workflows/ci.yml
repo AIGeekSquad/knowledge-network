@@ -39,12 +39,11 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
 
-      - name: Run linter (informational)
-        run: pnpm lint || echo "⚠️ Lint warnings present"
-        continue-on-error: true
+      - name: Run linter
+        run: pnpm lint
 
       - name: Check formatting
-        run: pnpm format:check || echo "⚠️ Formatting issues present"
+        run: pnpm format:check
         continue-on-error: true
 
       - name: Build packages

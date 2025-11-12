@@ -135,7 +135,7 @@ export class ViewportState implements CoordinateTransform {
    * Set pan offset with bounds checking
    */
   setPan(pan: Point2D): boolean {
-    let newPan = { ...pan };
+    const newPan = { ...pan };
 
     // Apply pan bounds if configured
     if (this.state.panBounds) {
