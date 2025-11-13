@@ -5,6 +5,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-13
 **Constitution Reference**: v1.1.0 (`.specify/memory/constitution.md`)
 
 ## Active Technologies
+- TypeScript ES2022 with strict configuration, async/Promise-based API design + D3.js v7 (force calculations), existing LayoutNode structures from 002-node-layout (003-edge-generator)
 
 **Core Stack**: TypeScript ES2022, D3.js v7, tsup, Vite, Vitest, pnpm workspaces
 **Architecture**: Monorepo with modular edge rendering, force-directed layouts, Canvas/SVG rendering
@@ -89,6 +90,7 @@ pnpm build                     # Build demo for production
 - NO separate test pages or fragmented demonstrations
 
 ## Recent Changes
+- 003-edge-generator: Added TypeScript ES2022 with strict configuration, async/Promise-based API design + D3.js v7 (force calculations), existing LayoutNode structures from 002-node-layout
 
 [LAST 3 FEATURES AND WHAT THEY ADDED - TO BE POPULATED BY SPECKIT COMMANDS]
 

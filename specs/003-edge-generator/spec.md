@@ -199,8 +199,8 @@ A system integrator needs EdgeGenerator to operate seamlessly within the sequent
 **Responsibility**: Orchestrate edge structure creation and coordinate compatibility-based processing
 **Functor Integration**: Accept and execute compatibility functors following `(edgeA, edgeB, context) => number` contract
 **Key Methods**:
-- `generateEdges(relationships: Relationship[], layoutNodes: LayoutNode[], config: EdgeGenerationConfig): Promise<EdgeLayout[]>`
-- `calculateCompatibility(edges: EdgeLayout[], compatibilityFunctor: CompatibilityFunctor): Promise<CompatibilityMatrix>`
+- `generateEdgesAsync(relationships: Relationship[], layoutNodes: LayoutNode[], config: EdgeGenerationConfig): Promise<EdgeLayout[]>`
+- `calculateCompatibilityAsync(edges: EdgeLayout[], compatibilityFunctor: CompatibilityFunctor): Promise<CompatibilityMatrix>`
 - `registerCompatibilityFunctor(name: string, functor: CompatibilityFunctor): void`
 
 #### RelationshipProcessor
