@@ -50,7 +50,7 @@ const cosineSimilarityJS = (a: Float32Array, b: Float32Array): number => {
 class WASMSimilarityProcessor {
   private wasmModule: WebAssembly.Module;
   
-  async calculateBatch(vectors: Float32Array[]): Promise<Float32Array> {
+  async calculateBatchAsync(vectors: Float32Array[]): Promise<Float32Array> {
     // WASM SIMD implementation processes 4 similarities per instruction
     return this.wasmModule.exports.calculateSimilarityMatrix(vectors);
   }
@@ -284,7 +284,7 @@ enum LayoutPhase {
 class ProgressiveLayoutEngine {
   private currentPhase = LayoutPhase.COARSE;
   
-  async executePhase(phase: LayoutPhase, nodes: LayoutNode[]): Promise<void> {
+  async executePhaseAsync(phase: LayoutPhase, nodes: LayoutNode[]): Promise<void> {
     switch (phase) {
       case LayoutPhase.COARSE:
         // Top 20% nodes by centrality, aggressive alpha cooling
@@ -453,7 +453,7 @@ class LayoutWorkerManager {
     }
   }
   
-  async computeLayout(nodes: LayoutNode[]): Promise<LayoutNode[]> {
+  async computeLayoutAsync(nodes: LayoutNode[]): Promise<LayoutNode[]> {
     if (!this.useWorkers) {
       return this.computeLayoutMainThread(nodes);
     }

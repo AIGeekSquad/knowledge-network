@@ -197,9 +197,9 @@ A performance engineer needs to monitor and control layout convergence with earl
 **Responsibility**: Orchestrate positioning algorithms and coordinate similarity-based spatial arrangement
 **Functor Integration**: Accept and execute similarity functors following `(nodeA, nodeB, context) => number` contract
 **Key Methods**:
-- `calculateLayout(nodes: Node[], similarityFunctor: SimilarityFunctor, config: LayoutConfig): Promise<LayoutResult>`
+- `calculateLayoutAsync(nodes: Node[], similarityFunctor: SimilarityFunctor, config: LayoutConfig): Promise<LayoutResult>`
 - `updatePositions(nodeUpdates: NodeUpdate[], preserveStability: boolean): void`
-- `switchDimensions(targetDimensions: 2 | 3): Promise<TransitionResult>`
+- `switchDimensionsAsync(targetDimensions: 2 | 3): Promise<TransitionResult>`
 
 #### SimilarityProcessor
 **Responsibility**: Execute similarity calculations and manage custom functor integration

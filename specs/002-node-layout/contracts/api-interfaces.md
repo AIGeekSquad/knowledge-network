@@ -293,20 +293,20 @@ interface NodeLayoutEngine {
   readonly eventEmitter: LayoutEventEmitter;
   
   /** Calculate layout with progressive refinement */
-  calculateLayout(
-    nodes: Node[], 
-    similarityFunctor: SimilarityFunctor, 
+  calculateLayoutAsync(
+    nodes: Node[],
+    similarityFunctor: SimilarityFunctor,
     config?: Partial<LayoutConfig>
   ): Promise<LayoutResult>;
   
   /** Update positions maintaining stability */
-  updatePositions(
-    nodeUpdates: NodeUpdate[], 
+  updatePositionsAsync(
+    nodeUpdates: NodeUpdate[],
     preserveStability?: boolean
   ): Promise<void>;
   
   /** Switch coordinate dimensions */
-  switchDimensions(targetDimensions: 2 | 3): Promise<TransitionResult>;
+  switchDimensionsAsync(targetDimensions: 2 | 3): Promise<TransitionResult>;
   
   /** Register custom similarity function */
   registerSimilarityFunction(

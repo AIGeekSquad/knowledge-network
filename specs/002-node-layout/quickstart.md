@@ -34,7 +34,7 @@ const layoutConfig = {
 };
 
 // Calculate layout
-const layoutResult = await layoutEngine.calculateLayout(nodes, layoutConfig);
+const layoutResult = await layoutEngine.calculateLayoutAsync(nodes, layoutConfig);
 
 // Access positioned nodes
 const positionedNodes = layoutResult.nodes;
@@ -95,7 +95,7 @@ const advancedConfig = {
 
 ```typescript
 // Switch between dimensional modes
-await layoutEngine.switchDimensions('3D'); // '2D' | '3D'
+await layoutEngine.switchDimensionsAsync('3D'); // '2D' | '3D'
 
 // Configure universal coordinates (2D mode uses z=0 constraint)
 const config3D = {
@@ -187,14 +187,14 @@ const progressiveConfig = {
   }
 };
 
-const result = await layoutEngine.calculateLayout(nodes, progressiveConfig);
+const result = await layoutEngine.calculateLayoutAsync(nodes, progressiveConfig);
 ```
 
 ### Convergence Monitoring
 
 ```typescript
 // Monitor convergence state
-const convergenceState = await layoutEngine.getConvergenceState();
+const convergenceState = await layoutEngine.getConvergenceStateAsync();
 console.log({
   isConverged: convergenceState.isConverged,
   stability: convergenceState.stability,
@@ -268,7 +268,7 @@ const updateLayout = async (newNodes: Node[], changedNodeIds: string[]) => {
     }
   };
   
-  return await layoutEngine.updatePositions(newNodes, updateConfig);
+  return await layoutEngine.updatePositionsAsync(newNodes, updateConfig);
 };
 ```
 
@@ -281,19 +281,19 @@ const updateLayout = async (newNodes: Node[], changedNodeIds: string[]) => {
 ```typescript
 class NodeLayoutEngine {
   // Calculate complete layout
-  calculateLayout(nodes: Node[], config: LayoutConfig): Promise<LayoutResult>;
+  calculateLayoutAsync(nodes: Node[], config: LayoutConfig): Promise<LayoutResult>;
   
   // Update existing layout
-  updatePositions(nodeUpdates: NodeUpdate[], options?: UpdateOptions): Promise<LayoutResult>;
+  updatePositionsAsync(nodeUpdates: NodeUpdate[], options?: UpdateOptions): Promise<LayoutResult>;
   
   // Switch dimensional mode
-  switchDimensions(targetDimensions: '2D' | '3D'): Promise<TransitionResult>;
+  switchDimensionsAsync(targetDimensions: '2D' | '3D'): Promise<TransitionResult>;
   
   // Register custom similarity function
   registerSimilarityFunction(name: string, functor: SimilarityFunctor, weight?: number): void;
   
   // Monitor convergence
-  getConvergenceState(): Promise<ConvergenceState>;
+  getConvergenceStateAsync(): Promise<ConvergenceState>;
 }
 ```
 
