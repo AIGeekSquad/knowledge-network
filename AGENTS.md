@@ -16,7 +16,6 @@ The library's standout feature is force-directed edge bundling, which reduces vi
 
 When working on this project:
 - All project files belong in this monorepo structure
-- Use `ai_working/` for temporary analysis files and working documents
 - Reference files with `@knowledge-network/` prefix for the core library
 - Demo Suite uses `workspace:*` dependencies to reference the local core library
 - Follow the modular architecture principles described in `docs/` documentation
@@ -195,7 +194,6 @@ The main library follows a modular architecture:
 │   │   └── tests/                 # Test suite
 │   └── demo-suite/                 # Next-generation interactive showcase platform
 ├── docs/                          # Project documentation
-├── ai_working/                    # Analysis and working files
 └── screenshots/                   # Visual examples
 ```
 
