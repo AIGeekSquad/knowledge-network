@@ -101,12 +101,12 @@ A system integrator needs EdgeGenerator to operate seamlessly within the sequent
 
 ### Functional Requirements
 
-- **FR-001**: System MUST generate EdgeLayout structures from relationship data that reference LayoutNode instances from node layout processing *(extends [`002-node-layout#FR-012`](../002-node-layout/spec.md) LayoutNode architecture)*
-- **FR-002**: System MUST preserve original relationship data in EdgeLayout structures while adding generation-specific metadata *(implements [`001-modular-graph-engine#FR-001`](../001-modular-graph-engine/spec.md) layout/rendering separation)*
-- **FR-003**: System MUST calculate edge compatibility using configurable functions following functor contract `(edgeA: EdgeLayout, edgeB: EdgeLayout, context: EdgeContext) => number` *(extends [`001-modular-graph-engine#FR-004`](../001-modular-graph-engine/spec.md) runtime extensibility)*
-- **FR-004**: System MUST support runtime registration of custom compatibility functions without system restart *(implements [`001-modular-graph-engine#FR-004`](../001-modular-graph-engine/spec.md) runtime extensibility)*
-- **FR-005**: System MUST operate in the sequential pipeline after node layout completion and before rendering operations *(implements [`001-modular-graph-engine#FR-003`](../001-modular-graph-engine/spec.md) pipeline processing)*
-- **FR-006**: System MUST provide compatibility data suitable for edge bundling algorithms without coupling to specific bundling implementations *(maintains [`001-modular-graph-engine#FR-002`](../001-modular-graph-engine/spec.md) pluggable rendering strategies)*
+- **FR-001**: System MUST generate EdgeLayout structures from relationship data that reference LayoutNode instances from node layout processing, with explicit ID mapping contract where `relationship.sourceId` and `relationship.targetId` map to `layoutNode.id` values *(extends [`002-node-layout#FR-012`](../002-node-layout/spec.md) LayoutNode architecture)*
+- **FR-002**: System MUST preserve original relationship data in EdgeLayout structures while adding generation-specific metadata *(coordinates with [`001-modular-graph-engine#FR-001`](../001-modular-graph-engine/spec.md) layout/rendering separation)*
+- **FR-003**: System MUST calculate edge compatibility using configurable functions following CompatibilityFunctor contract `(edgeA: EdgeLayout, edgeB: EdgeLayout, context: EdgeContext) => number` *(coordinated by [`001-modular-graph-engine#FR-004`](../001-modular-graph-engine/spec.md) runtime extensibility)*
+- **FR-004**: System MUST support runtime registration of custom compatibility functions without system restart *(coordinated by [`001-modular-graph-engine#FR-004`](../001-modular-graph-engine/spec.md) runtime extensibility)*
+- **FR-005**: System MUST operate in the sequential pipeline after node layout completion and before rendering operations *(orchestrated by [`001-modular-graph-engine#FR-003`](../001-modular-graph-engine/spec.md) pipeline processing)*
+- **FR-006**: System MUST provide compatibility data suitable for edge bundling algorithms without coupling to specific bundling implementations *(coordinated with [`001-modular-graph-engine#FR-002`](../001-modular-graph-engine/spec.md) pluggable rendering strategies)*
 - **FR-007**: System MUST handle invalid relationship references gracefully with detailed error reporting while continuing processing of valid relationships
 - **FR-008**: System MUST support both simple edge generation (source/target only) and complex edge generation (with full compatibility analysis) based on configuration
 - **FR-009**: System MUST provide progress events for edge generation phases including relationship processing, compatibility calculation, and edge structure creation
@@ -118,9 +118,9 @@ A system integrator needs EdgeGenerator to operate seamlessly within the sequent
 
 - **EdgeLayout**: Immutable edge structure with unique identifier containing references to source and target LayoutNodes, original relationship data, compatibility scores, and generation metadata. Ensures strict separation between original relationship data and generation-specific information
 - **Relationship Data**: Original relationship information including source/target identifiers, relationship type, properties, and metadata that forms the basis for edge generation
-- **Edge Compatibility Function**: Functor implementation following contract `(edgeA: EdgeLayout, edgeB: EdgeLayout, context: EdgeContext) => number` for calculating edge similarity *(implements [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) functor contract)*
-- **Edge Generation Configuration**: Parameters defining compatibility weighting, processing modes, bundling preparation settings, and performance optimization options *(extends [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) configuration objects)*
-- **Edge Context**: Runtime state including current compatibility calculations, relationship metadata, and spatial indexing for efficient edge processing *(aligns with [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) pipeline processing context)*
+- **Edge Compatibility Function**: CompatibilityFunctor implementation following contract `(edgeA: EdgeLayout, edgeB: EdgeLayout, context: EdgeContext) => number` for calculating edge compatibility *(coordinated by [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) functor contract)*
+- **Edge Generation Configuration**: Parameters defining compatibility weighting, processing modes, bundling preparation settings, and performance optimization options *(orchestrated by [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) pipeline coordination)*
+- **Edge Context**: Runtime state including current compatibility calculations, relationship metadata, and spatial indexing for efficient edge processing *(orchestrated by [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) pipeline processing context)*
 - **Generation Progress**: Progress tracking including relationship processing counts, compatibility calculation timing, and edge structure creation status
 
 ## Scope & Boundaries *(mandatory)*

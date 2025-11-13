@@ -101,17 +101,17 @@ A performance engineer needs to monitor and control layout convergence with earl
 
 ### Functional Requirements
 
-- **FR-001**: System MUST calculate node positions based on configurable similarity functions following functor contract `(nodeA, nodeB, context) => number` without modifying original node data *(extends [`001-modular-graph-engine#FR-004`](../001-modular-graph-engine/spec.md))*
+- **FR-001**: System MUST calculate node positions based on configurable NodeSimilarityFunctor functions following functor contract `(nodeA, nodeB, context) => number` without modifying original node data *(coordinated by [`001-modular-graph-engine#FR-004`](../001-modular-graph-engine/spec.md))*
 - **FR-002**: System MUST support seamless switching between 2D and 3D coordinate systems using universal z-coordinate approach (2D = z=0 constraint)
 - **FR-003**: System MUST translate similarity scores to spatial distances using configurable mapping functions
 - **FR-004**: System MUST integrate with force-directed physics while maintaining similarity-based positioning priorities
-- **FR-005**: System MUST provide progressive layout convergence with early position availability for interaction *(aligns with [`001-modular-graph-engine#FR-003`](../001-modular-graph-engine/spec.md) pipeline processing)*
+- **FR-005**: System MUST provide progressive layout convergence with early position availability for interaction *(orchestrated by [`001-modular-graph-engine#FR-003`](../001-modular-graph-engine/spec.md) pipeline processing)*
 - **FR-006**: System MUST implement clustering algorithms that group nodes based on similarity thresholds
-- **FR-007**: System MUST support runtime registration of custom similarity functions without system restart *(implements [`001-modular-graph-engine#FR-004`](../001-modular-graph-engine/spec.md) runtime extensibility)*
+- **FR-007**: System MUST support runtime registration of custom similarity functions without system restart *(coordinated by [`001-modular-graph-engine#FR-004`](../001-modular-graph-engine/spec.md) runtime extensibility)*
 - **FR-008**: System MUST maintain position stability when similarity parameters change during layout
 - **FR-009**: System MUST provide convergence monitoring with percentage complete and stability metrics
-- **FR-010**: System MUST optimize layout algorithms for responsive initial positioning and efficient full convergence for large datasets *(aligns with [`001-modular-graph-engine#SC-001`](../001-modular-graph-engine/spec.md) performance requirements)*
-- **FR-011**: System MUST maintain strict separation between layout calculation and visual rendering operations *(implements [`001-modular-graph-engine#FR-001`](../001-modular-graph-engine/spec.md) separation of concerns)*
+- **FR-010**: System MUST optimize layout algorithms for responsive initial positioning and efficient full convergence for large datasets *(orchestrated by [`001-modular-graph-engine#SC-001`](../001-modular-graph-engine/spec.md) performance requirements)*
+- **FR-011**: System MUST maintain strict separation between layout calculation and visual rendering operations *(coordinated with [`001-modular-graph-engine#FR-001`](../001-modular-graph-engine/spec.md) separation of concerns)*
 - **FR-012**: System MUST create immutable LayoutNode structures that reference original node data while storing layout-specific metadata and coordinates
 - **FR-013**: System MUST provide configurable ID generation for LayoutNode instances through functions that generate IDs given current node and context, with GUID-based default generator
 
@@ -119,9 +119,9 @@ A performance engineer needs to monitor and control layout convergence with earl
 
 - **LayoutNode**: Immutable layout wrapper with unique identifier containing reference to original node data, position coordinates (x, y, z), cluster assignment, similarity scores, and convergence status. Ensures strict separation between original data and layout-specific metadata
 - **Node Position**: Universal 3D coordinate data (x, y, z) with 2D mode implemented as z=0 constraint, eliminating architectural complexity
-- **Similarity Function**: Functor implementation following contract `(nodeA: Node, nodeB: Node, context: ClusteringContext) => number` with configuration parameters *(implements [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) functor contract)*
-- **Layout Configuration**: Parameters defining similarity weighting, force physics integration, dimensional settings, and convergence thresholds *(extends [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) configuration objects)*
-- **Clustering Context**: Runtime state including current cluster assignments, similarity thresholds, and OctTree spatial indexing for universal neighbor queries *(aligns with [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) pipeline processing context)*
+- **NodeSimilarityFunctor**: Functor implementation following contract `(nodeA: Node, nodeB: Node, context: ClusteringContext) => number` with configuration parameters *(coordinated by [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) functor contract)*
+- **Layout Configuration**: Parameters defining similarity weighting, force physics integration, dimensional settings, and convergence thresholds *(orchestrated by [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) configuration coordination)*
+- **Clustering Context**: Runtime state including current cluster assignments, similarity thresholds, and OctTree spatial indexing for universal neighbor queries *(orchestrated by [`001-modular-graph-engine`](../001-modular-graph-engine/spec.md) pipeline processing context)*
 - **Convergence State**: Progress tracking including stability metrics, position deltas, and performance timing for optimization monitoring
 
 ## Scope & Boundaries *(mandatory)*
