@@ -110,9 +110,12 @@ A system integrator needs EdgeGenerator to operate seamlessly within the sequent
 - **FR-007**: System MUST handle invalid relationship references gracefully with detailed error reporting while continuing processing of valid relationships
 - **FR-008**: System MUST support both simple edge generation (source/target only) and complex edge generation (with full compatibility analysis) based on configuration
 - **FR-009**: System MUST provide progress events for edge generation phases including relationship processing, compatibility calculation, and edge structure creation
-- **FR-010**: System MUST optimize edge generation algorithms for responsive processing of large relationship datasets using batch processing with configurable chunk sizes and best-effort timing optimized for responsive feel *(aligns with [`001-modular-graph-engine#SC-001`](../001-modular-graph-engine/spec.md) performance requirements)*
+- **FR-010**: System MUST optimize edge generation algorithms for responsive processing of large relationship datasets using adaptive batch processing that starts with 1000 relationships per chunk and adjusts based on available memory and processing time, with best-effort timing optimized for responsive feel *(aligns with [`001-modular-graph-engine#SC-001`](../001-modular-graph-engine/spec.md) performance requirements)*
 - **FR-011**: System MUST create immutable EdgeLayout structures that reference original relationship data while storing generation-specific metadata and compatibility scores
 - **FR-012**: System MUST provide configurable ID generation for EdgeLayout instances through functions that generate IDs given relationship and context data
+- **FR-013**: System MUST handle custom compatibility function failures or timeouts by automatically switching to built-in default compatibility functions while logging error details for debugging
+- **FR-014**: System MUST calculate dynamic compatibility thresholds based on edge distribution and dataset characteristics for automatic bundling decisions rather than using fixed threshold values
+- **FR-015**: System MUST buffer incoming relationship data changes during active edge generation processing and apply buffered changes only after current generation cycle completes to maintain processing stability
 
 ### Key Entities *(include if feature involves data)*
 
@@ -314,6 +317,10 @@ type CompatibilityFunctor = (edgeA: EdgeLayout, edgeB: EdgeLayout, context: Edge
 - Q: What specific performance timing targets should the EdgeGenerator meet to ensure predictable user experience across different dataset sizes? → A: Best-effort timing: No specific targets, optimize for "responsive feel"
 - Q: How should the system handle compatibility function results outside the expected [0,1] range to prevent bundling algorithm failures? → A: Normalize to [0,1] automatically
 - Q: What memory management strategy should EdgeGenerator use for processing very large relationship datasets to prevent browser memory issues? → A: Batch processing with configurable chunk sizes
+- Q: How should the EdgeGenerator determine optimal chunk sizes for batch processing different relationship dataset sizes and complexity levels? → A: Adaptive sizing: Start with 1000 relationships per chunk, adjust based on available memory and processing time
+- Q: How should the system handle custom compatibility function failures or timeouts during edge processing? → A: Use fallback default: Switch to built-in compatibility function when custom function fails
+- Q: What compatibility threshold values should be used for automatic bundling decisions when edges are grouped according to compatibility thresholds? → A: Dynamic thresholds: Calculate based on edge distribution and dataset characteristics
+- Q: How should the system behave when relationship data changes while edge generation is in progress? → A: Queue updates: Buffer incoming changes and apply after current generation completes
 
 ### CL-001: Default Edge Compatibility Functions
 **Question**: What default compatibility functions should the system provide to handle different relationship scenarios while ensuring the library works immediately upon installation?
