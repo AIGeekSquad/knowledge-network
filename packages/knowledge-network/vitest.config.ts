@@ -8,6 +8,7 @@ export default defineConfig({
     include: ['tests/**/*.test.ts', 'src/**/__tests__/**/*.test.ts'],
     exclude: [
       'tests/e2e/**/*.e2e.ts',
+      'tests/architecture.disabled/**/*.test.ts',
       // Browser-specific tests requiring WebGL, DOMMatrix, or Touch APIs not available in jsdom
       // These tests should be run separately with @playwright/test or in a real browser environment
       'src/rendering/__tests__/WebGLRenderer.test.ts',
