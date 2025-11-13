@@ -696,118 +696,201 @@ export class EdgeBundling implements EdgeRenderer {
    * - Lambert, A., et al. (2010). Winding roads: Routing edges into bundles.
    */
   private performBundling(edges: Edge[], controlPoints: ControlPoint[][]): void {
-    const n = edges.length;
-
-    // Compute compatibility between all edge pairs
     const compatibility = this.computeCompatibility(edges);
 
-    // Perform multiple iterations to gradually bundle edges
     for (let iter = 0; iter < this.config.iterations; iter++) {
-      // Cosine-based step decay for smooth convergence
-      const progress = iter / this.config.iterations;
-      const step = this.config.stepSize * (0.5 + 0.5 * Math.cos(progress * Math.PI));
-
-      // Apply smoothing periodically during bundling
-      if (iter > 0 && iter % this.config.smoothingFrequency === 0) {
+      const step = this.calculateStepSize(iter);
+      
+      if (this.shouldApplySmoothing(iter)) {
         this.applySmoothing(controlPoints, this.config.smoothingIterations);
       }
 
-      // For each edge
-      for (let i = 0; i < n; i++) {
-        const points = controlPoints[i];
-        const numPoints = points.length;
+      this.updateAllEdgeControlPoints(edges, controlPoints, compatibility, step, iter);
+    }
+  }
 
-        // For each control point (except endpoints)
-        for (let p = 1; p < numPoints - 1; p++) {
-          const point = points[p];
-          let forceX = 0;
-          let forceY = 0;
-          let compatibleCount = 0;
+  private calculateStepSize(iteration: number): number {
+    const progress = iteration / this.config.iterations;
+    return this.config.stepSize * (0.5 + 0.5 * Math.cos(progress * Math.PI));
+  }
 
-          // Calculate attraction to compatible edges
-          for (let j = 0; j < n; j++) {
-            if (i === j) continue;
+  private shouldApplySmoothing(iteration: number): boolean {
+    return iteration > 0 && iteration % this.config.smoothingFrequency === 0;
+  }
 
-            const comp = compatibility[i][j];
-            if (comp < this.config.compatibilityThreshold) continue;
+  private updateAllEdgeControlPoints(
+    edges: Edge[],
+    controlPoints: ControlPoint[][],
+    compatibility: number[][],
+    step: number,
+    iteration: number
+  ): void {
+    for (let i = 0; i < edges.length; i++) {
+      this.updateEdgeControlPoints(i, controlPoints, compatibility, step, iteration);
+      this.enforceEndpointConstraints(edges[i], controlPoints[i]);
+    }
+  }
 
-            const otherPoints = controlPoints[j];
-            // Ensure consistent subdivision mapping
-            const otherP = Math.round((p / (numPoints - 1)) * (otherPoints.length - 1));
-            const otherPoint = otherPoints[otherP];
+  private updateEdgeControlPoints(
+    edgeIndex: number,
+    controlPoints: ControlPoint[][],
+    compatibility: number[][],
+    step: number,
+    iteration: number
+  ): void {
+    const points = controlPoints[edgeIndex];
+    const numPoints = points.length;
 
-            // Calculate force toward the corresponding point on compatible edge
-            const dx = otherPoint.x - point.x;
-            const dy = otherPoint.y - point.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+    for (let p = 1; p < numPoints - 1; p++) {
+      this.updateControlPoint(edgeIndex, p, points, controlPoints, compatibility, step, iteration);
+    }
+  }
 
-            if (distance > 0.001) {
-              // Force proportional to compatibility with distance falloff
-              const forceMag = comp / (1 + distance * 0.001);
-              forceX += (dx / distance) * forceMag;
-              forceY += (dy / distance) * forceMag;
-              compatibleCount++;
-            }
-          }
+  private updateControlPoint(
+    edgeIndex: number,
+    pointIndex: number,
+    points: ControlPoint[],
+    allControlPoints: ControlPoint[][],
+    compatibility: number[][],
+    step: number,
+    iteration: number
+  ): void {
+    const point = points[pointIndex];
+    const { forceX, forceY, compatibleCount } = this.calculateBundlingForces(
+      edgeIndex,
+      pointIndex,
+      points,
+      allControlPoints,
+      compatibility
+    );
 
-          // Normalize bundling forces
-          if (compatibleCount > 0) {
-            forceX /= compatibleCount;
-            forceY /= compatibleCount;
-          }
+    const { springForceX, springForceY } = this.calculateSpringForces(pointIndex, points);
+    const { curveForceX, curveForceY } = this.calculateCurveForces(
+      pointIndex,
+      points,
+      compatibleCount,
+      iteration
+    );
 
-          // Apply spring force toward straight line (maintains edge structure)
-          const t = p / (numPoints - 1);
-          const straightX = points[0].x * (1 - t) + points[numPoints - 1].x * t;
-          const straightY = points[0].y * (1 - t) + points[numPoints - 1].y * t;
+    const totalForceX = forceX + springForceX + curveForceX;
+    const totalForceY = forceY + springForceY + curveForceY;
 
-          forceX += (straightX - point.x) * this.config.stiffness;
-          forceY += (straightY - point.y) * this.config.stiffness;
+    this.applyForcesToPoint(point, totalForceX, totalForceY, step);
+  }
 
-          // Simple convergent curvature system
-          const perpX = -(points[numPoints - 1].y - points[0].y);
-          const perpY = points[numPoints - 1].x - points[0].x;
-          const length = Math.sqrt(perpX * perpX + perpY * perpY);
+  private calculateBundlingForces(
+    edgeIndex: number,
+    pointIndex: number,
+    points: ControlPoint[],
+    allControlPoints: ControlPoint[][],
+    compatibility: number[][]
+  ): { forceX: number; forceY: number; compatibleCount: number } {
+    let forceX = 0;
+    let forceY = 0;
+    let compatibleCount = 0;
+    const point = points[pointIndex];
+    const numPoints = points.length;
 
-          if (length > 0) {
-            // Convergent amplitude - decreases over iterations for stability
-            const progress = iter / this.config.iterations;
-            const amplitude = 20 * (1 - progress); // Converges to zero
+    for (let j = 0; j < allControlPoints.length; j++) {
+      if (j === edgeIndex) continue;
 
-            // Simple curve force based on bundling strength
-            const curveStrength = compatibleCount > 0 ? 0.3 : 0.1; // Less for isolated edges
-            const organicForce = Math.sin(t * Math.PI) * amplitude * curveStrength;
+      const comp = compatibility[edgeIndex][j];
+      if (comp < this.config.compatibilityThreshold) continue;
 
-            forceX += (perpX / length) * organicForce;
-            forceY += (perpY / length) * organicForce;
-          }
+      const otherPoints = allControlPoints[j];
+      const otherP = Math.round((pointIndex / (numPoints - 1)) * (otherPoints.length - 1));
+      const otherPoint = otherPoints[otherP];
 
-          // Apply momentum-based force application
-          if (!point.vx) point.vx = 0;
-          if (!point.vy) point.vy = 0;
+      const dx = otherPoint.x - point.x;
+      const dy = otherPoint.y - point.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-          // Update velocity with momentum
-          point.vx = point.vx * this.config.momentum + forceX * step * (1 - this.config.momentum);
-          point.vy = point.vy * this.config.momentum + forceY * step * (1 - this.config.momentum);
-
-          // Apply velocity to position
-          point.x += point.vx;
-          point.y += point.vy;
-        }
-
-        // Enforce endpoint constraints to prevent drift
-        const source = edges[i].source as any;
-        const target = edges[i].target as any;
-        points[0].x = source.x;
-        points[0].y = source.y;
-        points[0].vx = 0;
-        points[0].vy = 0;
-        points[numPoints - 1].x = target.x;
-        points[numPoints - 1].y = target.y;
-        points[numPoints - 1].vx = 0;
-        points[numPoints - 1].vy = 0;
+      if (distance > 0.001) {
+        const forceMag = comp / (1 + distance * 0.001);
+        forceX += (dx / distance) * forceMag;
+        forceY += (dy / distance) * forceMag;
+        compatibleCount++;
       }
     }
+
+    if (compatibleCount > 0) {
+      forceX /= compatibleCount;
+      forceY /= compatibleCount;
+    }
+
+    return { forceX, forceY, compatibleCount };
+  }
+
+  private calculateSpringForces(
+    pointIndex: number,
+    points: ControlPoint[]
+  ): { springForceX: number; springForceY: number } {
+    const t = pointIndex / (points.length - 1);
+    const straightX = points[0].x * (1 - t) + points[points.length - 1].x * t;
+    const straightY = points[0].y * (1 - t) + points[points.length - 1].y * t;
+
+    const springForceX = (straightX - points[pointIndex].x) * this.config.stiffness;
+    const springForceY = (straightY - points[pointIndex].y) * this.config.stiffness;
+
+    return { springForceX, springForceY };
+  }
+
+  private calculateCurveForces(
+    pointIndex: number,
+    points: ControlPoint[],
+    compatibleCount: number,
+    iteration: number
+  ): { curveForceX: number; curveForceY: number } {
+    const perpX = -(points[points.length - 1].y - points[0].y);
+    const perpY = points[points.length - 1].x - points[0].x;
+    const length = Math.sqrt(perpX * perpX + perpY * perpY);
+
+    if (length === 0) {
+      return { curveForceX: 0, curveForceY: 0 };
+    }
+
+    const progress = iteration / this.config.iterations;
+    const amplitude = 20 * (1 - progress);
+    const curveStrength = compatibleCount > 0 ? 0.3 : 0.1;
+    const t = pointIndex / (points.length - 1);
+    const organicForce = Math.sin(t * Math.PI) * amplitude * curveStrength;
+
+    return {
+      curveForceX: (perpX / length) * organicForce,
+      curveForceY: (perpY / length) * organicForce
+    };
+  }
+
+  private applyForcesToPoint(
+    point: ControlPoint,
+    forceX: number,
+    forceY: number,
+    step: number
+  ): void {
+    if (!point.vx) point.vx = 0;
+    if (!point.vy) point.vy = 0;
+
+    point.vx = point.vx * this.config.momentum + forceX * step * (1 - this.config.momentum);
+    point.vy = point.vy * this.config.momentum + forceY * step * (1 - this.config.momentum);
+
+    point.x += point.vx;
+    point.y += point.vy;
+  }
+
+  private enforceEndpointConstraints(edge: Edge, points: ControlPoint[]): void {
+    const source = edge.source as any;
+    const target = edge.target as any;
+    const lastIndex = points.length - 1;
+
+    points[0].x = source.x;
+    points[0].y = source.y;
+    points[0].vx = 0;
+    points[0].vy = 0;
+
+    points[lastIndex].x = target.x;
+    points[lastIndex].y = target.y;
+    points[lastIndex].vx = 0;
+    points[lastIndex].vy = 0;
   }
 
   /**
