@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Testing
+coverage/
+.vitest-cache/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Temporary
+.tmp/
+temp/
+
+# Generated files
+*.d.ts
+*.d.ts.map
+*.min.js
+*.min.css
+
+# Package specific ignores
+packages/*/dist/
+packages/*/build/
+packages/*/node_modules/
+
+# Lock files (managed by pnpm)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Documentation (if auto-generated)
+docs/api/
+CHANGELOG.md
+
+# Screenshots and assets
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg

@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Testing
+coverage/
+.vitest-cache/
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Temporary
+.tmp/
+temp/
+
+# Generated files
+*.d.ts.map
+
+# Package specific ignores
+packages/*/dist/
+packages/*/build/
+packages/*/node_modules/
+
+# Documentation (if auto-generated)
+docs/api/

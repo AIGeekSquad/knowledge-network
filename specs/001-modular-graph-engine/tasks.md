@@ -24,12 +24,12 @@
 
 ## Phase 0: Archive & Infrastructure Setup
 
-- [ ] T001 [Archive] Create archive directory and backup existing source code `packages/knowledge-network/src-archive/`
-- [ ] T002 [Archive] Document existing architecture and integration points in `packages/knowledge-network/EXISTING_ARCHITECTURE.md`
-- [ ] T003 [Setup] Create modular engine interfaces directory `packages/knowledge-network/src/modular/interfaces/`
-- [ ] T004 [Setup] Create modular engine core directory `packages/knowledge-network/src/modular/core/`
-- [ ] T005 [Setup] Set up test directory for modular components `packages/knowledge-network/tests/modular/`
-- [ ] T006 [Setup] Extend existing types.ts with modular engine type definitions `packages/knowledge-network/src/types.ts`
+- [x] T001 [Archive] Create archive directory and backup existing source code `packages/knowledge-network/src-archive/`
+- [x] T002 [Archive] Document existing architecture and integration points in `packages/knowledge-network/EXISTING_ARCHITECTURE.md`
+- [x] T003 [Setup] Create modular engine interfaces directory `packages/knowledge-network/src/modular/interfaces/`
+- [x] T004 [Setup] Create modular engine core directory `packages/knowledge-network/src/modular/core/`
+- [x] T005 [Setup] Set up test directory for modular components `packages/knowledge-network/tests/modular/`
+- [x] T006 [Setup] Extend existing types.ts with modular engine type definitions `packages/knowledge-network/src/types.ts`
 
 ## Phase 1: US1 - Independent Layout Engine Operation
 
