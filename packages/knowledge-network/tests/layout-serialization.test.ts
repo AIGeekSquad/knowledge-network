@@ -442,7 +442,7 @@ describe('Layout State Serialization', () => {
         .mockImplementation((data: string) => {
           try {
             const parsed = JSON.parse(data);
-            return parsed.version && parsed.nodes && Array.isArray(parsed.nodes);
+            return !!(parsed.version && parsed.nodes && Array.isArray(parsed.nodes));
           } catch {
             return false;
           }

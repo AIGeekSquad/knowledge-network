@@ -121,7 +121,7 @@ describe('Layout Engine Isolation', () => {
 
       (mockLayoutEngine.calculateAsync as any).mockResolvedValue(expectedLayout);
 
-      const result = await mockLayoutEngine.calculateAsync(testNodes, testConfig);
+      const result = await mockLayoutEngine.calculateAsync(testNodes, testConfig, undefined);
       
       expect(result).toBeInstanceOf(Map);
       expect(result.size).toBe(testNodes.length);
@@ -167,7 +167,7 @@ describe('Layout Engine Isolation', () => {
       // Mock the return value first
       (mockLayoutEngine.calculateAsync as any).mockResolvedValue(new Map());
 
-      await mockLayoutEngine.calculateAsync(largeNodeSet, testConfig);
+      await mockLayoutEngine.calculateAsync(largeNodeSet, testConfig, undefined);
       
       expect(mockLayoutEngine.calculateAsync).toHaveBeenCalledWith(
         largeNodeSet,

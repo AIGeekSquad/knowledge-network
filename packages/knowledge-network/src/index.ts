@@ -1,22 +1,53 @@
 /**
- * Modular Knowledge Graph Engine
+ * Knowledge Network - Modular Graph Engine
  * 
- * Main barrel export file for the modular graph engine.
+ * Main entry point for the modular knowledge graph visualization library.
+ * Provides independent layout engines, pluggable rendering strategies,
+ * and sequential pipeline processing.
  * 
- * @fileoverview Entry point for the modular knowledge graph system
- * @author Knowledge Network Team
- * @version 1.0.0
+ * @fileoverview Main library exports
  */
 
-// Export all types
-export * from './types.js';
+// Core types and interfaces (selective exports to avoid conflicts)
+export type {
+  Node,
+  Edge,
+  GraphDataset,
+  ModularGraphConfig,
+  LayoutEngineOptions,
+  PipelineCoordinatorOptions,
+  NavigationContractOptions,
+  SimilarityMeasureOptions
+} from './types';
 
-// Module exports will be added during implementation phases
-// export * from './core/index.js';
-// export * from './layout/index.js';
-// export * from './edges/index.js';
-// export * from './rendering/index.js';
-// export * from './pipeline/index.js';
-// export * from './config/index.js';
-// export * from './navigation/index.js';
-// export * from './similarity/index.js';
+// Layout engine module (Phase 1: Independent Layout Engine)
+export {
+  LayoutEngine,
+  LayoutCalculator,
+  LayoutSerializer
+} from './layout';
+
+export type {
+  ILayoutEngine,
+  LayoutNode,
+  LayoutConfiguration,
+  LayoutContext,
+  LayoutMetadata,
+  LayoutProgress,
+  ForceConfig,
+  ClusteringConfig,
+  SimilarityFunction,
+  ProgressCallback,
+  SerializableLayoutState,
+  SerializableLayoutNode,
+  LayoutStateMetadata
+} from './layout';
+
+// Configuration module
+export * from './config/configuration';
+
+// Placeholder exports for future phases
+// TODO: Add rendering module exports (Phase 2)
+// TODO: Add similarity module exports (Phase 3) 
+// TODO: Add navigation module exports (Phase 4)
+// TODO: Add pipeline module exports (Phase 5)

@@ -35,18 +35,18 @@
 
 **Independent Test Criteria**: Layout calculations complete and positioning data available for export without any rendering operations
 
-- [ ] T007 [US1] Write test for ModularLayoutEngine interface extending existing LayoutEngine `packages/knowledge-network/tests/modular/ModularLayoutEngine.test.ts`
-- [ ] T008 [US1] Create IModularLayoutEngine interface extending existing LayoutEngine capabilities `packages/knowledge-network/src/modular/interfaces/IModularLayoutEngine.ts`
-- [ ] T009 [US1] Write test for layout data export functionality independent of rendering `packages/knowledge-network/tests/modular/LayoutDataExporter.test.ts`
-- [ ] T010 [US1] Implement LayoutDataExporter utility for position/metadata extraction `packages/knowledge-network/src/modular/core/LayoutDataExporter.ts`
-- [ ] T011 [US1] Write test for enhanced LayoutEngine with async calculateLayoutAsync method `packages/knowledge-network/tests/modular/EnhancedLayoutEngine.test.ts`
-- [ ] T012 [US1] Extend existing LayoutEngine class with async layout calculation `packages/knowledge-network/src/layout/LayoutEngine.ts` (modification)
-- [ ] T013 [US1] Write test for layout completion events without rendering dependency `packages/knowledge-network/tests/modular/LayoutEventSystem.test.ts`
-- [ ] T014 [US1] Enhance existing EventEmitter pattern in LayoutEngine for modular events `packages/knowledge-network/src/layout/LayoutEngine.ts` (modification)
-- [ ] T015 [US1] Write test for layout performance monitoring with 1000+ node warning `packages/knowledge-network/tests/modular/LayoutPerformanceMonitor.test.ts`
-- [ ] T016 [US1] Implement performance monitoring extension for existing LayoutEngine `packages/knowledge-network/src/modular/core/LayoutPerformanceMonitor.ts`
-- [ ] T017 [P] [US1] Write integration test for layout-only operation without KnowledgeGraph rendering `packages/knowledge-network/tests/modular/LayoutOnlyOperation.test.ts`
-- [ ] T018 [US1] Create ModularLayoutController that uses existing LayoutEngine without rendering `packages/knowledge-network/src/modular/core/ModularLayoutController.ts`
+- [x] T007 [US1] Write test for ModularLayoutEngine interface extending existing LayoutEngine `packages/knowledge-network/tests/layout-engine-isolation.test.ts`
+- [x] T008 [US1] Create IModularLayoutEngine interface extending existing LayoutEngine capabilities `packages/knowledge-network/src/layout/layout-engine.ts`
+- [x] T009 [US1] Write test for layout data export functionality independent of rendering `packages/knowledge-network/tests/layout-serialization.test.ts`
+- [x] T010 [US1] Implement LayoutDataExporter utility for position/metadata extraction `packages/knowledge-network/src/layout/LayoutSerializer.ts`
+- [x] T011 [US1] Write test for enhanced LayoutEngine with async calculateLayoutAsync method `packages/knowledge-network/tests/layout-computation.test.ts`
+- [x] T012 [US1] Extend existing LayoutEngine class with async layout calculation `packages/knowledge-network/src/layout/LayoutEngine.ts`
+- [x] T013 [US1] Write test for layout completion events without rendering dependency `packages/knowledge-network/tests/layout-engine-isolation.test.ts`
+- [x] T014 [US1] Enhance existing EventEmitter pattern in LayoutEngine for modular events `packages/knowledge-network/src/layout/LayoutCalculator.ts`
+- [x] T015 [US1] Write test for layout performance monitoring with 1000+ node warning `packages/knowledge-network/tests/layout-computation.test.ts`
+- [x] T016 [US1] Implement performance monitoring extension for existing LayoutEngine `packages/knowledge-network/src/layout/LayoutCalculator.ts`
+- [x] T017 [P] [US1] Write integration test for layout-only operation without KnowledgeGraph rendering `packages/knowledge-network/tests/layout-engine-isolation.test.ts`
+- [x] T018 [US1] Create ModularLayoutController that uses existing LayoutEngine without rendering `packages/knowledge-network/src/layout/LayoutEngine.ts`
 
 ## Phase 2: US2 - Pluggable Rendering Strategies  
 

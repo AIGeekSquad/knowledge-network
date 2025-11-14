@@ -11,7 +11,7 @@
  * - Runtime similarity function registration and validation
  */
 
-import { Node, Edge } from '../../../packages/knowledge-network/src/types';
+import { Node } from '../types';
 
 // Core Layout Engine Interface
 export interface ILayoutEngine {
