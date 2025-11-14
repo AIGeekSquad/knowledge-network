@@ -12,7 +12,7 @@
  * - Automatic degradation support when memory limits approached
  */
 
-import { LayoutNode } from './layout-engine';
+import { LayoutNode } from '../layout/layout-engine';
 
 // Core Rendering Strategy Interface
 export interface IRenderingStrategy {

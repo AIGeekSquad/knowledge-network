@@ -46,8 +46,30 @@ export type {
 // Configuration module
 export * from './config/configuration';
 
+// Rendering module (Phase 2: Pluggable Rendering Strategies)
+export {
+  BaseRenderingStrategy,
+  CanvasRenderingStrategy,
+  SVGRenderingStrategy,
+  WebGLRenderingStrategy,
+  StrategySwitcher
+} from './rendering';
+
+export type {
+  IRenderingStrategy,
+  RenderingContext,
+  RenderingConfig,
+  RenderingCapabilities,
+  VisualUpdates,
+  InteractionEvent,
+  RenderingProgressCallback,
+  PerformanceMetrics,
+  SwitcherOptions,
+  PerformanceSuggestion,
+  StrategyComparison
+} from './rendering';
+
 // Placeholder exports for future phases
-// TODO: Add rendering module exports (Phase 2)
-// TODO: Add similarity module exports (Phase 3) 
+// TODO: Add similarity module exports (Phase 3)
 // TODO: Add navigation module exports (Phase 4)
 // TODO: Add pipeline module exports (Phase 5)

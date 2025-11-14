@@ -189,8 +189,8 @@ export abstract class BaseRenderingStrategy implements IRenderingStrategy {
    * Provides common validation patterns for all strategies
    */
   protected validateContext(context: RenderingContext): ValidationResult {
-    const errors = [];
-    const warnings = [];
+    const errors: Array<{field: string; message: string; code: string}> = [];
+    const warnings: Array<{field: string; message: string; severity: 'low' | 'medium' | 'high'}> = [];
 
     // Validate required context properties
     if (!context) {
@@ -240,7 +240,7 @@ export abstract class BaseRenderingStrategy implements IRenderingStrategy {
       warnings.push({
         field: 'context.nodes',
         message: `Node count (${context.nodes.size}) exceeds recommended maximum (${capabilities.maxNodes})`,
-        severity: 'medium'
+        severity: 'medium' as const
       });
     }
 
@@ -248,7 +248,7 @@ export abstract class BaseRenderingStrategy implements IRenderingStrategy {
       warnings.push({
         field: 'context.edges',
         message: `Edge count (${context.edges.length}) exceeds recommended maximum (${capabilities.maxEdges})`,
-        severity: 'medium'
+        severity: 'medium' as const
       });
     }
 
@@ -259,7 +259,7 @@ export abstract class BaseRenderingStrategy implements IRenderingStrategy {
           warnings.push({
             field: 'context.container',
             message: 'Container element is not attached to DOM',
-            severity: 'low'
+            severity: 'low' as const
           });
         }
       } catch (error) {

@@ -305,8 +305,8 @@ export class CanvasRenderingStrategy extends BaseRenderingStrategy {
    * Validate Canvas-specific configuration
    */
   public validateConfiguration(config: RenderingConfig): ValidationResult {
-    const errors = [];
-    const warnings = [];
+    const errors: Array<{field: string; message: string; code: string}> = [];
+    const warnings: Array<{field: string; message: string; severity: 'low' | 'medium' | 'high'}> = [];
 
     // Validate canvas options
     if (config.strategyOptions?.canvas) {
@@ -423,7 +423,7 @@ export class CanvasRenderingStrategy extends BaseRenderingStrategy {
       
       // Determine visual properties
       const radius = nodeConfig.defaultRadius;
-      const fillColor = node.data?.color || nodeConfig.defaultFillColor;
+      const fillColor = (node as any).data?.color || nodeConfig.defaultFillColor;
       const strokeColor = nodeConfig.defaultStrokeColor;
       const opacity = isSelected ? nodeConfig.selectedOpacity : 
                      isHighlighted ? nodeConfig.highlightedOpacity : 
@@ -499,7 +499,7 @@ export class CanvasRenderingStrategy extends BaseRenderingStrategy {
 
     const nodeRadius = this.currentContext.config.visual.nodes.defaultRadius;
     
-    for (const [nodeId, node] of this.currentContext.nodes) {
+    for (const [_nodeId, node] of this.currentContext.nodes) {
       const dx = graphCoords.x - node.x;
       const dy = graphCoords.y - node.y;
       const distance = Math.sqrt(dx * dx + dy * dy);

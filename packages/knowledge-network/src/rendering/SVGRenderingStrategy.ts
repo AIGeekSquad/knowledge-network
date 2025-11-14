@@ -19,7 +19,6 @@ import type {
   RenderingProgressCallback,
   Point2D
 } from './rendering-strategy';
-import type { LayoutNode } from '../layout/layout-engine';
 
 /**
  * SVG DOM Rendering Strategy
@@ -314,8 +313,8 @@ export class SVGRenderingStrategy extends BaseRenderingStrategy {
    * Validate SVG-specific configuration
    */
   public validateConfiguration(config: RenderingConfig): ValidationResult {
-    const errors = [];
-    const warnings = [];
+    const errors: Array<{field: string; message: string; code: string}> = [];
+    const warnings: Array<{field: string; message: string; severity: 'low' | 'medium' | 'high'}> = [];
 
     // Validate SVG options
     if (config.strategyOptions?.svg) {
@@ -432,7 +431,7 @@ export class SVGRenderingStrategy extends BaseRenderingStrategy {
       circle.setAttribute('r', nodeConfig.defaultRadius.toString());
       
       // Set visual attributes
-      const fillColor = node.data?.color || nodeConfig.defaultFillColor;
+      const fillColor = (node as any).data?.color || nodeConfig.defaultFillColor;
       circle.setAttribute('fill', fillColor);
       circle.setAttribute('stroke', nodeConfig.defaultStrokeColor);
       circle.setAttribute('stroke-width', nodeConfig.strokeWidth.toString());
@@ -442,11 +441,11 @@ export class SVGRenderingStrategy extends BaseRenderingStrategy {
       circle.setAttribute('data-node-id', nodeId);
       circle.setAttribute('role', 'button');
       circle.setAttribute('tabindex', '0');
-      circle.setAttribute('aria-label', `Node: ${node.data?.label || nodeId}`);
+      circle.setAttribute('aria-label', `Node: ${(node as any).data?.label || nodeId}`);
 
       // Add title element for tooltips
       const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-      title.textContent = node.data?.label || nodeId;
+      title.textContent = (node as any).data?.label || nodeId;
       circle.appendChild(title);
 
       // Apply selection and highlight states
