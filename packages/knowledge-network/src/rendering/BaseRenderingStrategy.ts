@@ -252,13 +252,19 @@ export abstract class BaseRenderingStrategy implements IRenderingStrategy {
       });
     }
 
-    // Validate container is in DOM
-    if (context.container && !document.body.contains(context.container)) {
-      warnings.push({
-        field: 'context.container',
-        message: 'Container element is not attached to DOM',
-        severity: 'low'
-      });
+    // Validate container is in DOM (only in browser environment)
+    if (context.container && typeof document !== 'undefined' && document.body) {
+      try {
+        if (!document.body.contains(context.container)) {
+          warnings.push({
+            field: 'context.container',
+            message: 'Container element is not attached to DOM',
+            severity: 'low'
+          });
+        }
+      } catch (error) {
+        // Ignore DOM validation errors in test environments
+      }
     }
 
     return {
