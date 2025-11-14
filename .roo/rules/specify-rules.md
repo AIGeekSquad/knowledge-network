@@ -6,6 +6,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-13
 
 ## Active Technologies
 - TypeScript ES2022 with strict configuration, async/Promise-based API design + D3.js v7 (force calculations), existing LayoutNode structures from 002-node-layout (003-edge-generator)
+- TypeScript ES2022 with strict configuration, async/Promise-based API design + D3.js v7 (force calculations), existing LayoutNode structures from 002-node-layout, EdgeGenerator from 003-edge-generator (001-modular-graph-engine)
 
 **Core Stack**: TypeScript ES2022, D3.js v7, tsup, Vite, Vitest, pnpm workspaces
 **Architecture**: Monorepo with modular edge rendering, force-directed layouts, Canvas/SVG rendering
@@ -90,6 +91,7 @@ pnpm build                     # Build demo for production
 - NO separate test pages or fragmented demonstrations
 
 ## Recent Changes
+- 001-modular-graph-engine: Added TypeScript ES2022 with strict configuration, async/Promise-based API design + D3.js v7 (force calculations), existing LayoutNode structures from 002-node-layout, EdgeGenerator from 003-edge-generator
 - 003-edge-generator: Added TypeScript ES2022 with strict configuration, async/Promise-based API design + D3.js v7 (force calculations), existing LayoutNode structures from 002-node-layout
 
 [LAST 3 FEATURES AND WHAT THEY ADDED - TO BE POPULATED BY SPECKIT COMMANDS]
