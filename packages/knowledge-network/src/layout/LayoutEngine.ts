@@ -1,16 +1,30 @@
 /**
  * Layout Engine Implementation
- * 
+ *
  * Main implementation of the ILayoutEngine interface that coordinates
  * layout calculation and serialization. Independent of rendering concerns.
- * 
- * @fileoverview Main layout engine implementation
+ * Extended with runtime similarity function registration capabilities.
+ *
+ * @fileoverview Main layout engine implementation with similarity extension
  */
 
 import { EventEmitter } from 'events';
 import type { Node } from '../types';
 import { LayoutCalculator } from './LayoutCalculator';
 import { LayoutSerializer } from './LayoutSerializer';
+import {
+  SimilarityFunctionRegistry,
+  createSimilarityFunctionRegistry,
+  type ISimilarityMeasure,
+  type ISimilarityMeasureRegistry,
+  type SimilarityFunction,
+  type ClusteringContext
+} from '../modular/core/SimilarityFunctionRegistry';
+import {
+  SimilarityConflictResolver,
+  createConflictResolver,
+  type ConflictResolutionStrategy
+} from '../modular/core/SimilarityConflictResolver';
 import type {
   ILayoutEngine,
   LayoutNode,
@@ -26,16 +40,21 @@ import type {
 /**
  * Main Layout Engine implementation
  * Coordinates layout calculation, validation, and capabilities reporting
+ * Extended with runtime similarity function registration capabilities
  */
 export class LayoutEngine extends EventEmitter implements ILayoutEngine {
   private calculator: LayoutCalculator;
   private isProcessing = false;
   private lastLayoutMap: Map<string, LayoutNode> | null = null;
   private lastPerformanceMetrics: PerformanceMetrics | null = null;
+  private similarityRegistry: ISimilarityMeasureRegistry;
+  private conflictResolver: SimilarityConflictResolver;
 
   constructor() {
     super();
     this.calculator = new LayoutCalculator();
+    this.similarityRegistry = createSimilarityFunctionRegistry();
+    this.conflictResolver = createConflictResolver();
     
     // Forward calculator events
     this.calculator.on('progress', (progress) => {
@@ -373,6 +392,204 @@ export class LayoutEngine extends EventEmitter implements ILayoutEngine {
         similarityThreshold: 0.5,
         maxClusterSize: 50,
         clusterSeparation: 100,
+
+  // ===== SIMILARITY EXTENSION METHODS (T036: Runtime Registration System) =====
+
+  /**
+   * Register a custom similarity measure for runtime extensibility
+   * @param measure Similarity measure to register
+   */
+  registerSimilarityMeasure(measure: ISimilarityMeasure): void {
+    this.similarityRegistry.register(measure);
+    this.emit('similarityMeasureRegistered', { id: measure.id, name: measure.name });
+  }
+
+  /**
+   * Unregister a similarity measure
+   * @param measureId ID of measure to unregister
+   */
+  unregisterSimilarityMeasure(measureId: string): void {
+    this.similarityRegistry.unregister(measureId);
+    this.emit('similarityMeasureUnregistered', { id: measureId });
+  }
+
+  /**
+   * Get all registered similarity measure IDs
+   * @returns Array of measure IDs
+   */
+  getRegisteredSimilarityMeasures(): string[] {
+    return this.similarityRegistry.list();
+  }
+
+  /**
+   * Get similarity registry for advanced operations
+   * @returns The similarity registry instance
+   */
+  getSimilarityRegistry(): ISimilarityMeasureRegistry {
+    return this.similarityRegistry;
+  }
+
+  /**
+   * Calculate similarity between two nodes using specified measure
+   * @param measureId ID of similarity measure to use
+   * @param nodeA First node
+   * @param nodeB Second node
+   * @param context Clustering context
+   * @returns Similarity score (0-1)
+   */
+  calculateNodeSimilarity(
+    measureId: string,
+    nodeA: Node,
+    nodeB: Node,
+    context: ClusteringContext
+  ): number {
+    return this.similarityRegistry.calculateSimilarity(measureId, nodeA, nodeB, context);
+  }
+
+  /**
+   * Calculate similarity using multiple measures with conflict resolution
+   * @param measureIds Array of measure IDs to use
+   * @param nodeA First node
+   * @param nodeB Second node
+   * @param context Clustering context
+   * @returns Combined similarity score
+
+  /**
+   * Enhanced similarity calculation with conflict resolution
+   * @param measureIds Array of measure IDs to use
+   * @param nodeA First node
+   * @param nodeB Second node  
+   * @param context Clustering context
+   * @returns Resolved similarity score with conflict resolution
+   */
+  calculateEnhancedSimilarity(
+    measureIds: string[],
+    nodeA: Node,
+    nodeB: Node,
+    context: ClusteringContext
+  ): number {
+    if (measureIds.length === 0) {
+      throw new Error('At least one similarity measure must be specified');
+    }
+
+    if (measureIds.length === 1) {
+      return this.calculateNodeSimilarity(measureIds[0], nodeA, nodeB, context);
+    }
+
+    // Calculate scores with multiple measures
+    const scores: number[] = [];
+    const weights: number[] = [];
+
+    for (const measureId of measureIds) {
+      try {
+        const score = this.calculateNodeSimilarity(measureId, nodeA, nodeB, context);
+        const weight = context.config.measureWeights.get(measureId) || 1.0;
+        
+        scores.push(score);
+        weights.push(weight);
+      } catch (error) {
+        console.warn(`Failed to calculate similarity with measure ${measureId}:`, error);
+        // Continue with other measures
+      }
+    }
+
+    if (scores.length === 0) {
+      throw new Error('All similarity calculations failed');
+    }
+
+    // Use conflict resolver for enhanced resolution
+    return this.conflictResolver.resolveConflicts(
+      scores,
+      weights,
+      context.config.conflictResolution
+    );
+  }
+
+  /**
+   * Get conflict analysis for similarity calculations
+   * @param measureIds Array of measure IDs
+   * @param nodeA First node
+   * @param nodeB Second node
+   * @param context Clustering context
+   * @returns Conflict statistics and resolution report
+   */
+  analyzeSimilarityConflicts(
+    measureIds: string[],
+    nodeA: Node,
+    nodeB: Node,
+    context: ClusteringContext
+  ) {
+    const scores: number[] = [];
+    const weights: number[] = [];
+
+    for (const measureId of measureIds) {
+      try {
+        const score = this.calculateNodeSimilarity(measureId, nodeA, nodeB, context);
+        const weight = context.config.measureWeights.get(measureId) || 1.0;
+        
+        scores.push(score);
+        weights.push(weight);
+      } catch (error) {
+        console.warn(`Failed to calculate similarity with measure ${measureId}:`, error);
+      }
+    }
+
+    const resolvedScore = this.conflictResolver.resolveConflicts(
+      scores, 
+      weights, 
+      context.config.conflictResolution
+    );
+
+    return this.conflictResolver.createResolutionReport(
+      scores,
+      resolvedScore,
+      context.config.conflictResolution,
+      weights
+    );
+  }
+
+  /**
+   * Get enhanced similarity capabilities including conflict resolution
+   * @returns Enhanced capabilities with similarity extensions
+   */
+  getEnhancedCapabilities(): LayoutEngineCapabilities & {
+    similarityExtensions: {
+      supportedConflictResolutions: ConflictResolutionStrategy[];
+      maxCustomMeasures: number;
+      registeredMeasures: string[];
+      supportsRuntimeRegistration: boolean;
+    }
+  } {
+    const baseCapabilities = this.getCapabilities();
+    
+    return {
+      ...baseCapabilities,
+      similarityExtensions: {
+        supportedConflictResolutions: ['average', 'weighted-average', 'max', 'min'],
+        maxCustomMeasures: 50, // Reasonable limit for performance
+        registeredMeasures: this.getRegisteredSimilarityMeasures(),
+        supportsRuntimeRegistration: true
+      }
+    };
+  }
+   */
+  calculateMultiSimilarity(
+    measureIds: string[],
+    nodeA: Node,
+    nodeB: Node,
+    context: ClusteringContext
+  ): number {
+    return this.similarityRegistry.calculateMultiSimilarity(measureIds, nodeA, nodeB, context);
+  }
+
+  /**
+   * Validate a custom similarity function before registration
+   * @param fn Function to validate
+   * @returns Validation result with errors and warnings
+   */
+  validateSimilarityFunction(fn: SimilarityFunction): ValidationResult {
+    return this.similarityRegistry.validateFunction(fn);
+  }
         algorithm: 'similarity-based'
       },
       similarityMeasures: [],
