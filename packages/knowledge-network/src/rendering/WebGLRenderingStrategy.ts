@@ -19,7 +19,6 @@ import type {
   RenderingProgressCallback,
   Point2D
 } from './rendering-strategy';
-import type { LayoutNode } from '../layout/layout-engine';
 
 /**
  * WebGL Rendering Strategy
@@ -345,8 +344,8 @@ export class WebGLRenderingStrategy extends BaseRenderingStrategy {
    * Validate WebGL configuration
    */
   public validateConfiguration(config: RenderingConfig): ValidationResult {
-    const errors = [];
-    const warnings = [];
+    const errors: Array<{field: string; message: string; code: string}> = [];
+    const warnings: Array<{field: string; message: string; severity: 'low' | 'medium' | 'high'}> = [];
 
     // Check WebGL support
     const webglSupport = this.validateDOMSupport(['WebGLRenderingContext']);
@@ -506,12 +505,13 @@ export class WebGLRenderingStrategy extends BaseRenderingStrategy {
     const nodeConfig = context.config.visual.nodes;
     const vertexData: number[] = [];
 
-    for (const [nodeId, node] of context.nodes) {
+    for (const [, node] of context.nodes) {
       // Position (x, y)
       vertexData.push(node.x, node.y);
       
       // Color (r, g, b) - parse from hex or use default
-      const color = this.parseColor(node.data?.color || nodeConfig.defaultFillColor);
+      const nodeData = (node as any).data; // TODO: Fix LayoutNode type to include data property
+      const color = this.parseColor(nodeData?.color || nodeConfig.defaultFillColor);
       vertexData.push(color.r, color.g, color.b);
       
       // Size
@@ -548,7 +548,7 @@ export class WebGLRenderingStrategy extends BaseRenderingStrategy {
   /**
    * Setup viewport and projection matrices
    */
-  private setupViewport(context: RenderingContext): void {
+  private setupViewport(_context: RenderingContext): void {
     if (!this.gl || !this.canvas) return;
 
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -604,7 +604,7 @@ export class WebGLRenderingStrategy extends BaseRenderingStrategy {
   /**
    * Update node buffers for visual changes
    */
-  private async updateNodeBuffers(nodeUpdates: Map<string, any>): Promise<void> {
+  private async updateNodeBuffers(_nodeUpdates: Map<string, any>): Promise<void> {
     if (!this.gl || !this.currentContext) return;
 
     // For efficiency, could update specific buffer regions

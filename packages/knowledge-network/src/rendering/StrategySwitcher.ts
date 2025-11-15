@@ -511,7 +511,7 @@ export class StrategySwitcher extends EventEmitter {
   /**
    * Trigger automatic strategy switching
    */
-  private async triggerAutoSwitch(metrics: PerformanceMetrics): Promise<void> {
+  private async triggerAutoSwitch(_metrics: PerformanceMetrics): Promise<void> {
     if (!this.currentContext) return;
 
     try {
