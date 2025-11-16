@@ -69,6 +69,13 @@ export type {
   StrategyComparison
 } from './rendering';
 
+// Main KnowledgeGraph class (backward compatibility)
+export { KnowledgeGraph } from '../src-archive/KnowledgeGraph';
+export type { GraphData, GraphConfig } from '../src-archive/types';
+
+// Reactive event system (using reactive-js for portability)
+export { EventEmitter, ReactiveEmitter } from './utils/ReactiveEmitter';
+
 // Placeholder exports for future phases
 // TODO: Add similarity module exports (Phase 3)
 // TODO: Add navigation module exports (Phase 4)

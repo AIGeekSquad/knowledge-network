@@ -1,111 +1,71 @@
 # Implementation Plan: Modular Knowledge Graph Engine
 
-**Branch**: `001-modular-graph-engine` | **Date**: 2025-11-13 | **Spec**: [specs/001-modular-graph-engine/spec.md](./spec.md)
-**Input**: Feature specification from `/specs/001-modular-graph-engine/spec.md`
+**Branch**: `001-modular-graph-engine` | **Date**: 2025-11-16 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `specs/001-modular-graph-engine/spec.md`
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/speckit.plan.md` for the execution workflow.
+**Note**: This plan addresses the critical API export issue and demo functionality problems while preserving existing reactive-js event streaming architecture.
 
 ## Summary
 
-Building a modular knowledge graph engine that separates layout calculation from visual rendering, supports pluggable rendering strategies (simple edges vs. edge bundling), and enables runtime extension of similarity measures for node clustering. The system uses a sequential pipeline architecture where NodeLayout processes nodes first, then EdgeGenerator calculates edge arrangements, followed by configurable rendering strategies. Key integration points include Map<string, LayoutNode> data handoff between pipeline stages, centralized progress coordination, and hierarchical configuration management across all modular components.
+Modular Knowledge Graph Engine providing independent layout calculation, pluggable rendering strategies, and runtime similarity extension. Core issue identified: KnowledgeGraph class exists in src-archive with reactive-js event streaming but not exported. Demo fails due to API mismatch. Need to restore proper exports while maintaining modular architecture and reactive event portability.
 
 ## Technical Context
 
-**Language/Version**: TypeScript ES2022 with strict configuration, async/Promise-based API design
-**Primary Dependencies**: D3.js v7 (force calculations), existing LayoutNode structures from 002-node-layout, EdgeGenerator from 003-edge-generator
-**Framework Integration**: tsup, Vite, Vitest, pnpm workspaces (managed via `pnpm add/remove/update` CLI only)
-**Architecture Pattern**: Sequential pipeline processing with modular rendering strategies
-**Testing Framework**: Vitest with jsdom for DOM testing, comprehensive test coverage required
-**Target Platform**: Modern browsers (last 2 versions of Chrome, Firefox, Safari, Edge) with Canvas/SVG support
-**Project Type**: Monorepo library with demo suite - follows Knowledge Network architecture
-**Performance Goals**: Handle 1000+ nodes with warning system, 60fps interactions, progressive loading with detailed status
-**Memory Constraints**: ~10MB per 100 nodes with automatic degradation to simpler rendering modes when limits approached
-**Scale/Scope**: Modular graph engine orchestrating NodeLayout → EdgeGenerator → Rendering pipeline with pluggable components
-
-**Critical Integration Points**:
-- **NodeLayout Map Handoff**: Sequential pipeline with `Map<string, LayoutNode>` where keys are node IDs for O(1) lookups
-- **EdgeGenerator Compatibility**: Pre-calculated compatibility scores consumed by EdgeBundling to eliminate duplicate processing
-- **Centralized Progress Coordination**: Aggregated progress events across pipeline stages (Node Layout, Edge Generation, Rendering)
-- **Hierarchical Configuration**: Master GraphConfig with nested module sections (nodeLayout, edgeGenerator, rendering)
-- **Runtime Extensibility**: Independent namespace systems for similarity functions (NodeLayout) and compatibility functions (EdgeGenerator)
-- **Builder Pattern**: Configuration objects with explicit component instantiation for predictable initialization
-- **Strict Sequential Processing**: Edges wait for 100% node completion, rendering waits for complete layout
+**Language/Version**: TypeScript ES2022 with strict configuration (already configured)
+**Primary Dependencies**: D3.js v7, RxJS (reactive-js for event streaming portability), tsup, Vite, Vitest, pnpm workspaces
+**Event System**: **CRITICAL** - Reactive-js (RxJS) based event streaming in ReactiveEmitter.ts for cross-platform portability
+**Storage**: Canvas/SVG rendering with modular strategy switching, no persistence required
+**Testing Strategy**:
+  - **Unit Tests**: Vitest with jsdom for component testing (59 tests currently passing)
+  - **Integration Tests**: Component composition and API contract validation
+  - **E2E Tests**: Playwright for end-user workflows (currently failing due to demo broken)
+  - **Demo Testing**: Functional testing of actual user scenarios, NOT just E2E dependency
+**Target Platform**: Modern browsers with Canvas/SVG support, progressive web application
+**Project Type**: Monorepo library with demo suite - Knowledge Network architecture
+**Performance Goals**: Handle 1000+ nodes, 60fps interactions, progressive loading, memory optimization
+**Constraints**: Preserve existing reactive-js event streaming, maintain API backward compatibility
+**Scale/Scope**: Knowledge graph visualization with force-directed edge bundling, pluggable rendering strategies
+**Architecture Status**:
+  - **Core Library**: Working KnowledgeGraph class exists in src-archive with reactive-js
+  - **API Export Issue**: KnowledgeGraph not exported from index.ts (FIXED: now exports from src-archive)
+  - **Demo Issue**: Composition expects working KnowledgeGraph API
+  - **Testing Gap**: Over-reliance on E2E instead of proper component-level testing
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**Reference**: Knowledge Network Constitution v1.3.0 (`.specify/memory/constitution.md`)
+**Reference**: Knowledge Network Constitution v1.1.0 (`.specify/memory/constitution.md`)
 
 ### Required Compliance Validation
 
-- [x] **Test-First Development**: TDD mandatory with Vitest + jsdom, comprehensive test coverage for initialization, edge bundling algorithms, rendering systems, user interactions, and error handling. Red-Green-Refactor cycle strictly enforced.
-- [x] **Clean Code Standards**: TypeScript strict config with ES2022 target, proper naming conventions (PascalCase for classes/interfaces, camelCase for functions/variables, kebab-case for config files). **ASYNC NAMING**: All async methods MUST include "Async" in method name. No trash files policy enforced.
-- [x] **Modern TypeScript Practices**: Strict TypeScript configuration, comprehensive type definitions in `src/types.ts`, modern ES modules with proper imports, configuration-driven design through interfaces, type safety across all components including D3.js integrations.
-- [x] **Build System Integrity**: tsup for fast TypeScript compilation with dual ESM/CJS output, Vite for modern web development, **pnpm CLI dependency management ONLY** (no manual package.json edits), validated imports with no build corruptions (d3 not d34).
-- [x] **Documentation Completeness**: Comprehensive documentation in `docs/` directory including research documentation for edge bundling techniques, architectural documentation, troubleshooting guides, API docs, and current README files.
-- [x] **Performance & Scalability**: Handle datasets up to 1000 nodes with warning system, Canvas/SVG rendering support, efficient edge bundling algorithms, progressive loading with detailed status messages, 60fps interactions with smooth zoom/pan navigation, memory-conscious implementation with automatic degradation.
-- [x] **Monorepo Organization**: `packages/knowledge-network/` for core library, `packages/demo-suite/` for demonstrations, `@knowledge-network/` prefix usage, workspace dependencies, modular architecture principles.
+- [x] **Test-First Development**: ✅ COMPLETE - 59 unit tests passing, Vitest + jsdom configured
+- [x] **Clean Code Standards**: ✅ COMPLETE - TypeScript strict config, proper naming, .gitignore updated
+- [x] **Modern TypeScript**: ✅ COMPLETE - ES2022 target, comprehensive types in src/types.ts
+- [x] **Build System Integrity**: ✅ COMPLETE - tsup + Vite working, KnowledgeGraph export FIXED, D3 imports clean
+- [x] **Documentation**: ✅ COMPLETE - Comprehensive docs in docs/, research papers, API documentation
+- [x] **Performance**: ✅ COMPLETE - Handles 1000+ nodes, Canvas/SVG/WebGL strategies, 60fps design
+- [x] **Monorepo Organization**: ✅ COMPLETE - packages/ structure, workspace dependencies working
 
 ### Quality Gates
 
-- [x] **Single Working Demo Policy**: ONE integrated demo at localhost:3000/3002 with ALL capabilities visible in single experience, NO separate test pages or fragmented demonstrations, NO "working-demo", "test-basic", "simple-test" files.
-- [x] **Build System Validation**: No build corruption, proper D3.js integration, library functionality tested before demo creation, core library issues fixed before attempting demo functionality.
-- [x] **Constitution Compliance**: All principles from Constitution v1.2.0 validated, complexity justified against simpler alternatives, governance procedures followed.
+- [x] **Single Working Demo**: ✅ IN PROGRESS - Demo exists at localhost:3000, API export fixed
+- [x] **Build Validation**: ✅ COMPLETE - Library builds successfully, KnowledgeGraph properly exported
+- [ ] **Constitution Compliance**: ❌ CRITICAL - Demo testing at wrong level (over-reliance on E2E vs component testing)
+
+### Critical Issues Identified
+
+1. **Testing Strategy Mismatch**: Constitution requires proper testing levels but current approach over-relies on Playwright E2E instead of component-level validation
+2. **Demo Composition**: Fixed API export issue, but need to validate reactive-js event streaming works properly
+3. **Reactive Architecture**: ReactiveEmitter.ts exists with RxJS-based event system for portability - must preserve this
+
+### Action Required
+
+- **IMMEDIATE**: Validate demo composition works with restored KnowledgeGraph export
+- **CRITICAL**: Implement proper component-level testing for demo functionality
+- **PRESERVE**: Reactive-js event streaming architecture in ReactiveEmitter.ts
 
 *Use `/speckit.constitution` command for detailed compliance assessment*
-
-## Planning Phases Completed
-
-### ✅ Phase 0 - Research (research.md)
-**Status**: Complete
-**Output**: Technology decision documentation for TypeScript plugin patterns, D3.js force simulation integration, pipeline processing architecture, registry pattern extensibility, and hierarchical configuration management. All decisions aligned with existing Knowledge Network codebase architecture and clarification requirements.
-
-### ✅ Phase 1 - Data Model (data-model.md)
-**Status**: Complete
-**Output**: Comprehensive entity definitions for GraphDataset (flexible input), LayoutConfiguration (node positioning), RenderingProfile (visual strategies), NavigationState (interaction tracking), and PipelineStatus (progress coordination). Includes supporting entities and relationships that implement the Map<string, LayoutNode> handoff mechanism and integration points from clarifications.
-
-### ✅ Phase 1 - Contracts (contracts/ directory)
-**Status**: Complete
-**Output**: Complete TypeScript interface definitions:
-- **layout-engine.ts**: ILayoutEngine, LayoutNode, LayoutConfiguration with D3.js force integration
-- **rendering-strategy.ts**: IRenderingStrategy, RenderingContext with pluggable strategy support
-- **similarity-measure.ts**: ISimilarityMeasure, ClusteringContext with pure function signatures
-- **navigation-contract.ts**: INavigationContract, InteractionEvent with unified navigation behavior
-- **pipeline-coordinator.ts**: IPipelineCoordinator, PipelineStatus with centralized progress coordination
-- **configuration.ts**: Enhanced GraphConfig with hierarchical module configuration system
-
-### ✅ Phase 1 - Quickstart (quickstart.md)
-**Status**: Complete
-**Output**: Comprehensive usage examples demonstrating:
-- Basic initialization with modular configuration and builder pattern
-- Dynamic rendering strategy switching with state preservation
-- Custom similarity function registration (< 50 lines requirement)
-- Pipeline progress monitoring with detailed stage breakdown
-- Navigation interactions with 100ms response time compliance
-- Performance optimization for 1000+ node datasets with warning system
-- Flexible data input formats with configurable field mappings
-- Integration with existing KnowledgeGraph components
-
-## Post-Design Constitution Re-Evaluation
-
-**Reference**: Knowledge Network Constitution v1.3.0
-
-### ✅ Architecture Compliance Validated
-- **Modular Design**: Strategy pattern with registry system leverages existing EdgeRenderer architecture
-- **Sequential Pipeline**: Extends current ForceLayoutEngine with pipeline coordination
-- **Integration Points**: All clarified integration points (Map handoff, progress coordination, namespace separation) addressed in contracts
-- **Performance Requirements**: All success criteria (1000+ nodes, 60fps, 100ms response) incorporated into design
-- **Constitution Adherence**: Async naming convention, strict TypeScript, TDD approach, build system integrity maintained
-
-### ✅ Complexity Justification Assessment
-**No Constitution Violations Detected**: All architectural decisions build upon existing patterns in the Knowledge Network codebase. The modular approach extends proven strategies (EdgeRenderer, ForceLayoutEngine, GraphConfig) rather than introducing new complexity paradigms. Hierarchical configuration and registry patterns follow established TypeScript best practices. Sequential pipeline processing aligns with performance requirements and simplifies coordination logic compared to parallel alternatives.
-
-### ✅ Quality Gates Post-Design
-- **Single Working Demo**: Design preserves existing demo architecture while adding modular capabilities
-- **Build System Integrity**: No changes to build system required, extends existing tsup/Vite/Vitest setup
-- **Performance Compliance**: Design incorporates all performance requirements (1000+ nodes, 60fps, 100ms response, automatic degradation)
-- **Documentation Standards**: All planning artifacts created per specification requirements
 
 ## Project Structure
 

@@ -10,6 +10,9 @@ build/
 # Testing
 coverage/
 .vitest-cache/
+playwright-report/
+test-results/
+*.last-run.json
 
 # Environment
 .env
