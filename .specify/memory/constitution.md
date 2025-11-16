@@ -1,11 +1,11 @@
 <!--
 Sync Impact Report:
-- Version: 1.2.0 → 1.3.0 (MINOR: Added Structural Simplicity principle)
-- Added: Principle VIII (Structural Simplicity & Meaningful Organization)
-- Modified: Principle II (Enhanced folder naming guidance)
-- Key Learning: Implementation revealed critical need for clear folder structure and minimal complexity
-- Impact: All future development must follow clear naming and structural simplicity
-- Date: 2025-11-15
+- Version: 1.3.0 → 1.4.0 (MINOR: Added Archive Code Protection principle)
+- Added: Principle IX (Archive Code Protection & Historical Preservation)
+- Modified: None (new principle addition)
+- Key Learning: Archive/historical code MUST never be used in production - read-only for research
+- Impact: All future development must respect archived code as precious historical points
+- Date: 2025-11-16
 -->
 
 # Knowledge Network Constitution
@@ -36,6 +36,9 @@ All project files belong in monorepo structure; Use `packages/knowledge-network/
 ### VIII. Structural Simplicity & Meaningful Organization
 **SIMPLICITY FIRST**: Aim for simplicity and minimal effort in all implementations; Maximize reuse of existing functionality rather than creating new components; Keep work to clear and strict necessary requirements only; **MEANINGFUL FOLDERS**: Every folder must have immediate, clear purpose - no empty folders, no confusing names; Folder structure must be immediately understandable by any developer; Use domain-specific names (`core/`, `layout/`, `rendering/`) not abstract terms (`modular/`, `utils/`, `helpers/`); **MINIMAL COMPLEXITY**: Complexity must be explicitly justified against simpler alternatives; When possible, extend existing components rather than creating parallel systems; Remove broken or obsolete infrastructure rather than maintaining it.
 
+### IX. Archive Code Protection & Historical Preservation
+**ARCHIVED CODE IS READ-ONLY**: All archived code (src-archive/, tests-archive/, etc.) exists ONLY for historical reference, research, and learning purposes; **NEVER import, export, or reference archived code in production systems**; Archived materials are precious points in time that must be preserved intact; **PRODUCTION RULE**: All production code must exist in current `src/` directory with proper modular architecture; If archived code contains useful patterns, reimplement them properly in current codebase rather than importing historical versions; **VIOLATION CONSEQUENCE**: Using archived code in production violates historical preservation and creates unstable dependencies.
+
 ## Development Standards
 
 ### Single Working Demo Policy
@@ -51,4 +54,4 @@ Respect user time: test thoroughly before presenting; Fix obvious issues before 
 
 Constitution supersedes all other practices; Amendments require documentation, approval, and migration plan; All PRs/reviews must verify compliance with these principles; Complexity must be justified against simpler alternatives; Use AGENTS.md for runtime development guidance; Commit changes with actual improvement on build quality and no regression.
 
-**Version**: 1.3.0 | **Ratified**: 2025-11-13 | **Last Amended**: 2025-11-15
+**Version**: 1.4.0 | **Ratified**: 2025-11-13 | **Last Amended**: 2025-11-16
