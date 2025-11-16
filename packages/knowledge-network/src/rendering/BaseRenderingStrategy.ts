@@ -8,7 +8,7 @@
  * @fileoverview Base rendering strategy with common implementation patterns
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/ReactiveEmitter.js';
 import type {
   IRenderingStrategy,
   RenderingContext,

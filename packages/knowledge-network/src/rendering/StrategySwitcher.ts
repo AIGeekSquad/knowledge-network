@@ -8,7 +8,7 @@
  * @fileoverview Dynamic rendering strategy management and switching
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/ReactiveEmitter.js';
 import type {
   IRenderingStrategy,
   RenderingContext,

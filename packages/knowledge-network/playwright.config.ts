@@ -30,7 +30,7 @@ export default defineConfig({
   /* Shared settings for all projects */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:3002',
+    baseURL: 'http://localhost:3001',
     
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -40,6 +40,11 @@ export default defineConfig({
     
     /* Record video on failure */
     video: 'retain-on-failure',
+    
+    /* Coverage collection for SonarQube E2E tracking */
+    extraHTTPHeaders: {
+      'X-Coverage-Collection': 'enabled'
+    }
   },
 
   /* Configure projects for major browsers */
@@ -85,16 +90,15 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: [
-    {
-      command: 'pnpm run dev',
-      cwd: '../demo-suite',
-      port: 3002,
-      reuseExistingServer: !process.env.CI,
-      stdout: 'ignore',
-      stderr: 'pipe'
-    }
-  ],
+  webServer: {
+    command: 'pnpm run dev',
+    cwd: '../demo-suite',
+    port: 3001,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000, // Extended timeout for demo server startup
+    stdout: 'pipe',
+    stderr: 'pipe'
+  },
 
   /* Global test timeout for knowledge graph rendering operations */
   timeout: 30000,
@@ -109,7 +113,7 @@ export default defineConfig({
   /* Test artifacts configuration */
   outputDir: 'test-results/e2e',
   
-  /* Global setup and teardown */
-  globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
-  globalTeardown: require.resolve('./tests/e2e/global-teardown.ts'),
+  /* Global setup and teardown - commented out until implemented */
+  // globalSetup: './tests/e2e/global-setup.ts',
+  // globalTeardown: './tests/e2e/global-teardown.ts',
 });

@@ -13,7 +13,7 @@
  * - Dynamic graph structure adaptation
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/ReactiveEmitter.js';
 import type { 
   Node,
   Edge,

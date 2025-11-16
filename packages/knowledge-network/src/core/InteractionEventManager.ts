@@ -13,7 +13,7 @@
  * - Comprehensive error handling and fallback mechanisms
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/ReactiveEmitter.js';
 import type { 
   InteractionEvent,
   NavigationState,

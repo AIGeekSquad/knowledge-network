@@ -13,7 +13,7 @@
  * - Integration with existing KnowledgeGraph progress patterns
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/ReactiveEmitter.js';
 
 export type PipelineStage = 
   | 'NodePositioning' 

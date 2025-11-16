@@ -8,7 +8,7 @@
  */
 
 import * as d3 from 'd3';
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/ReactiveEmitter.js';
 import type { Node } from '../types';
 import type {
   LayoutNode,

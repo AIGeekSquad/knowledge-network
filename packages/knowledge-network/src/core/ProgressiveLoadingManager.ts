@@ -13,7 +13,7 @@
  * - Real-time progress tracking and completion estimation
  */
 
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../utils/ReactiveEmitter.js';
 import type { 
   Node,
   Edge,

@@ -49,21 +49,24 @@ Modular Knowledge Graph Engine providing independent layout calculation, pluggab
 
 ### Quality Gates
 
-- [x] **Single Working Demo**: ✅ IN PROGRESS - Demo exists at localhost:3000, API export fixed
-- [x] **Build Validation**: ✅ COMPLETE - Library builds successfully, KnowledgeGraph properly exported
-- [ ] **Constitution Compliance**: ❌ CRITICAL - Demo testing at wrong level (over-reliance on E2E vs component testing)
+- [ ] **Single Working Demo**: ❌ FAILING - Browser verification failed, no evidence demo runs at localhost:3000
+- [x] **Build Validation**: ✅ PARTIAL - Library builds (298KB), demo builds, but no runtime verification
+- [ ] **Constitution Compliance**: ❌ FAILING - E2E tests broken, actual demo functionality unproven
 
-### Critical Issues Identified
+### Critical Issues Identified - EVIDENCE BASED
 
-1. **Testing Strategy Mismatch**: Constitution requires proper testing levels but current approach over-relies on Playwright E2E instead of component-level validation
-2. **Demo Composition**: Fixed API export issue, but need to validate reactive-js event streaming works properly
-3. **Reactive Architecture**: ReactiveEmitter.ts exists with RxJS-based event system for portability - must preserve this
+1. **Demo Runtime Status**: UNKNOWN - No evidence demo server starts or renders anything
+2. **E2E Tests Status**: BROKEN - Playwright tests still failing, original problem unresolved
+3. **API Export**: FIXED - KnowledgeGraph restored from src-archive, component tests pass (6/6)
+4. **Reactive Architecture**: PRESERVED - ReactiveEmitter.ts with RxJS event system intact
+5. **Build System**: WORKING - Core library (59/59 tests pass), demo builds successfully
 
-### Action Required
+### Action Required - EVIDENCE BASED
 
-- **IMMEDIATE**: Validate demo composition works with restored KnowledgeGraph export
-- **CRITICAL**: Implement proper component-level testing for demo functionality
-- **PRESERVE**: Reactive-js event streaming architecture in ReactiveEmitter.ts
+- **CRITICAL**: Demo server startup and runtime verification REQUIRED
+- **FAILING**: E2E test resolution REQUIRED
+- **INCOMPLETE**: Visual/functional validation of demo REQUIRED
+- **WORKING**: Component-level testing implemented (6/6 pass)
 
 *Use `/speckit.constitution` command for detailed compliance assessment*
 

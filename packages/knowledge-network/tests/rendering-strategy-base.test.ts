@@ -11,7 +11,7 @@ import type {
   RenderingProgressCallback
 } from '../src/rendering/rendering-strategy';
 import type { LayoutNode } from '../src/layout/layout-engine';
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../src/utils/ReactiveEmitter';
 
 // Mock implementation for testing abstract base class
 class MockRenderingStrategy extends BaseRenderingStrategy {
