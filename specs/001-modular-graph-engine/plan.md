@@ -35,7 +35,7 @@ Building a modular knowledge graph engine that separates layout calculation from
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**Reference**: Knowledge Network Constitution v1.2.0 (`.specify/memory/constitution.md`)
+**Reference**: Knowledge Network Constitution v1.3.0 (`.specify/memory/constitution.md`)
 
 ### Required Compliance Validation
 
@@ -89,7 +89,7 @@ Building a modular knowledge graph engine that separates layout calculation from
 
 ## Post-Design Constitution Re-Evaluation
 
-**Reference**: Knowledge Network Constitution v1.2.0
+**Reference**: Knowledge Network Constitution v1.3.0
 
 ### ✅ Architecture Compliance Validated
 - **Modular Design**: Strategy pattern with registry system leverages existing EdgeRenderer architecture

@@ -6,6 +6,7 @@
 // Import actual knowledge graph library
 import { KnowledgeGraph } from '@aigeeksquad/knowledge-network';
 import { announceToScreenReader } from './shared/utils.js';
+import { UnifiedDemo, createUnifiedDemo } from './components/UnifiedDemo.js';
 
 /**
  * Application initialization configuration.
@@ -279,7 +280,7 @@ function setupDebugMode(app: any): void {
 }
 
 /**
- * Initialize comprehensive interactive demo
+ * Initialize comprehensive interactive demo with unified modular capabilities
  */
 async function initializeInteractiveDemo(): Promise<void> {
   const container = document.getElementById('demo-container');
@@ -290,36 +291,82 @@ async function initializeInteractiveDemo(): Promise<void> {
   }
 
   try {
-    // Import required components
-    const { DataGenerator } = await import('./shared/DataGenerator.js');
-    const { initializeGlobalPerformanceMonitor } = await import('./shared/PerformanceMonitor.js');
+    // Check for unified demo mode (FR-010 implementation)
+    const params = new URLSearchParams(window.location.search);
+    const useUnifiedDemo = params.get('unified') !== 'false'; // Default to unified demo
 
-    // Initialize performance monitoring
-    const perfMonitor = initializeGlobalPerformanceMonitor(container, {
-      showOverlay: true,
-      position: 'top-right',
-      enableDetails: true
-    });
+    if (useUnifiedDemo) {
+      // Initialize FR-010 Unified Demo - Single integrated experience with ALL capabilities
+      console.log('🎯 Initializing FR-010 Unified Demo - Single integrated experience');
+      
+      const unifiedDemo = createUnifiedDemo('demo-container', {
+        initialStrategy: (params.get('strategy') as 'canvas' | 'svg' | 'webgl') || 'canvas',
+        showControls: true,
+        enablePerformanceMonitoring: true
+      });
 
-    // Create interactive demo manager
-    const demoManager = new InteractiveDemoManager(container, perfMonitor);
-    await demoManager.initialize();
+      // Make unified demo available for E2E testing
+      (window as any).__unifiedDemo = unifiedDemo;
+      (window as any).__knowledgeGraph = unifiedDemo.getGraph();
+      (window as any).__currentRenderingStrategy = params.get('strategy') || 'canvas';
+      (window as any).__knowledgeGraphReady = true;
 
-    console.log('✅ Interactive demo initialized successfully');
+      console.log('✅ FR-010 Unified Demo initialized - ALL modular capabilities available in single experience');
+      
+    } else {
+      // Fallback to original demo system for development/testing
+      await initializeOriginalDemo(container);
+    }
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Failed to initialize interactive demo:', error);
-    container.innerHTML = `
-      <div style="padding: 20px; color: white; text-align: center;">
-        <h2>Demo Initialization Error</h2>
-        <p>Error: ${errorMessage}</p>
+    console.error('Failed to initialize demo:', error);
+    showDemoInitializationError(container, errorMessage);
+  }
+}
+
+/**
+ * Initialize original demo system (preserved for development)
+ */
+async function initializeOriginalDemo(container: HTMLElement): Promise<void> {
+  // Import required components
+  const { DataGenerator } = await import('./shared/DataGenerator.js');
+  const { initializeGlobalPerformanceMonitor } = await import('./shared/PerformanceMonitor.js');
+
+  // Initialize performance monitoring
+  const perfMonitor = initializeGlobalPerformanceMonitor(container, {
+    showOverlay: true,
+    position: 'top-right',
+    enableDetails: true
+  });
+
+  // Create interactive demo manager
+  const demoManager = new InteractiveDemoManager(container, perfMonitor);
+  await demoManager.initialize();
+
+  console.log('✅ Original interactive demo initialized successfully');
+}
+
+/**
+ * Show demo initialization error
+ */
+function showDemoInitializationError(container: HTMLElement, errorMessage: string): void {
+  container.innerHTML = `
+    <div style="padding: 20px; color: white; text-align: center;">
+      <h2>Demo Initialization Error</h2>
+      <p>Error: ${errorMessage}</p>
+      <div style="margin-top: 20px;">
         <button onclick="window.location.reload()" style="
           background: #667eea; color: white; border: none;
-          padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 10px;
+          padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px;
         ">Retry</button>
+        <button onclick="window.location.href='/?unified=false'" style="
+          background: #6c757d; color: white; border: none;
+          padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px;
+        ">Fallback Mode</button>
       </div>
-    `;
-  }
+    </div>
+  `;
 }
 
 /**
