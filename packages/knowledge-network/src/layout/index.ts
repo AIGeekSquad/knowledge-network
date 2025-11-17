@@ -56,4 +56,42 @@ export type {
 } from './LayoutSerializer';
 
 // Re-export commonly used types from main types file
+
+// ============================================
+// NodeLayout Module Exports (002-node-layout)
+// ============================================
+
+// Similarity-based positioning engine
+export { NodeLayoutEngine } from './NodeLayoutEngine';
+
+// Similarity processing with functor contract compliance
+export { SimilarityProcessor } from './SimilarityProcessor';
+
+// Spatial optimization with configurable distance mapping
+export { SpatialOptimizer, SimilarityMappingAlgorithms } from './SpatialOptimizer';
+export type { SimilarityToDistanceMapper } from './SpatialOptimizer';
+
+// Immutable LayoutNode factory system
+export { LayoutCalculator } from './LayoutCalculator';
+
+// High-performance similarity caching
+export { SimilarityCache } from './SimilarityCache';
+
+// NodeLayout types for external usage
+export type { 
+  SimilarityFunctor,
+  ClusteringContext,
+  EnhancedLayoutNode,
+  LayoutConfig,
+  LayoutResult,
+  NodeImportance,
+  Position3D,
+  ConvergenceMetrics,
+  WeightedSimilarityFunction,
+  LayoutEventEmitter,
+  LayoutProgressEvent,
+  NodeUpdate,
+  TransitionResult,
+  EngineState
+} from '../types';
 export type { Node, Edge, GraphDataset } from '../types';

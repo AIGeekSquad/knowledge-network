@@ -1,293 +1,335 @@
 /**
- * Layout Calculator - Core D3.js Force Simulation
+ * @fileoverview LayoutCalculator - Factory for creating immutable LayoutNode structures
  * 
- * Handles force-directed layout calculations independent of rendering concerns.
- * Uses D3.js v7 force simulation for positioning nodes with configurable forces.
- * 
- * @fileoverview Core layout calculation engine
+ * Provides LayoutNode factory methods and immutable wrapper system that maintains
+ * strict separation between original node data and layout-specific metadata.
  */
 
-import * as d3 from 'd3';
-import { EventEmitter } from '../utils/ReactiveEmitter.js';
-import type { Node } from '../types';
-import type {
-  LayoutNode,
-  LayoutConfiguration,
-  LayoutMetadata,
-  PerformanceMetrics,
-  ProgressCallback
-} from './layout-engine';
+import { 
+  Node,
+  EnhancedLayoutNode,
+  Position3D,
+  NodeImportance,
+  LayoutNodeMetadata,
+  NodeConvergenceState,
+  LayoutPhase,
+  ClusterAssignment
+} from '../types';
 
 /**
- * Core layout calculator using D3.js force simulation
- * Independent of rendering - no DOM/Canvas/SVG dependencies
+ * LayoutCalculator creates immutable LayoutNode wrappers from original nodes
  */
-export class LayoutCalculator extends EventEmitter {
-  private simulation: d3.Simulation<d3.SimulationNodeDatum, undefined> | null = null;
-  private isRunning = false;
-  private startTime = 0;
-  private currentIteration = 0;
+export class LayoutCalculator {
+  private static idCounter = 0;
 
   /**
-   * Calculate layout for given nodes using D3.js force simulation
-   * Returns Map<string, LayoutNode> for O(1) lookups
+   * Create LayoutNode from original node with immutable reference
    */
-  async calculateAsync(
-    nodes: Node[], 
-    config: LayoutConfiguration,
-    progress?: ProgressCallback
-  ): Promise<Map<string, LayoutNode>> {
-    this.startTime = Date.now();
-    this.currentIteration = 0;
-    this.isRunning = true;
+  public static createLayoutNode(
+    originalNode: Node,
+    initialPosition?: Position3D,
+    config?: { 
+      generateId?: (node: Node) => string;
+      calculateImportance?: (node: Node) => NodeImportance;
+    }
+  ): EnhancedLayoutNode {
+    // Generate unique layout ID
+    const layoutId = config?.generateId ? 
+      config.generateId(originalNode) : 
+      this.generateDefaultId(originalNode);
 
-    // Report initialization progress
-    progress?.({
-      stage: 'initialization',
-      percentage: 0,
-      message: `Initializing layout for ${nodes.length} nodes`,
-      metrics: this.getPerformanceMetrics(),
-      cancellable: true
+    // Calculate node importance
+    const importance = config?.calculateImportance ?
+      config.calculateImportance(originalNode) :
+      this.calculateDefaultImportance(originalNode);
+
+    // Create immutable LayoutNode wrapper
+    const layoutNode: EnhancedLayoutNode = {
+      id: layoutId,
+      originalNode: Object.freeze({ ...originalNode }), // Immutable reference
+      position: initialPosition || this.generateInitialPosition(),
+      cluster: undefined, // Will be assigned during clustering
+      similarityScores: new Map<string, number>(),
+      convergenceState: this.createInitialConvergenceState(),
+      importance,
+      metadata: this.createInitialMetadata()
+    };
+
+    return Object.freeze(layoutNode); // Immutable wrapper
+  }
+
+  /**
+   * Create batch of LayoutNodes from node array
+   */
+  public static createLayoutNodes(
+    nodes: Node[],
+    positions?: Position3D[],
+    config?: {
+      generateId?: (node: Node, index: number) => string;
+      calculateImportance?: (node: Node, allNodes: Node[]) => NodeImportance;
+      spatialConstraints?: { width: number; height: number; depth?: number };
+    }
+  ): EnhancedLayoutNode[] {
+    if (positions && positions.length !== nodes.length) {
+      throw new Error('Position array length must match nodes array length');
+    }
+
+    return nodes.map((node, index) => {
+      const position = positions ? positions[index] : 
+        this.generateConstrainedPosition(config?.spatialConstraints);
+      
+      const importance = config?.calculateImportance ?
+        config.calculateImportance(node, nodes) :
+        this.calculateDefaultImportance(node);
+
+      const layoutId = config?.generateId ?
+        config.generateId(node, index) :
+        this.generateDefaultId(node);
+
+      return this.createLayoutNode(node, position, {
+        generateId: () => layoutId,
+        calculateImportance: () => importance
+      });
     });
+  }
 
+  /**
+   * Update LayoutNode with new position while preserving immutability
+   */
+  public static updatePosition(
+    layoutNode: EnhancedLayoutNode,
+    newPosition: Position3D,
+    preserveHistory: boolean = true
+  ): EnhancedLayoutNode {
+    // Calculate position delta for convergence tracking
+    const positionDelta = this.calculatePositionDelta(layoutNode.position, newPosition);
+    
+    // Update convergence state
+    const updatedConvergenceState = this.updateConvergenceState(
+      layoutNode.convergenceState,
+      positionDelta,
+      preserveHistory
+    );
+
+    // Create new immutable LayoutNode
+    const updatedNode: EnhancedLayoutNode = {
+      ...layoutNode,
+      position: newPosition,
+      convergenceState: updatedConvergenceState,
+      metadata: {
+        ...layoutNode.metadata,
+        lastUpdated: Date.now(),
+        isStable: positionDelta < 0.01 // Stability threshold
+      }
+    };
+
+    return Object.freeze(updatedNode);
+  }
+
+  /**
+   * Assign cluster to LayoutNode
+   */
+  public static assignCluster(
+    layoutNode: EnhancedLayoutNode,
+    cluster: ClusterAssignment
+  ): EnhancedLayoutNode {
+    const updatedNode: EnhancedLayoutNode = {
+      ...layoutNode,
+      cluster,
+      metadata: {
+        ...layoutNode.metadata,
+        lastUpdated: Date.now()
+      }
+    };
+
+    return Object.freeze(updatedNode);
+  }
+
+  /**
+   * Update similarity scores for LayoutNode
+   */
+  public static updateSimilarityScores(
+    layoutNode: EnhancedLayoutNode,
+    similarities: Map<string, number>
+  ): EnhancedLayoutNode {
+    // Merge with existing scores
+    const updatedScores = new Map([
+      ...layoutNode.similarityScores.entries(),
+      ...similarities.entries()
+    ]);
+
+    const updatedNode: EnhancedLayoutNode = {
+      ...layoutNode,
+      similarityScores: updatedScores,
+      metadata: {
+        ...layoutNode.metadata,
+        lastUpdated: Date.now()
+      }
+    };
+
+    return Object.freeze(updatedNode);
+  }
+
+  /**
+   * Batch update multiple LayoutNodes
+   */
+  public static batchUpdate(
+    layoutNodes: EnhancedLayoutNode[],
+    updates: Array<{
+      nodeId: string;
+      position?: Position3D;
+      cluster?: ClusterAssignment;
+      similarities?: Map<string, number>;
+    }>
+  ): EnhancedLayoutNode[] {
+    const nodeMap = new Map(layoutNodes.map(node => [node.id, node]));
+    
+    // Apply updates
+    for (const update of updates) {
+      const existing = nodeMap.get(update.nodeId);
+      if (existing) {
+        let updated = existing;
+        
+        if (update.position) {
+          updated = this.updatePosition(updated, update.position);
+        }
+        
+        if (update.cluster) {
+          updated = this.assignCluster(updated, update.cluster);
+        }
+        
+        if (update.similarities) {
+          updated = this.updateSimilarityScores(updated, update.similarities);
+        }
+        
+        nodeMap.set(update.nodeId, updated);
+      }
+    }
+
+    return Array.from(nodeMap.values());
+  }
+
+  /**
+   * Validate LayoutNode data integrity
+   */
+  public static validateLayoutNode(layoutNode: EnhancedLayoutNode): boolean {
     try {
-      // Convert nodes to D3 simulation nodes
-      const simulationNodes = nodes.map(node => ({
-        ...node,
-        x: Math.random() * 800, // Random initial position
-        y: Math.random() * 600,
-        vx: 0,
-        vy: 0
-      }));
+      // Validate required fields
+      if (!layoutNode.id || !layoutNode.originalNode || !layoutNode.position) {
+        return false;
+      }
 
-      // Create force simulation with proper typing
-      this.simulation = d3.forceSimulation(simulationNodes as d3.SimulationNodeDatum[])
-        .force('charge', d3.forceManyBody().strength(config.forceParameters.chargeForce * -300))
-        .force('center', d3.forceCenter(400, 300))
-        .force('collision', d3.forceCollide().radius(config.forceParameters.collisionRadius))
-        .stop(); // Don't start automatically
+      // Validate position coordinates are finite
+      const pos = layoutNode.position;
+      if (!Number.isFinite(pos.x) || !Number.isFinite(pos.y) || !Number.isFinite(pos.z)) {
+        return false;
+      }
 
-      // Custom force configuration if provided
-      if (config.forceParameters.customForces) {
-        for (const [, ] of config.forceParameters.customForces) {
-          // Add custom forces based on configuration
-          // This is extensible for future force types
+      // Validate importance metrics are in valid ranges
+      const imp = layoutNode.importance;
+      if (imp.composite < 0 || imp.composite > 1) {
+        return false;
+      }
+
+      // Validate similarity scores are in [0, 1] range
+      for (const [key, value] of layoutNode.similarityScores.entries()) {
+        if (value < 0 || value > 1 || !Number.isFinite(value)) {
+          return false;
         }
       }
 
-      // Set up progress reporting
-      let iterationCount = 0;
-      const maxIterations = config.maxIterations;
-      
-      this.simulation?.on('tick', () => {
-        iterationCount++;
-        this.currentIteration = iterationCount;
-        
-        const percentage = Math.min((iterationCount / maxIterations) * 100, 100);
-        
-        progress?.({
-          stage: 'simulation',
-          percentage,
-          message: `Running simulation: iteration ${iterationCount}/${maxIterations}`,
-          metrics: this.getPerformanceMetrics(),
-          cancellable: true
-        });
-
-        // Check stability
-        if (this.checkStability(simulationNodes, config.stabilityThreshold)) {
-          this.simulation?.stop();
-        }
-      });
-
-      // Run simulation
-      progress?.({
-        stage: 'simulation',
-        percentage: 10,
-        message: 'Starting force simulation',
-        metrics: this.getPerformanceMetrics(),
-        cancellable: true
-      });
-
-      // Run simulation for specified iterations or until stable
-      for (let i = 0; i < maxIterations && this.isRunning; i++) {
-        this.simulation?.tick();
-        
-        if (this.checkStability(simulationNodes, config.stabilityThreshold)) {
-          break;
-        }
-
-        // Yield control periodically for async behavior
-        if (i % 10 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 1));
-        }
-      }
-
-      // Convert to LayoutNode map
-      const layoutMap = new Map<string, LayoutNode>();
-      
-      progress?.({
-        stage: 'finalization',
-        percentage: 90,
-        message: 'Converting to layout nodes',
-        metrics: this.getPerformanceMetrics(),
-        cancellable: false
-      });
-
-      for (const simNode of simulationNodes) {
-        const layoutNode: LayoutNode = {
-          id: simNode.id,
-          x: simNode.x || 0,
-          y: simNode.y || 0,
-          clusterId: undefined, // Will be set by clustering if enabled
-          similarityScores: new Map(),
-          originalData: simNode,
-          layoutMetadata: this.createLayoutMetadata(simNode)
-        };
-        
-        layoutMap.set(simNode.id, layoutNode);
-      }
-
-      // Apply clustering if enabled
-      if (config.clusteringConfig.enabled) {
-        await this.applyClustering(layoutMap, config);
-      }
-
-      progress?.({
-        stage: 'finalization',
-        percentage: 100,
-        message: `Layout complete: ${layoutMap.size} nodes positioned`,
-        metrics: this.getPerformanceMetrics(),
-        cancellable: false
-      });
-
-      this.isRunning = false;
-      return layoutMap;
-
+      return true;
     } catch (error) {
-      this.isRunning = false;
-      throw new Error(`Layout calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return false;
     }
   }
 
-  /**
-   * Check if simulation has stabilized
-   */
-  private checkStability(nodes: d3.SimulationNodeDatum[], threshold: number): boolean {
-    let totalVelocity = 0;
-    
-    for (const node of nodes) {
-      if (node.vx !== undefined && node.vy !== undefined) {
-        totalVelocity += Math.abs(node.vx) + Math.abs(node.vy);
-      }
-    }
-    
-    const averageVelocity = totalVelocity / nodes.length;
-    return averageVelocity < threshold;
+  // Private helper methods
+
+  private static generateDefaultId(node: Node): string {
+    return `layout-${node.id}-${Date.now()}-${this.idCounter++}`;
   }
 
-  /**
-   * Apply clustering based on similarity scores
-   */
-  private async applyClustering(
-    layoutMap: Map<string, LayoutNode>, 
-    config: LayoutConfiguration
-  ): Promise<void> {
-    // Simple clustering implementation
-    // In a full implementation, this would use the configured clustering algorithm
-    
-    const nodes = Array.from(layoutMap.values());
-    let clusterId = 0;
-    
-    for (const node of nodes) {
-      if (!node.clusterId) {
-        const cluster = `cluster_${clusterId++}`;
-        node.clusterId = cluster;
-        
-        // Find nearby nodes to cluster together
-        for (const otherNode of nodes) {
-          if (!otherNode.clusterId && node.id !== otherNode.id) {
-            const distance = Math.sqrt(
-              Math.pow(node.x - otherNode.x, 2) + Math.pow(node.y - otherNode.y, 2)
-            );
-            
-            if (distance < config.clusteringConfig.clusterSeparation) {
-              otherNode.clusterId = cluster;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Create layout metadata for a node
-   */
-  private createLayoutMetadata(node: d3.SimulationNodeDatum): LayoutMetadata {
+  private static generateInitialPosition(): Position3D {
     return {
-      algorithm: 'force-directed',
-      timestamp: Date.now(),
-      processingTime: Date.now() - this.startTime,
-      appliedForces: new Map([
-        ['charge', this.simulation?.force('charge') ? 1 : 0],
-        ['center', this.simulation?.force('center') ? 1 : 0],
-        ['collision', this.simulation?.force('collision') ? 1 : 0]
-      ]),
-      customData: {
-        initialPosition: { x: node.x, y: node.y },
-        finalVelocity: { vx: node.vx || 0, vy: node.vy || 0 }
-      }
+      x: Math.random() * 800,
+      y: Math.random() * 600, 
+      z: 0 // Default to 2D
     };
   }
 
-  /**
-   * Get current performance metrics
-   */
-  getPerformanceMetrics(): PerformanceMetrics {
-    const now = Date.now();
-    const processingTime = now - this.startTime;
+  private static generateConstrainedPosition(
+    constraints?: { width: number; height: number; depth?: number }
+  ): Position3D {
+    const bounds = constraints || { width: 800, height: 600, depth: 0 };
     
     return {
-      processingTime,
-      memoryUsage: process.memoryUsage?.()?.heapUsed / 1024 / 1024 || 0, // MB
-      iterations: this.currentIteration,
-      stabilityScore: 0.5, // Placeholder - would calculate actual stability
-      currentFPS: this.calculateFPS()
+      x: Math.random() * bounds.width,
+      y: Math.random() * bounds.height,
+      z: bounds.depth ? Math.random() * bounds.depth : 0
     };
   }
 
-  /**
-   * Calculate approximate FPS for performance monitoring
-   */
-  private calculateFPS(): number {
-    if (this.currentIteration === 0) return 0;
+  private static calculateDefaultImportance(node: Node): NodeImportance {
+    // Simple heuristic-based importance calculation
+    const connections = (node as any).connections || (node as any).degree || 1;
+    const degree = Math.min(connections / 10, 1); // Normalize to [0, 1]
     
-    const timeElapsed = (Date.now() - this.startTime) / 1000; // seconds
-    return Math.round(this.currentIteration / timeElapsed);
+    // Placeholder calculations (in real implementation, would use graph topology)
+    const betweenness = Math.random() * 0.5; // Conservative estimate
+    const eigenvector = Math.random() * 0.5; // Conservative estimate
+    
+    const composite = 0.4 * degree + 0.3 * betweenness + 0.3 * eigenvector;
+
+    return {
+      degree: connections,
+      betweenness,
+      eigenvector, 
+      composite
+    };
   }
 
-  /**
-   * Stop the current calculation
-   */
-  stop(): void {
-    this.isRunning = false;
-    if (this.simulation) {
-      this.simulation.stop();
-    }
+  private static createInitialConvergenceState(): NodeConvergenceState {
+    return {
+      isStable: false,
+      positionDelta: 1.0, // High initial delta
+      stabilityHistory: [1.0] // Track recent position changes
+    };
   }
 
-  /**
-   * Get the current D3 simulation (for debugging/testing)
-   */
-  getSimulation(): d3.Simulation<d3.SimulationNodeDatum, undefined> | null {
-    return this.simulation;
+  private static createInitialMetadata(): LayoutNodeMetadata {
+    return {
+      createdAt: Date.now(),
+      lastUpdated: Date.now(),
+      isStable: false,
+      phase: LayoutPhase.COARSE,
+      forceContributions: []
+    };
   }
 
-  /**
-   * Cleanup resources
-   */
-  cleanup(): void {
-    this.stop();
-    this.simulation = null;
-    this.removeAllListeners();
+  private static calculatePositionDelta(previous: Position3D, current: Position3D): number {
+    const dx = current.x - previous.x;
+    const dy = current.y - previous.y;
+    const dz = current.z - previous.z;
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  }
+
+  private static updateConvergenceState(
+    current: NodeConvergenceState,
+    positionDelta: number,
+    preserveHistory: boolean
+  ): NodeConvergenceState {
+    const newHistory = preserveHistory ? 
+      [...current.stabilityHistory.slice(-9), positionDelta] : // Keep last 10
+      [positionDelta];
+
+    const isStable = positionDelta < 0.01 && 
+                     newHistory.slice(-3).every(delta => delta < 0.01);
+
+    return {
+      isStable,
+      positionDelta,
+      stabilityHistory: newHistory
+    };
   }
 }

@@ -1,7 +1,7 @@
 /**
  * @fileoverview SpatialOptimizer - Translates similarity scores to spatial coordinates with convergence monitoring
  * 
- * Handles similarity-to-distance mapping, coordinate optimization, force integration,
+ * Handles configurable similarity-to-distance mapping, coordinate optimization, force integration,
  * and convergence detection for similarity-based node positioning.
  */
 
@@ -18,13 +18,79 @@ import {
 } from '../types';
 
 /**
- * SpatialOptimizer translates similarity scores to spatial coordinates
+ * Similarity-to-distance mapping function type
+ */
+export type SimilarityToDistanceMapper = (similarity: number, config?: any) => number;
+
+/**
+ * Pre-defined similarity-to-distance mapping algorithms
+ */
+export class SimilarityMappingAlgorithms {
+  /**
+   * Exponential distance mapping: high similarity = small distance
+   * Formula: maxDistance * (1 - similarity^exponent)
+   */
+  public static exponential(similarity: number, config: { maxDistance: number; exponent: number } = { maxDistance: 100, exponent: 2 }): number {
+    return config.maxDistance * (1 - Math.pow(similarity, config.exponent));
+  }
+
+  /**
+   * Linear inverse mapping: distance = maxDistance * (1 - similarity)
+   */
+  public static linear(similarity: number, config: { maxDistance: number } = { maxDistance: 100 }): number {
+    return config.maxDistance * (1 - similarity);
+  }
+
+  /**
+   * Logarithmic mapping for non-linear similarity relationships
+   * Formula: maxDistance * -log(similarity + epsilon) / log(1 + epsilon)
+   */
+  public static logarithmic(similarity: number, config: { maxDistance: number; epsilon: number } = { maxDistance: 100, epsilon: 0.01 }): number {
+    const normalizedSim = similarity + config.epsilon;
+    const maxLog = -Math.log(config.epsilon);
+    const currentLog = -Math.log(normalizedSim);
+    return config.maxDistance * (currentLog / maxLog);
+  }
+
+  /**
+   * Spring-based mapping using Hooke's law simulation
+   * Formula: restLength * (1 - similarity * springConstant)
+   */
+  public static spring(similarity: number, config: { restLength: number; springConstant: number } = { restLength: 80, springConstant: 0.8 }): number {
+    return config.restLength * (1 - similarity * config.springConstant);
+  }
+
+  /**
+   * Threshold-based mapping: binary distance based on similarity threshold
+   */
+  public static threshold(similarity: number, config: { threshold: number; closeDistance: number; farDistance: number } = { threshold: 0.5, closeDistance: 20, farDistance: 100 }): number {
+    return similarity >= config.threshold ? config.closeDistance : config.farDistance;
+  }
+
+  /**
+   * Power law mapping for scale-free network layouts
+   */
+  public static powerLaw(similarity: number, config: { scale: number; exponent: number } = { scale: 100, exponent: 1.5 }): number {
+    return config.scale * Math.pow(1 - similarity + 0.01, config.exponent);
+  }
+}
+
+/**
+ * SpatialOptimizer translates similarity scores to spatial coordinates with configurable mapping
  */
 export class SpatialOptimizer {
   private convergenceMetrics: ConvergenceMetrics;
   private previousPositions = new Map<string, Position3D>();
+  private similarityMapper: SimilarityToDistanceMapper;
+  private mappingConfig: any;
 
-  constructor() {
+  constructor(
+    mapper: SimilarityToDistanceMapper = SimilarityMappingAlgorithms.exponential,
+    mappingConfig?: any
+  ) {
+    this.similarityMapper = mapper;
+    this.mappingConfig = mappingConfig || { maxDistance: 100, exponent: 2 };
+    
     this.convergenceMetrics = {
       isConverged: false,
       stability: 0,
@@ -39,7 +105,7 @@ export class SpatialOptimizer {
   }
 
   /**
-   * Optimize node positions based on similarity matrix
+   * Optimize node positions based on similarity matrix using configurable mapping
    */
   public optimizePositions(
     similarities: Map<string, number>,
@@ -149,6 +215,109 @@ export class SpatialOptimizer {
   }
 
   /**
+   * Set similarity-to-distance mapping function
+   */
+  public setSimilarityMapper(
+    mapper: SimilarityToDistanceMapper,
+    config?: any
+  ): void {
+    this.similarityMapper = mapper;
+    this.mappingConfig = config;
+  }
+
+  /**
+   * Get current mapping configuration
+   */
+  public getMappingConfig(): { mapper: SimilarityToDistanceMapper; config: any } {
+    return {
+      mapper: this.similarityMapper,
+      config: this.mappingConfig
+    };
+  }
+
+  /**
+   * Test different mapping algorithms and return quality metrics
+   */
+  public benchmarkMappingAlgorithms(
+    similarities: Map<string, number>,
+    testAlgorithms: Array<{
+      name: string;
+      mapper: SimilarityToDistanceMapper;
+      config?: any;
+    }>
+  ): Array<{
+    name: string;
+    stressScore: number;
+    convergenceIterations: number;
+    qualityMetric: number;
+  }> {
+    const results = [];
+
+    for (const algorithm of testAlgorithms) {
+      // Temporarily switch to test algorithm
+      const originalMapper = this.similarityMapper;
+      const originalConfig = this.mappingConfig;
+      
+      this.setSimilarityMapper(algorithm.mapper, algorithm.config);
+
+      // Run optimization and measure quality
+      const startTime = performance.now();
+      const positions = this.optimizePositions(similarities, { dimensions: 2 });
+      const endTime = performance.now();
+
+      // Calculate stress (how well distances match target similarities)
+      const stress = this.calculateStress(similarities, positions, this.extractNodeIds(similarities));
+      const convergenceTime = endTime - startTime;
+      
+      // Quality metric combining stress and convergence speed
+      const qualityMetric = 1 / (1 + stress + convergenceTime / 1000);
+
+      results.push({
+        name: algorithm.name,
+        stressScore: stress,
+        convergenceIterations: Math.ceil(convergenceTime / 16.67), // ~60fps assumption
+        qualityMetric
+      });
+
+      // Restore original mapper
+      this.setSimilarityMapper(originalMapper, originalConfig);
+    }
+
+    return results.sort((a, b) => b.qualityMetric - a.qualityMetric);
+  }
+
+  /**
+   * Calculate layout stress (how well spatial distances match similarity scores)
+   */
+  public calculateStress(
+    similarities: Map<string, number>,
+    positions: Position3D[],
+    nodeIds: string[]
+  ): number {
+    let totalStress = 0;
+    let comparisons = 0;
+
+    for (let i = 0; i < nodeIds.length; i++) {
+      for (let j = i + 1; j < nodeIds.length; j++) {
+        const key = `${nodeIds[i]}|${nodeIds[j]}`;
+        const similarity = similarities.get(key);
+        
+        if (similarity !== undefined && i < positions.length && j < positions.length) {
+          const targetDistance = this.similarityMapper(similarity, this.mappingConfig);
+          const actualDistance = this.calculateDistance(positions[i], positions[j]);
+          
+          // Stress is squared difference between target and actual distances
+          const stress = Math.pow(targetDistance - actualDistance, 2);
+          totalStress += stress;
+          comparisons++;
+        }
+      }
+    }
+
+    return comparisons > 0 ? Math.sqrt(totalStress / comparisons) : 0;
+  }
+
+  /**
    * Calculate position delta between two positions
    */
   public calculatePositionDelta(current: Position3D, previous: Position3D): PositionDelta {
@@ -231,18 +400,18 @@ export class SpatialOptimizer {
     const maxIterations = 50;
     const learningRate = 0.1;
 
-    // Iterative optimization using stress minimization
+    // Iterative optimization using stress minimization with configurable mapping
     for (let iteration = 0; iteration < maxIterations; iteration++) {
       const forces: Position3D[] = positions.map(() => ({ x: 0, y: 0, z: 0 }));
 
-      // Calculate similarity-based forces
+      // Calculate similarity-based forces using configurable mapping
       for (let i = 0; i < nodeIds.length; i++) {
         for (let j = i + 1; j < nodeIds.length; j++) {
           const key = `${nodeIds[i]}|${nodeIds[j]}`;
           const similarity = similarities.get(key) || 0;
           
-          // Convert similarity to target distance (high similarity = small distance)
-          const targetDistance = 100 * (1 - similarity * 0.8); // 20-100 pixel range
+          // Convert similarity to target distance using configurable mapping
+          const targetDistance = this.similarityMapper(similarity, this.mappingConfig);
           
           // Calculate current distance
           const currentDistance = this.calculateDistance(positions[i], positions[j]);
