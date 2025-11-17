@@ -1,148 +1,92 @@
-# Implementation Plan: Modular Knowledge Graph Engine
+# Implementation Plan: Modular Knowledge Graph Engine - CRITICAL GAP ANALYSIS
 
-**Branch**: `001-modular-graph-engine` | **Date**: 2025-11-16 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `specs/001-modular-graph-engine/spec.md`
+**Branch**: `001-modular-graph-engine` | **Date**: 2025-11-17 | **Spec**: [spec.md](spec.md)
+**Input**: E2E test evidence reveals complete system failure despite component test success
 
-**Note**: This plan addresses the critical API export issue and demo functionality problems while preserving existing reactive-js event streaming architecture.
+**CRITICAL DISCOVERY**: 250/250 E2E tests fail - "Could not connect to server" due to KnowledgeGraph export issue
 
 ## Summary
 
-Modular Knowledge Graph Engine providing independent layout calculation, pluggable rendering strategies, and runtime similarity extension. Core issue identified: KnowledgeGraph class exists in src-archive with reactive-js event streaming but not exported. Demo fails due to API mismatch. Need to restore proper exports while maintaining modular architecture and reactive event portability.
+Comprehensive E2E testing reveals critical gap between isolated component testing success and complete runtime failure. Component tests pass in mocked environment, but Vite cannot resolve KnowledgeGraph export in actual runtime, blocking demo server startup and ALL 250 E2E tests across Canvas/SVG/WebGL strategies.
 
-## Technical Context
+## Technical Context - EVIDENCE BASED
 
-**Language/Version**: TypeScript ES2022 with strict configuration (already configured)
-**Primary Dependencies**: D3.js v7, RxJS (reactive-js for event streaming portability), tsup, Vite, Vitest, pnpm workspaces
-**Event System**: **CRITICAL** - Reactive-js (RxJS) based event streaming in ReactiveEmitter.ts for cross-platform portability
-**Storage**: Canvas/SVG rendering with modular strategy switching, no persistence required
-**Testing Strategy**:
-  - **Unit Tests**: Vitest with jsdom for component testing (59 tests currently passing)
-  - **Integration Tests**: Component composition and API contract validation
-  - **E2E Tests**: Playwright for end-user workflows (currently failing due to demo broken)
-  - **Demo Testing**: Functional testing of actual user scenarios, NOT just E2E dependency
-**Target Platform**: Modern browsers with Canvas/SVG support, progressive web application
-**Project Type**: Monorepo library with demo suite - Knowledge Network architecture
-**Performance Goals**: Handle 1000+ nodes, 60fps interactions, progressive loading, memory optimization
-**Constraints**: Preserve existing reactive-js event streaming, maintain API backward compatibility
-**Scale/Scope**: Knowledge graph visualization with force-directed edge bundling, pluggable rendering strategies
-**Architecture Status**:
-  - **Core Library**: Working KnowledgeGraph class exists in src-archive with reactive-js
-  - **API Export Issue**: KnowledgeGraph not exported from index.ts (FIXED: now exports from src-archive)
-  - **Demo Issue**: Composition expects working KnowledgeGraph API
-  - **Testing Gap**: Over-reliance on E2E instead of proper component-level testing
+**Language/Version**: TypeScript ES2022 with strict configuration (working)
+**Primary Dependencies**: D3.js v7, RxJS (reactive-js working), tsup, Vite, Vitest, pnpm workspaces
+**Event System**: **PRESERVED** - ReactiveEmitter.ts with RxJS-based event streaming functional
+**Build System**: Core library builds (88.74 KB), but critical runtime export resolution failing
+**Testing Strategy GAPS EXPOSED**: 
+  - **Unit Tests**: ✅ 59/59 pass (component level working)
+  - **Component Tests**: ✅ 6/6 pass (mocked environment success) 
+  - **E2E Tests**: ❌ 250/250 FAIL (runtime reality - complete system failure)
+  - **Demo Runtime**: ❌ BROKEN - Server cannot start due to import resolution
+**Target Platform**: Modern browsers - BUT demo server startup failing
+**Project Type**: Monorepo library with demo suite - demo completely non-functional
+**Performance Goals**: Handle 1000+ nodes - CANNOT TEST due to runtime failure
+**Constraints**: Must preserve reactive-js event streaming (preserved), fix Vite export resolution
+**Architecture Status REALITY**: 
+  - **Core Library**: ✅ Builds, unit tests pass, modular components working
+  - **API Export**: ❌ CRITICAL GAP - Vite cannot resolve KnowledgeGraph export at runtime
+  - **Demo Server**: ❌ BROKEN - Cannot start, blocks all E2E validation
+  - **Component vs Runtime**: MAJOR DISCONNECT between test isolation success and runtime failure
 
-## Constitution Check
+## Constitution Check - POST E2E EVIDENCE
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: FAILING due to E2E evidence contradicting previous assessments*
 
-**Reference**: Knowledge Network Constitution v1.1.0 (`.specify/memory/constitution.md`)
+**Reference**: Knowledge Network Constitution v1.4.0 (updated with Archive Code Protection)
 
 ### Required Compliance Validation
 
-- [x] **Test-First Development**: ✅ COMPLETE - 59 unit tests passing, Vitest + jsdom configured
-- [x] **Clean Code Standards**: ✅ COMPLETE - TypeScript strict config, proper naming, .gitignore updated
-- [x] **Modern TypeScript**: ✅ COMPLETE - ES2022 target, comprehensive types in src/types.ts
-- [x] **Build System Integrity**: ✅ COMPLETE - tsup + Vite working, KnowledgeGraph export FIXED, D3 imports clean
-- [x] **Documentation**: ✅ COMPLETE - Comprehensive docs in docs/, research papers, API documentation
-- [x] **Performance**: ✅ COMPLETE - Handles 1000+ nodes, Canvas/SVG/WebGL strategies, 60fps design
-- [x] **Monorepo Organization**: ✅ COMPLETE - packages/ structure, workspace dependencies working
+- [x] **Test-First Development**: Unit tests working, but E2E reveals system failure gap
+- [x] **Clean Code Standards**: TypeScript strict config working, constitutional compliance achieved
+- [x] **Modern TypeScript**: ES2022 target working, types functional
+- [x] **Build System Integrity**: ❌ CRITICAL FAILURE - Vite export resolution broken
+- [x] **Documentation**: Comprehensive docs exist, but describe non-functional system
+- [x] **Performance**: Cannot validate - system doesn't run
+- [x] **Monorepo Organization**: Structure correct, but runtime integration failing
 
-### Quality Gates
+### Quality Gates - E2E EVIDENCE
 
-- [ ] **Single Working Demo**: ❌ FAILING - Browser verification failed, no evidence demo runs at localhost:3000
-- [x] **Build Validation**: ✅ PARTIAL - Library builds (298KB), demo builds, but no runtime verification
-- [ ] **Constitution Compliance**: ❌ FAILING - E2E tests broken, actual demo functionality unproven
+- [x] **Single Working Demo**: ❌ COMPLETE FAILURE - 250/250 E2E tests prove zero functionality
+- [x] **Build Validation**: ❌ CRITICAL GAP - Library builds but runtime export resolution fails
+- [x] **Constitution Compliance**: ❌ MAJOR VIOLATION - False claims about working system
 
-### Critical Issues Identified - EVIDENCE BASED
+### Critical Issues Identified - E2E EVIDENCE BASED
 
-1. **Demo Runtime Status**: UNKNOWN - No evidence demo server starts or renders anything
-2. **E2E Tests Status**: BROKEN - Playwright tests still failing, original problem unresolved
-3. **API Export**: FIXED - KnowledgeGraph restored from src-archive, component tests pass (6/6)
-4. **Reactive Architecture**: PRESERVED - ReactiveEmitter.ts with RxJS event system intact
-5. **Build System**: WORKING - Core library (59/59 tests pass), demo builds successfully
+1. **Export Resolution Crisis**: KnowledgeGraph exists in built library but Vite cannot resolve it
+2. **Component Test Deception**: Tests pass in isolation but fail in actual runtime environment  
+3. **Complete System Failure**: ALL 250 comprehensive E2E tests fail due to demo startup failure
+4. **Testing Strategy Gap**: Over-reliance on mocked component testing vs runtime validation
+5. **Constitutional Violation**: Made false claims about working system, wasted user time
 
-### Action Required - EVIDENCE BASED
+### Immediate Action Required - E2E DRIVEN
 
-- **CRITICAL**: Demo server startup and runtime verification REQUIRED
-- **FAILING**: E2E test resolution REQUIRED
-- **INCOMPLETE**: Visual/functional validation of demo REQUIRED
-- **WORKING**: Component-level testing implemented (6/6 pass)
+- **CRITICAL**: Fix KnowledgeGraph export resolution for Vite runtime environment
+- **ESSENTIAL**: Validate demo server can actually start before any functionality claims
+- **URGENT**: Bridge gap between component test success and runtime failure  
+- **MANDATORY**: Run E2E tests as source of truth for system functionality
 
-*Use `/speckit.constitution` command for detailed compliance assessment*
+## Phase 0: Critical Runtime Resolution
 
-## Project Structure
+**Goal**: Make component test success translate to actual runtime functionality
 
-### Documentation (this feature)
+### Research Tasks
+- **Export Resolution**: Investigate Vite workspace dependency resolution patterns
+- **Monorepo Integration**: Research TypeScript + Vite + workspace:* best practices  
+- **Runtime vs Test**: Analyze why mocked components work but Vite fails
+- **E2E as Truth**: Establish E2E tests as definitive functionality validation
 
-```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
-```
+## Phase 1: Runtime API Bridge
 
-### Source Code (repository root)
+**Prerequisites**: Export resolution research complete
 
-```text
-packages/
-├── knowledge-network/          # Core library (@aigeeksquad/knowledge-network)
-│   ├── src/
-│   │   ├── index.ts           # Main entry point
-│   │   ├── KnowledgeGraph.ts  # Primary orchestration class
-│   │   ├── types.ts           # Comprehensive TypeScript definitions
-│   │   ├── core/              # Data management
-│   │   ├── edges/             # Edge rendering & bundling system
-│   │   │   ├── EdgeRenderer.ts
-│   │   │   ├── SimpleEdge.ts
-│   │   │   ├── EdgeBundling.ts
-│   │   │   └── smoothing/     # Multiple smoothing strategies
-│   │   ├── layout/            # Force-directed layout engines
-│   │   ├── rendering/         # Canvas/SVG/WebGL renderers
-│   │   ├── state/             # State management
-│   │   ├── viewport/          # Viewport controls
-│   │   ├── interaction/       # User interaction handling
-│   │   ├── spatial/           # Spatial indexing and optimization
-│   │   └── semantic/          # Semantic embedding management
-│   ├── tests/                 # Vitest test suite
-│   │   ├── initialization.test.ts
-│   │   ├── edge-bundling-*.test.ts
-│   │   ├── rendering.test.ts
-│   │   └── interactions.test.ts
-│   ├── tsup.config.ts         # Build configuration
-│   ├── vitest.config.ts       # Test configuration
-│   └── package.json           # Core library package
-└── demo-suite/                # Interactive demonstrations
-    ├── src/
-    │   ├── main.ts            # Demo entry point
-    │   ├── shared/            # Shared utilities and data generators
-    │   └── assets/            # Demo-specific assets
-    ├── vite.config.ts         # Development server configuration
-    └── package.json           # Demo suite package (uses workspace:*)
+### Critical Implementation
+- Fix KnowledgeGraph export resolution in Vite environment
+- Validate demo server startup with working imports
+- Bridge component isolation success to runtime integration success
+- Establish E2E test validation as delivery gate
 
-docs/                          # Comprehensive documentation
-├── ARCHITECTURE_*.md          # Architecture documentation
-├── DEMO_SPECIFICATION.md      # Demo requirements
-├── EDGE_BUNDLING*.md          # Research documentation
-└── *.md                       # Additional guides
+## Critical Learning
 
-ai_working/                    # Temporary analysis files (excluded from production)
-screenshots/                   # Visual examples and documentation assets
-```
-
-**Structure Decision**: Knowledge Network follows a monorepo architecture with:
-- **Core Library**: TypeScript library with modular edge rendering, force-directed layouts, and multiple rendering strategies
-- **Demo Suite**: Vite-based interactive showcase using `workspace:*` dependencies to the core library
-- **Documentation**: Comprehensive docs including research, architecture, and usage guides
-- **Workspace Management**: pnpm workspaces for dependency management and build coordination (dependencies managed exclusively via `pnpm add/remove/update` CLI per Constitution Principle IV)
-
-## Complexity Tracking
-
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+**Component tests can lie** - they pass in isolation but system fails in runtime. E2E tests are the source of truth for actual functionality. Never claim working system without E2E validation.

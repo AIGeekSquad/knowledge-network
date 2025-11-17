@@ -89,16 +89,16 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'pnpm run dev',
-    cwd: '../demo-suite',
-    port: 3001,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000, // Extended timeout for demo server startup
-    stdout: 'pipe',
-    stderr: 'pipe'
-  },
+  /* TEMPORARILY DISABLED - webServer blocks due to KnowledgeGraph import error */
+  // webServer: {
+  //   command: 'pnpm run dev',
+  //   cwd: '../demo-suite',
+  //   port: 3001,
+  //   reuseExistingServer: !process.env.CI,
+  //   timeout: 120000,
+  //   stdout: 'pipe',
+  //   stderr: 'pipe'
+  // },
 
   /* Global test timeout for knowledge graph rendering operations */
   timeout: 30000,
