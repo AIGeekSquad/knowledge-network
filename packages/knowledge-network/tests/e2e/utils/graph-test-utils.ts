@@ -383,7 +383,7 @@ export const RENDERING_STRATEGY_TESTS: RenderingStrategyTest[] = [
   {
     strategy: 'canvas',
     selector: 'canvas[data-graph-canvas]',
-    expectedElements: ['canvas[data-graph-canvas]']
+    expectedElements: [] // Canvas element itself is the container, no nested elements needed
   },
   {
     strategy: 'svg',

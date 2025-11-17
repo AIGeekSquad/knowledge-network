@@ -44,21 +44,25 @@ export default defineConfig({
     open: true
   },
 
-  // Dependency optimization
+  // Dependency optimization - exclude workspace deps to avoid bundling issues
   optimizeDeps: {
     include: [
-      'd3',
+      'd3'
+    ],
+    exclude: [
       '@aigeeksquad/knowledge-network'
     ]
   },
 
-  // Path resolution
+  // Path resolution - include workspace dependency alias
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
       '@shared': resolve(__dirname, 'src/shared'),
       '@modules': resolve(__dirname, 'src/modules'),
-      '@assets': resolve(__dirname, 'src/assets')
+      '@assets': resolve(__dirname, 'src/assets'),
+      // Direct path to workspace library for Vite resolution
+      '@aigeeksquad/knowledge-network': resolve(__dirname, '../knowledge-network/src/index.ts')
     }
   },
 

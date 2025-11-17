@@ -23,14 +23,15 @@ export default defineConfig({
   
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['html'],
-    ['json', { outputFile: 'test-results/e2e-results.json' }]
+    ['list'], // Non-blocking console output
+    ['json', { outputFile: 'test-results/e2e-results.json' }],
+    ...(process.env.CI ? [] : [['html', { open: 'never' }]]) // HTML only in dev, never auto-open
   ],
   
   /* Shared settings for all projects */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:3001',
+    baseURL: 'http://localhost:3000',
     
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -89,16 +90,16 @@ export default defineConfig({
     },
   ],
 
-  /* TEMPORARILY DISABLED - webServer blocks due to KnowledgeGraph import error */
-  // webServer: {
-  //   command: 'pnpm run dev',
-  //   cwd: '../demo-suite',
-  //   port: 3001,
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120000,
-  //   stdout: 'pipe',
-  //   stderr: 'pipe'
-  // },
+  /* Web server configuration - now fixed for correct port and non-blocking operation */
+  webServer: {
+    command: 'pnpm run dev',
+    cwd: '../demo-suite',
+    port: 3000,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+    stdout: 'pipe',
+    stderr: 'pipe'
+  },
 
   /* Global test timeout for knowledge graph rendering operations */
   timeout: 30000,
