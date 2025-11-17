@@ -20,6 +20,22 @@ export interface Node {
   /** Optional group/type classification */
   group?: string;
   
+  /** Optional vector embedding for similarity calculations */
+  vector?: number[];
+  
+  /** Optional metadata for Jaccard similarity */
+  metadata?: {
+    tags?: string[];
+    [key: string]: any;
+  };
+  
+  /** Optional position for spatial similarity */
+  position?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  
   /** Additional node properties */
   [key: string]: any;
 }
@@ -124,4 +140,242 @@ export interface SimilarityMeasureOptions {
   parameters?: {
     [key: string]: any;
   };
+}
+
+// ============================================
+// 002-node-layout Feature Types
+// ============================================
+
+/** 3D Position coordinates with z=0 for 2D mode */
+export interface Position3D {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number; // 0 for 2D mode
+}
+
+/** Functor contract for similarity calculations */
+export type SimilarityFunctor = (
+  nodeA: Node, 
+  nodeB: Node, 
+  context: ClusteringContext
+) => number;
+
+/** Enhanced LayoutNode with similarity-based metadata */
+export interface EnhancedLayoutNode {
+  readonly id: string;
+  readonly originalNode: Node;
+  readonly position: Position3D;
+  readonly cluster?: ClusterAssignment;
+  readonly similarityScores: Map<string, number>;
+  readonly convergenceState: NodeConvergenceState;
+  readonly importance: NodeImportance;
+  readonly metadata: LayoutNodeMetadata;
+}
+
+/** Node importance metrics for progressive refinement */
+export interface NodeImportance {
+  readonly degree: number;        // Direct connections count
+  readonly betweenness: number;   // Bridging centrality (0-1)
+  readonly eigenvector: number;   // Network influence (0-1)
+  readonly composite: number;     // Weighted combination
+}
+
+/** Layout metadata for tracking processing state */
+export interface LayoutNodeMetadata {
+  readonly createdAt: number;
+  readonly lastUpdated: number;
+  readonly isStable: boolean;
+  readonly phase: LayoutPhase;
+  readonly forceContributions: ForceContribution[];
+}
+
+/** Progressive refinement phases */
+export enum LayoutPhase {
+  COARSE = 'coarse',     // 0-500ms: High-importance nodes
+  MEDIUM = 'medium',     // 500ms-2s: Medium-importance nodes
+  FINE = 'fine'          // 2s-5s: All nodes with stability
+}
+
+/** Clustering context for similarity calculations */
+export interface ClusteringContext {
+  readonly currentIteration: number;
+  readonly alpha: number;
+  readonly spatialIndex: QuadTreeIndex | null;
+  readonly cacheManager: SimilarityCache | null;
+  readonly performanceMetrics: PerformanceMetrics;
+  readonly layoutConfig: LayoutConfig;
+}
+
+/** Spatial indexing for performance optimization */
+export interface QuadTreeIndex {
+  readonly bounds: BoundingBox;
+  readonly theta: number;               // Barnes-Hut approximation threshold
+  readonly maxDepth: number;           // Tree depth limit
+  readonly nodeCapacity: number;      // Nodes per leaf
+}
+
+/** Bounding box for spatial calculations */
+export interface BoundingBox {
+  readonly minX: number;
+  readonly minY: number;
+  readonly maxX: number;
+  readonly maxY: number;
+}
+
+/** Layout configuration for similarity-based positioning */
+export interface LayoutConfig {
+  readonly dimensions: 2 | 3;
+  readonly similarityThreshold: number;
+  readonly convergenceThreshold: number;
+  readonly maxIterations: number;
+  readonly forceIntegration: ForceIntegrationConfig;
+  readonly progressiveRefinement: ProgressiveConfig;
+  readonly memoryManagement: MemoryConfig;
+}
+
+/** Force integration configuration */
+export interface ForceIntegrationConfig {
+  readonly enablePhysics: boolean;
+  readonly similarityStrength: number;
+  readonly repulsionStrength: number;
+  readonly centeringStrength: number;
+}
+
+/** Progressive refinement configuration */
+export interface ProgressiveConfig {
+  readonly enablePhases: boolean;
+  readonly phase1Duration: number;
+  readonly phase2Duration: number;
+  readonly importanceWeights: {
+    readonly degree: number;
+    readonly betweenness: number;
+    readonly eigenvector: number;
+  };
+}
+
+/** Memory management configuration */
+export interface MemoryConfig {
+  readonly useTypedArrays: boolean;
+  readonly cacheSize: number;
+  readonly historySize: number;
+  readonly gcThreshold: number;
+}
+
+/** Convergence state tracking */
+export interface NodeConvergenceState {
+  readonly isStable: boolean;
+  readonly positionDelta: number;
+  readonly stabilityHistory: number[];
+}
+
+/** Cluster assignment */
+export interface ClusterAssignment {
+  readonly clusterId: string;
+  readonly confidence: number;
+  readonly centroid: Position3D;
+}
+
+/** Force contribution tracking */
+export interface ForceContribution {
+  readonly type: string;
+  readonly magnitude: number;
+  readonly direction: Position3D;
+}
+
+/** Performance metrics */
+export interface PerformanceMetrics {
+  readonly similarityCalculations: number;
+  readonly cacheHitRate: number;
+  readonly iterationsPerSecond: number;
+  readonly memoryPeakUsage: number;
+}
+
+/** Similarity cache interface */
+export interface SimilarityCache {
+  readonly cache: Map<string, CacheEntry>;
+  readonly config: CacheConfig;
+  readonly statistics: CacheStatistics;
+}
+
+/** Cache entry structure */
+export interface CacheEntry {
+  readonly value: number;
+  readonly timestamp: number;
+  readonly accessCount: number;
+  readonly nodeHashes: [string, string];
+}
+
+/** Cache configuration */
+export interface CacheConfig {
+  readonly ttl: number;
+  readonly maxSize: number;
+  readonly evictionPolicy: 'lru' | 'fifo' | 'lfu';
+  readonly invalidationEvents: string[];
+}
+
+/** Cache statistics */
+export interface CacheStatistics {
+  readonly hitCount: number;
+  readonly missCount: number;
+  readonly hitRate: number;
+  readonly evictionCount: number;
+  readonly memoryUsage: number;
+}
+
+/** Layout engine configuration for NodeLayoutEngine */
+export interface LayoutConfiguration {
+  readonly similarityFunction: SimilarityFunctor | string;
+  readonly dimensionalMode: '2D' | '3D';
+  readonly convergenceThreshold: number;
+  readonly maxIterations?: number;
+  readonly similarityWeights?: Record<string, number>;
+  readonly progressiveRefinement?: ProgressiveRefinementConfig;
+  readonly spatialConstraints?: SpatialConstraints;
+  readonly incrementalUpdate?: IncrementalConfig;
+}
+
+/** Progressive refinement configuration */
+export interface ProgressiveRefinementConfig {
+  readonly enabled: boolean;
+  readonly phases: ProgressiveRefinementPhase[];
+  readonly earlyInteraction?: boolean;
+}
+
+/** Progressive refinement phase definition */
+export interface ProgressiveRefinementPhase {
+  readonly phase: string;
+  readonly nodeSelection?: 'high-degree' | 'random' | 'custom';
+  readonly nodePercentage?: number;
+  readonly maxNodes?: number;
+  readonly maxDuration?: number;
+  readonly convergenceThreshold?: number;
+}
+
+/** Spatial constraints */
+export interface SpatialConstraints {
+  readonly boundingBox?: {
+    width: number;
+    height: number;
+    depth?: number;
+  };
+}
+
+/** Incremental update configuration */
+export interface IncrementalConfig {
+  readonly enabled: boolean;
+  readonly changedNodes?: string[];
+  readonly preserveStability?: boolean;
+}
+
+/** Convergence metrics */
+export interface ConvergenceMetrics {
+  readonly isConverged: boolean;
+  readonly stability: number;
+  readonly iterations: number;
+  readonly positionDelta: number;
+  readonly averageMovement: number;
+  readonly maxMovement: number;
+  readonly stabilityRatio: number;
+  readonly iterationCount: number;
+  readonly timeElapsed: number;
 }
