@@ -1,184 +1,87 @@
 /**
- * Browser-compatible EventEmitter implementation
+ * @fileoverview EventEmitter - Simple event emitter for layout progress tracking
  * 
- * Provides EventEmitter functionality that works in both Node.js and browser environments
- * Replaces Node.js 'events' module dependency for browser compatibility
+ * Provides event emission and subscription capabilities for NodeLayout components
+ * to communicate progress updates, convergence status, and completion events.
  */
 
-export interface EventListener {
-  (...args: any[]): void;
-}
+import { LayoutEventEmitter } from '../types';
 
-export class EventEmitter {
-  private events: Map<string, Set<EventListener>> = new Map();
-  private maxListeners: number = 10;
-
-  /**
-   * Add a listener for the specified event
-   */
-  public on(event: string, listener: EventListener): this {
-    this.addListener(event, listener);
-    return this;
-  }
+/**
+ * Simple EventEmitter implementation for layout events
+ */
+export class EventEmitter implements LayoutEventEmitter {
+  private readonly listeners = new Map<string, Function[]>();
 
   /**
-   * Add a listener for the specified event
+   * Subscribe to an event
    */
-  public addListener(event: string, listener: EventListener): this {
-    if (!this.events.has(event)) {
-      this.events.set(event, new Set());
+  public on(event: string, handler: Function): void {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
     }
     
-    const listeners = this.events.get(event)!;
-    listeners.add(listener);
-
-    // Check max listeners warning
-    if (listeners.size > this.maxListeners) {
-      console.warn(`MaxListenersExceededWarning: ${listeners.size} ${event} listeners added. Use setMaxListeners() to increase limit.`);
-    }
-
-    return this;
+    const eventListeners = this.listeners.get(event)!;
+    eventListeners.push(handler);
   }
 
   /**
-   * Add a one-time listener for the specified event
+   * Emit an event with data
    */
-  public once(event: string, listener: EventListener): this {
-    const onceWrapper = (...args: any[]) => {
-      this.removeListener(event, onceWrapper);
-      listener.apply(this, args);
-    };
-    
-    return this.addListener(event, onceWrapper);
-  }
-
-  /**
-   * Remove a specific listener for the specified event
-   */
-  public removeListener(event: string, listener: EventListener): this {
-    const listeners = this.events.get(event);
-    if (listeners) {
-      listeners.delete(listener);
-      if (listeners.size === 0) {
-        this.events.delete(event);
+  public emit(event: string, data: any): void {
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners) {
+      for (const listener of eventListeners) {
+        try {
+          listener(data);
+        } catch (error) {
+          console.warn(`Event listener error for event '${event}':`, error);
+        }
       }
     }
-    return this;
   }
 
   /**
-   * Remove all listeners for the specified event, or all events if no event specified
+   * Unsubscribe from an event
    */
-  public removeAllListeners(event?: string): this {
+  public off(event: string, handler: Function): void {
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners) {
+      const index = eventListeners.indexOf(handler);
+      if (index >= 0) {
+        eventListeners.splice(index, 1);
+      }
+      
+      // Clean up empty listener arrays
+      if (eventListeners.length === 0) {
+        this.listeners.delete(event);
+      }
+    }
+  }
+
+  /**
+   * Remove all listeners for an event or all events
+   */
+  public removeAllListeners(event?: string): void {
     if (event) {
-      this.events.delete(event);
+      this.listeners.delete(event);
     } else {
-      this.events.clear();
+      this.listeners.clear();
     }
-    return this;
   }
 
   /**
-   * Emit an event to all listeners
-   */
-  public emit(event: string, ...args: any[]): boolean {
-    const listeners = this.events.get(event);
-    if (!listeners || listeners.size === 0) {
-      return false;
-    }
-
-    // Execute all listeners
-    listeners.forEach(listener => {
-      try {
-        listener.apply(this, args);
-      } catch (error) {
-        // Emit error event but don't stop other listeners
-        this.emit('error', error);
-      }
-    });
-
-    return true;
-  }
-
-  /**
-   * Get all listeners for the specified event
-   */
-  public listeners(event: string): EventListener[] {
-    const listeners = this.events.get(event);
-    return listeners ? Array.from(listeners) : [];
-  }
-
-  /**
-   * Get the number of listeners for the specified event
+   * Get count of listeners for an event
    */
   public listenerCount(event: string): number {
-    const listeners = this.events.get(event);
-    return listeners ? listeners.size : 0;
+    const eventListeners = this.listeners.get(event);
+    return eventListeners ? eventListeners.length : 0;
   }
 
   /**
-   * Set the maximum number of listeners before warning
-   */
-  public setMaxListeners(n: number): this {
-    this.maxListeners = n;
-    return this;
-  }
-
-  /**
-   * Get the maximum number of listeners
-   */
-  public getMaxListeners(): number {
-    return this.maxListeners;
-  }
-
-  /**
-   * Get all event names that have listeners
+   * Get all registered event names
    */
   public eventNames(): string[] {
-    return Array.from(this.events.keys());
-  }
-
-  /**
-   * Prepend a listener to the beginning of the listeners array
-   */
-  public prependListener(event: string, listener: EventListener): this {
-    // Since we're using Set, we can't truly prepend, but we can simulate it
-    // by removing and re-adding (Set maintains insertion order in modern JS)
-    if (!this.events.has(event)) {
-      this.events.set(event, new Set());
-    }
-    
-    const listeners = this.events.get(event)!;
-    const existingListeners = Array.from(listeners);
-    listeners.clear();
-    listeners.add(listener);
-    existingListeners.forEach(l => listeners.add(l));
-
-    return this;
-  }
-
-  /**
-   * Prepend a one-time listener to the beginning of the listeners array
-   */
-  public prependOnceListener(event: string, listener: EventListener): this {
-    const onceWrapper = (...args: any[]) => {
-      this.removeListener(event, onceWrapper);
-      listener.apply(this, args);
-    };
-    
-    return this.prependListener(event, onceWrapper);
-  }
-
-  /**
-   * Remove a listener (alias for removeListener)
-   */
-  public off(event: string, listener: EventListener): this {
-    return this.removeListener(event, listener);
+    return Array.from(this.listeners.keys());
   }
 }
-
-// For compatibility with Node.js EventEmitter static methods
-EventEmitter.prototype.setMaxListeners = EventEmitter.prototype.setMaxListeners;
-
-// Default export for compatibility
-export default EventEmitter;

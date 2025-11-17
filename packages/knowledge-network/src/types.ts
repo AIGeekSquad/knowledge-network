@@ -379,3 +379,165 @@ export interface ConvergenceMetrics {
   readonly iterationCount: number;
   readonly timeElapsed: number;
 }
+
+// ============================================
+// Additional NodeLayout Engine Types
+// ============================================
+
+/** Node layout engine states */
+export enum EngineState {
+  IDLE = 'idle',
+  INITIALIZING = 'initializing',
+  PROCESSING = 'processing', 
+  CONVERGED = 'converged',
+  ERROR = 'error'
+}
+
+/** Layout computation result */
+export interface LayoutResult {
+  readonly nodes: EnhancedLayoutNode[];
+  readonly convergenceState: ConvergenceMetrics;
+  readonly performanceMetrics: PerformanceMetrics;
+  readonly processingTime: number;
+  readonly memoryUsage: MemoryUsage;
+  readonly status: {
+    readonly success: boolean;
+    readonly warnings: string[];
+    readonly errors: string[];
+  };
+}
+
+/** Memory usage tracking */
+export interface MemoryUsage {
+  readonly coordinateStorage: number;
+  readonly cacheSize: number;
+  readonly spatialIndexSize: number;
+  readonly totalEstimated: number;
+  readonly heapUsagePercent: number;
+}
+
+/** Position change vector */
+export interface PositionDelta {
+  readonly dx: number;
+  readonly dy: number;
+  readonly dz: number;
+  readonly magnitude: number;
+}
+
+/** Dimensional switching result */
+export interface TransitionResult {
+  readonly success: boolean;
+  readonly fromDimensions: 2 | 3;
+  readonly toDimensions: 2 | 3;
+  readonly positionDeviations: PositionDelta[];
+  readonly transitionTime: number;
+}
+
+/** Node position update specification */
+export interface NodeUpdate {
+  readonly nodeId: string;
+  readonly newPosition: Position3D;
+  readonly priority: number;
+  readonly triggerConvergence: boolean;
+}
+
+/** Spatial index performance metrics */
+export interface SpatialIndexStatistics {
+  readonly nodeCount: number;
+  readonly treeDepth: number;
+  readonly averageLeafSize: number;
+  readonly queryPerformance: number;
+  readonly memoryUsage: number;
+}
+
+/** Weighted similarity function composition */
+export interface WeightedSimilarityFunction {
+  readonly name: string;
+  readonly functor: SimilarityFunctor;
+  readonly weight: number;
+  readonly isDefault: boolean;
+  readonly metadata: SimilarityFunctionMetadata;
+}
+
+/** Similarity function metadata */
+export interface SimilarityFunctionMetadata {
+  readonly description: string;
+  readonly expectedDataTypes: string[];
+  readonly performanceHint: 'fast' | 'moderate' | 'slow';
+  readonly deterministic: boolean;
+}
+
+/** Layout event emitter interface */
+export interface LayoutEventEmitter {
+  on(event: 'layoutProgress', handler: (data: LayoutProgressEvent) => void): void;
+  on(event: 'phaseComplete', handler: (data: PhaseCompleteEvent) => void): void;
+  on(event: 'layoutComplete', handler: (data: LayoutCompleteEvent) => void): void;
+  on(event: 'convergenceUpdate', handler: (data: ConvergenceUpdateEvent) => void): void;
+  emit(event: string, data: any): void;
+  off(event: string, handler: Function): void;
+}
+
+/** Layout progress event data */
+export interface LayoutProgressEvent {
+  readonly type: 'nodeLoading' | 'nodeLayout' | 'nodeLayoutComplete';
+  readonly progress: number;
+  readonly phase: string;
+  readonly nodesProcessed: number;
+  readonly totalNodes: number;
+  readonly timeElapsed: number;
+  readonly estimatedRemaining?: number;
+}
+
+/** Phase completion event data */
+export interface PhaseCompleteEvent {
+  readonly phase: LayoutPhase;
+  readonly duration: number;
+  readonly nodesPositioned: number;
+  readonly convergenceAchieved: boolean;
+}
+
+/** Layout completion event data */
+export interface LayoutCompleteEvent {
+  readonly totalDuration: number;
+  readonly finalStability: number;
+  readonly totalNodes: number;
+  readonly totalIterations: number;
+}
+
+/** Convergence update event data */
+export interface ConvergenceUpdateEvent {
+  readonly stability: number;
+  readonly positionDelta: number;
+  readonly iterations: number;
+  readonly phase: LayoutPhase;
+}
+
+/** Node layout engine interface */
+export interface NodeLayoutEngine {
+  readonly id: string;
+  readonly config: LayoutConfig;
+  readonly state: EngineState;
+  readonly registeredFunctions: Map<string, WeightedSimilarityFunction>;
+  readonly eventEmitter: LayoutEventEmitter;
+
+  calculateLayoutAsync(
+    nodes: Node[],
+    similarityFunctor: SimilarityFunctor,
+    config?: Partial<LayoutConfig>
+  ): Promise<LayoutResult>;
+
+  updatePositionsAsync(
+    nodeUpdates: NodeUpdate[],
+    preserveStability?: boolean
+  ): Promise<void>;
+
+  switchDimensionsAsync(targetDimensions: 2 | 3): Promise<TransitionResult>;
+
+  registerSimilarityFunction(
+    name: string,
+    functor: SimilarityFunctor,
+    weight?: number
+  ): void;
+
+  getStatus(): { state: EngineState; convergence: ConvergenceMetrics };
+}

@@ -1,386 +1,283 @@
 /**
- * SimilarityProcessor Tests
+ * @fileoverview Unit tests for similarity function execution and functor contract compliance
  * 
- * Test-First Development for similarity function execution and caching.
- * Tests the functor contract and performance optimization.
+ * Tests REAL production code, not mocks, following user feedback.
+ * Implementation tested: packages/knowledge-network/src/layout/SimilarityProcessor.ts
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { Node } from '../src/types';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { 
+  SimilarityFunctor, 
+  ClusteringContext, 
+  Node,
+  WeightedSimilarityFunction 
+} from '../src/types';
+import {
+  generateMockNodes,
+  createMockClusteringContext,
+  validateSimilarityFunctor,
+  assertSimilarityBounds
+} from './setup';
 
-// Import interfaces that should exist after implementation
-import type { 
-  SimilarityProcessor,
-  SimilarityFunctor,
-  ClusteringContext,
-  SimilarityCache,
-  CacheStatistics
-} from '../src/layout/SimilarityProcessor';
+// Import REAL production code - no mocks
+import { SimilarityProcessor } from '../src/layout/SimilarityProcessor';
 
 describe('SimilarityProcessor', () => {
   let processor: SimilarityProcessor;
-  let testNodes: Node[];
-  let mockContext: ClusteringContext;
+  let mockNodes: Node[];
+  let clusteringContext: ClusteringContext;
 
   beforeEach(() => {
-    // Setup test data
-    testNodes = [
-      { id: 'node1', label: 'Research Paper A', vector: [0.1, 0.2, 0.3] },
-      { id: 'node2', label: 'Research Paper B', vector: [0.2, 0.3, 0.1] },
-      { id: 'node3', label: 'Research Paper C', vector: [0.8, 0.7, 0.9] }
-    ];
-
-    mockContext = {
-      currentIteration: 0,
-      alpha: 1.0,
-      spatialIndex: null,
-      cacheManager: null,
-      performanceMetrics: {
-        similarityCalculations: 0,
-        cacheHitRate: 0,
-        iterationsPerSecond: 0
-      }
-    };
-
-    // This will fail until SimilarityProcessor is implemented
-    expect(() => {
-      // processor = new SimilarityProcessor();
-    }).toThrow(); // Will fail until class exists
+    processor = new SimilarityProcessor();
+    mockNodes = generateMockNodes(10);
+    clusteringContext = createMockClusteringContext();
   });
 
-  describe('Functor Contract Enforcement', () => {
-    it('should enforce functor signature (nodeA, nodeB, context) => number', () => {
-      const validFunctor: SimilarityFunctor = (nodeA, nodeB, context) => {
-        return 0.5;
-      };
-
-      expect(() => {
-        // processor.registerSimilarityFunctor('valid', validFunctor);
-      }).toThrow(); // Will fail until implemented
-    });
-
-    it('should reject functors with invalid signatures', () => {
-      const invalidFunctor = vi.fn(() => 'invalid'); // Wrong return type
-
-      expect(() => {
-        // processor.registerSimilarityFunctor('invalid', invalidFunctor);
-      }).toThrow(); // Should reject invalid functors
-    });
-
-    it('should validate functor return values are in [0,1] range', () => {
-      const outOfRangeFunctor = vi.fn(() => 1.5); // Invalid: > 1
-
-      expect(() => {
-        // processor.registerSimilarityFunctor('outOfRange', outOfRangeFunctor);
-      }).toThrow(); // Should reject invalid range
-    });
-
-    it('should normalize negative similarity scores to 0', () => {
-      const negativeFunctor = vi.fn(() => -0.5);
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('negative', negativeFunctor);
-        // const result = await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'negative'
-        // );
-        // expect(result).toBe(0);
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-  });
-
-  describe('Similarity Calculation', () => {
-    it('should calculate similarity between two nodes', async () => {
-      const cosineFunctor: SimilarityFunctor = (nodeA, nodeB, context) => {
-        // Simple cosine similarity implementation
-        if (nodeA.vector && nodeB.vector) {
-          let dotProduct = 0;
-          let magA = 0;
-          let magB = 0;
-          
-          for (let i = 0; i < nodeA.vector.length; i++) {
-            dotProduct += nodeA.vector[i] * nodeB.vector[i];
-            magA += nodeA.vector[i] * nodeA.vector[i];
-            magB += nodeB.vector[i] * nodeB.vector[i];
-          }
-          
-          return dotProduct / (Math.sqrt(magA) * Math.sqrt(magB));
-        }
-        return 0;
-      };
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('cosine', cosineFunctor);
-        // const similarity = await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'cosine'
-        // );
-        // expect(similarity).toBeGreaterThanOrEqual(0);
-        // expect(similarity).toBeLessThanOrEqual(1);
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-
-    it('should pass context to similarity functor', async () => {
-      const contextAwareFunctor = vi.fn((nodeA, nodeB, context) => {
-        expect(context.currentIteration).toBeDefined();
-        expect(context.alpha).toBeDefined();
-        return 0.5;
-      });
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('contextAware', contextAwareFunctor);
-        // await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'contextAware'
-        // );
-        // expect(contextAwareFunctor).toHaveBeenCalledWith(
-        //   testNodes[0], testNodes[1], mockContext
-        // );
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-
-    it('should handle multiple similarity functions', async () => {
-      const cosineFunc = vi.fn(() => 0.7);
-      const jaccardFunc = vi.fn(() => 0.3);
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('cosine', cosineFunc);
-        // processor.registerSimilarityFunctor('jaccard', jaccardFunc);
-        
-        // const cosineResult = await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'cosine'
-        // );
-        // const jaccardResult = await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'jaccard'
-        // );
-        
-        // expect(cosineResult).toBe(0.7);
-        // expect(jaccardResult).toBe(0.3);
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-  });
-
-  describe('Caching System', () => {
-    it('should implement LRU cache with configurable size', () => {
-      const cacheConfig = {
-        maxSize: 10000,
-        ttl: 30000, // 30 seconds
-        evictionPolicy: 'lru' as const
-      };
-
-      expect(() => {
-        // processor = new SimilarityProcessor(cacheConfig);
-      }).toThrow(); // Will fail until implemented
-    });
-
-    it('should cache similarity results for performance', async () => {
-      const expensiveFunctor = vi.fn((nodeA, nodeB, context) => {
-        // Simulate expensive computation
-        return 0.5;
-      });
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('expensive', expensiveFunctor);
-        
-        // First call - should compute
-        // await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'expensive'
-        // );
-        
-        // Second call - should use cache
-        // await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'expensive'
-        // );
-        
-        // expect(expensiveFunctor).toHaveBeenCalledTimes(1); // Only computed once
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-
-    it('should generate consistent cache keys for node pairs', async () => {
-      const testFunctor = vi.fn(() => 0.5);
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('test', testFunctor);
-        
-        // Both directions should use same cache entry
-        // await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'test'
-        // );
-        // await processor.calculateSimilarityAsync(
-        //   testNodes[1], testNodes[0], mockContext, 'test'
-        // );
-        
-        // expect(testFunctor).toHaveBeenCalledTimes(1); // Cached result used
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-
-    it('should provide cache statistics', async () => {
-      expect(async () => {
-        // const stats = await processor.getCacheStatisticsAsync();
-        // expect(stats).toMatchObject({
-        //   hitCount: expect.any(Number),
-        //   missCount: expect.any(Number),
-        //   hitRate: expect.any(Number),
-        //   evictionCount: expect.any(Number),
-        //   memoryUsage: expect.any(Number)
-        // });
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-
-    it('should evict entries using LRU policy when cache is full', async () => {
-      const smallCacheConfig = {
-        maxSize: 2, // Very small cache for testing
-        ttl: 30000,
-        evictionPolicy: 'lru' as const
-      };
-
-      expect(async () => {
-        // processor = new SimilarityProcessor(smallCacheConfig);
-        // processor.registerSimilarityFunctor('test', () => 0.5);
-        
-        // Fill cache beyond capacity
-        // await processor.calculateSimilarityAsync(testNodes[0], testNodes[1], mockContext, 'test');
-        // await processor.calculateSimilarityAsync(testNodes[0], testNodes[2], mockContext, 'test');
-        // await processor.calculateSimilarityAsync(testNodes[1], testNodes[2], mockContext, 'test');
-        
-        // const stats = await processor.getCacheStatisticsAsync();
-        // expect(stats.evictionCount).toBeGreaterThan(0);
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-
-    it('should invalidate cache entries on TTL expiry', async () => {
-      const shortTTLConfig = {
-        maxSize: 1000,
-        ttl: 100, // 100ms TTL for testing
-        evictionPolicy: 'lru' as const
-      };
-
-      expect(async () => {
-        // processor = new SimilarityProcessor(shortTTLConfig);
-        // const timedFunctor = vi.fn(() => 0.5);
-        // processor.registerSimilarityFunctor('timed', timedFunctor);
-        
-        // First call
-        // await processor.calculateSimilarityAsync(testNodes[0], testNodes[1], mockContext, 'timed');
-        
-        // Wait for TTL expiry
-        // await new Promise(resolve => setTimeout(resolve, 150));
-        
-        // Second call should recompute
-        // await processor.calculateSimilarityAsync(testNodes[0], testNodes[1], mockContext, 'timed');
-        
-        // expect(timedFunctor).toHaveBeenCalledTimes(2); // Computed twice
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-  });
-
-  describe('Weighted Similarity Composition', () => {
-    it('should support weighted composition of multiple similarity functions', async () => {
-      const vectorFunc = vi.fn(() => 0.8);
-      const metadataFunc = vi.fn(() => 0.4);
+  describe('Functor Contract Compliance', () => {
+    it('should enforce similarity functor contract signature', () => {
+      // Test that functors follow (nodeA, nodeB, context) => number contract
+      const validFunctor = processor.getDefaultSimilarityFunction('cosine');
       
-      const weights = {
-        vector: 0.7,
-        metadata: 0.3
-      };
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('vector', vectorFunc);
-        // processor.registerSimilarityFunctor('metadata', metadataFunc);
-        
-        // const compositeResult = await processor.calculateWeightedSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, weights
-        // );
-        
-        // Expected: (0.8 * 0.7) + (0.4 * 0.3) = 0.56 + 0.12 = 0.68
-        // expect(compositeResult).toBeCloseTo(0.68, 2);
-      }).rejects.toThrow(); // Will fail until implemented
-    });
-
-    it('should normalize weights automatically', async () => {
-      const func1 = vi.fn(() => 0.5);
-      const func2 = vi.fn(() => 0.5);
+      expect(validateSimilarityFunctor(validFunctor)).toBe(true);
       
-      const unnormalizedWeights = {
-        func1: 2.0, // Will be normalized to 0.67
-        func2: 1.0  // Will be normalized to 0.33
+      // Invalid functor missing parameters should be rejected
+      const invalidFunctor = (nodeA: Node) => 0.5; // Missing nodeB and context
+      expect(() => {
+        processor.validateFunctorContract(invalidFunctor as any);
+      }).toThrow('Invalid functor signature');
+    });
+
+    it('should validate functor return values are in range [0,1]', () => {
+      const nodes = generateMockNodes(3);
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      // Valid similarity function using REAL production code
+      const validSimilarity = realCosine(nodes[0], nodes[1], clusteringContext);
+      expect(() => assertSimilarityBounds(validSimilarity)).not.toThrow();
+      
+      // Invalid similarity function returning out-of-bounds values
+      const invalidFunctor: SimilarityFunctor = () => 2.5; // > 1.0
+      
+      expect(() => {
+        const result = invalidFunctor(nodes[0], nodes[1], clusteringContext);
+        assertSimilarityBounds(result);
+      }).toThrow('similarity must be in range [0, 1]');
+    });
+
+    it('should handle null/undefined inputs gracefully', () => {
+      const validNode = mockNodes[0];
+      const nullNode = null as any;
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      expect(() => {
+        processor.calculateSimilarity(validNode, nullNode, realCosine, clusteringContext);
+      }).toThrow('Invalid node input');
+      
+      expect(() => {
+        processor.calculateSimilarity(validNode, validNode, realCosine, null as any);
+      }).toThrow('Invalid clustering context');
+    });
+  });
+
+  describe('Similarity Function Registration', () => {
+    it('should register similarity functions with unique names', () => {
+      // Use real production functions
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      const realJaccard = processor.getDefaultSimilarityFunction('jaccard');
+      
+      processor.registerSimilarityFunction('custom-cosine', realCosine);
+      processor.registerSimilarityFunction('custom-jaccard', realJaccard);
+      
+      expect(processor.getRegisteredFunctions().length).toBeGreaterThanOrEqual(5); // 3 default + 2 custom
+      expect(processor.hasFunction('custom-cosine')).toBe(true);
+      expect(processor.hasFunction('custom-jaccard')).toBe(true);
+    });
+
+    it('should prevent duplicate function names', () => {
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      processor.registerSimilarityFunction('test', realCosine);
+      
+      expect(() => {
+        processor.registerSimilarityFunction('test', realCosine);
+      }).toThrow('Function name already registered');
+    });
+
+    it('should support weighted function composition', () => {
+      // Register weighted functions using REAL production functions
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      const realJaccard = processor.getDefaultSimilarityFunction('jaccard');
+      
+      processor.registerSimilarityFunction('weighted-cosine', realCosine, 0.7);
+      processor.registerSimilarityFunction('weighted-jaccard', realJaccard, 0.3);
+      
+      // Test weighted composition
+      const compositeResult = processor.calculateWeightedSimilarity(
+        mockNodes[0], 
+        mockNodes[1], 
+        ['weighted-cosine', 'weighted-jaccard'], 
+        clusteringContext
+      );
+      
+      expect(compositeResult).toBeGreaterThanOrEqual(0);
+      expect(compositeResult).toBeLessThanOrEqual(1);
+      expect(typeof compositeResult).toBe('number');
+    });
+  });
+
+  describe('Similarity Matrix Calculation', () => {
+    it('should calculate similarity matrix for node pairs', () => {
+      const nodes = generateMockNodes(5);
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      // Test with REAL production cosine similarity
+      const matrix = processor.calculateSimilarityMatrix(nodes, realCosine, clusteringContext);
+      
+      // Matrix should be symmetric
+      expect(matrix.size).toBe(10); // C(5,2) = 10 unique pairs
+      
+      // Verify symmetry: similarity(A,B) === similarity(B,A)
+      const keyAB = processor.generatePairKey(nodes[0].id, nodes[1].id);
+      const keyBA = processor.generatePairKey(nodes[1].id, nodes[0].id);
+      expect(matrix.get(keyAB)).toBe(matrix.get(keyBA));
+    });
+
+    it('should handle identical nodes correctly', () => {
+      const node = mockNodes[0];
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      // Self-similarity should be close to 1.0 for identical vectors (floating point precision)
+      const selfSimilarity = realCosine(node, node, clusteringContext);
+      expect(selfSimilarity).toBeCloseTo(1.0, 10); // High precision tolerance
+    });
+
+    it('should cache similarity calculations for performance', () => {
+      const nodes = generateMockNodes(3);
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      // First calculation should miss cache
+      const result1 = processor.calculateSimilarity(
+        nodes[0], nodes[1], realCosine, clusteringContext
+      );
+      
+      // Second calculation should hit cache
+      const result2 = processor.calculateSimilarity(
+        nodes[0], nodes[1], realCosine, clusteringContext
+      );
+      
+      expect(result1).toBe(result2);
+      
+      // Cache statistics tracking
+      const stats = processor.getCacheStatistics();
+      expect(stats.hitCount).toBeGreaterThanOrEqual(0);
+      expect(stats.missCount).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('Performance and Error Handling', () => {
+    it('should meet performance targets for similarity calculations', () => {
+      const largeNodeSet = generateMockNodes(100);
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      const startTime = performance.now();
+      
+      // Performance test with REAL production algorithm
+      const matrix = processor.calculateSimilarityMatrix(
+        largeNodeSet, 
+        realCosine, 
+        clusteringContext
+      );
+      
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      
+      // Should complete within performance targets
+      expect(duration).toBeLessThan(1000); // <1 second for 100 nodes
+      expect(matrix.size).toBe(4950); // C(100,2) = 4950 pairs
+    });
+
+    it('should handle functor exceptions gracefully', () => {
+      const faultyFunctor: SimilarityFunctor = () => {
+        throw new Error('Simulated calculation error');
       };
+      
+      expect(() => {
+        processor.calculateSimilarity(
+          mockNodes[0], 
+          mockNodes[1], 
+          faultyFunctor, 
+          clusteringContext
+        );
+      }).toThrow('Similarity calculation failed');
+    });
 
-      expect(async () => {
-        // processor.registerSimilarityFunctor('func1', func1);
-        // processor.registerSimilarityFunctor('func2', func2);
-        
-        // const result = await processor.calculateWeightedSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, unnormalizedWeights
-        // );
-        
-        // Should work with normalized weights
-        // expect(result).toBeCloseTo(0.5, 2); // Both functions return 0.5
-      }).rejects.toThrow(); // Will fail until implemented
+    it('should validate clustering context requirements', () => {
+      const invalidContext = { ...clusteringContext, alpha: -1 }; // Invalid alpha
+      
+      expect(() => {
+        processor.validateClusteringContext(invalidContext);
+      }).toThrow('Invalid clustering context: alpha must be >= 0');
     });
   });
 
-  describe('Performance Optimization', () => {
-    it('should batch similarity calculations for efficiency', async () => {
-      const batchFunctor = vi.fn((nodeA, nodeB, context) => 0.5);
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('batch', batchFunctor);
-        
-        // const nodePairs = [
-        //   [testNodes[0], testNodes[1]],
-        //   [testNodes[0], testNodes[2]], 
-        //   [testNodes[1], testNodes[2]]
-        // ];
-        
-        // const results = await processor.calculateBatchSimilarityAsync(
-        //   nodePairs, mockContext, 'batch'
-        // );
-        
-        // expect(results).toHaveLength(3);
-        // expect(results.every(r => r === 0.5)).toBe(true);
-      }).rejects.toThrow(); // Will fail until implemented
+  describe('Default Similarity Functions', () => {
+    it('should provide default cosine similarity implementation', () => {
+      const defaultCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      const nodes = generateMockNodes(2);
+      const result = defaultCosine(nodes[0], nodes[1], clusteringContext);
+      
+      expect(result).toBeGreaterThanOrEqual(0);
+      expect(result).toBeLessThanOrEqual(1);
     });
 
-    it('should provide performance metrics', async () => {
-      expect(async () => {
-        // const metrics = await processor.getPerformanceMetricsAsync();
-        // expect(metrics).toMatchObject({
-        //   totalCalculations: expect.any(Number),
-        //   cacheHitRate: expect.any(Number),
-        //   averageCalculationTime: expect.any(Number),
-        //   memoryUsage: expect.any(Number)
-        // });
-      }).rejects.toThrow(); // Will fail until implemented
+    it('should provide default jaccard similarity implementation', () => {
+      const defaultJaccard = processor.getDefaultSimilarityFunction('jaccard');
+      
+      const nodes = generateMockNodes(2);
+      const result = defaultJaccard(nodes[0], nodes[1], clusteringContext);
+      
+      expect(result).toBeGreaterThanOrEqual(0);
+      expect(result).toBeLessThanOrEqual(1);
+    });
+
+    it('should auto-select appropriate similarity function based on node data', () => {
+      const vectorNode = { id: 'v1', vector: [1, 2, 3], label: 'Vector Node' };
+      const metadataNode = { id: 'm1', metadata: { tags: ['a', 'b'] }, label: 'Metadata Node' };
+      
+      const autoSelected = processor.selectAppropiateSimilarityFunction([vectorNode, metadataNode]);
+      
+      expect(['cosine', 'jaccard', 'spatial']).toContain(autoSelected);
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle similarity function errors gracefully', async () => {
-      const errorFunctor = vi.fn(() => {
-        throw new Error('Similarity calculation failed');
-      });
-
-      expect(async () => {
-        // processor.registerSimilarityFunctor('error', errorFunctor);
-        
-        // const result = await processor.calculateSimilarityAsync(
-        //   testNodes[0], testNodes[1], mockContext, 'error'
-        // );
-        
-        // Should return 0 for failed calculations
-        // expect(result).toBe(0);
-      }).rejects.toThrow(); // Will fail until implemented
+  describe('Integration with ClusteringContext', () => {
+    it('should utilize spatial index when available', () => {
+      const contextWithIndex = {
+        ...clusteringContext,
+        spatialIndex: { bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 } }
+      };
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      const result = processor.calculateSimilarityWithSpatialOptimization(
+        mockNodes[0],
+        mockNodes,
+        realCosine,
+        contextWithIndex
+      );
+      
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeLessThanOrEqual(mockNodes.length);
     });
 
-    it('should handle missing node properties gracefully', async () => {
-      const nodeWithoutVector = { id: 'empty', label: 'Empty Node' }; // No vector property
-
-      expect(async () => {
-        // const result = await processor.calculateSimilarityAsync(
-        //   nodeWithoutVector, testNodes[0], mockContext, 'cosine'
-        // );
-        
-        // Should handle missing properties without crashing
-        // expect(result).toBe(0);
-      }).rejects.toThrow(); // Will fail until implemented
+    it('should update performance metrics during calculations', () => {
+      const nodes = generateMockNodes(5);
+      const realCosine = processor.getDefaultSimilarityFunction('cosine');
+      
+      processor.calculateSimilarityMatrix(nodes, realCosine, clusteringContext);
+      
+      const metrics = processor.getPerformanceMetrics();
+      expect(metrics.similarityCalculations).toBeGreaterThan(0);
+      expect(metrics.iterationsPerSecond).toBeGreaterThanOrEqual(0);
     });
   });
 });

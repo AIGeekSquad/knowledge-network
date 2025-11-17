@@ -1,594 +1,413 @@
 /**
- * NodeLayoutEngine Implementation
+ * @fileoverview NodeLayoutEngine - Main orchestrator for similarity-based node positioning
  * 
- * Similarity-based node positioning engine that extends the existing LayoutEngine.
- * Implements functor contract for extensible similarity functions and provides
- * progressive refinement with 2D/3D coordinate support.
+ * Coordinates similarity processing, spatial optimization, and layout convergence
+ * following the NodeLayout architecture with functor contract compliance.
  */
 
-import { LayoutEngine } from './LayoutEngine.js';
-import { SimilarityProcessor } from './SimilarityProcessor.js';
-import { DefaultSimilarityFunctions } from './DefaultSimilarityFunctions.js';
-import type { 
-  Node, 
-  EnhancedLayoutNode,
-  LayoutConfiguration,
+import { 
+  Node,
+  EnhancedLayoutNode, 
   SimilarityFunctor,
   ClusteringContext,
-  Position3D,
+  LayoutConfig,
+  LayoutResult,
+  NodeUpdate,
+  TransitionResult,
+  EngineState,
   ConvergenceMetrics,
-  ProgressiveRefinementPhase,
-  LayoutPhase,
+  PerformanceMetrics,
+  MemoryUsage,
+  WeightedSimilarityFunction,
+  LayoutEventEmitter,
+  LayoutProgressEvent,
+  PhaseCompleteEvent,
+  LayoutCompleteEvent,
+  ConvergenceUpdateEvent,
+  Position3D,
   NodeImportance,
-  PerformanceMetrics
-} from '../types.js';
-import type { 
-  ILayoutEngine,
-  LayoutNode,
-  LayoutConfiguration as BaseLayoutConfiguration,
-  ProgressCallback,
-  ValidationResult,
-  LayoutEngineCapabilities
-} from './layout-engine.js';
+  LayoutPhase,
+  LayoutNodeMetadata,
+  NodeConvergenceState
+} from '../types';
+import { SimilarityProcessor } from './SimilarityProcessor';
+import { SpatialOptimizer } from './SpatialOptimizer';
+import { EventEmitter } from '../utils/EventEmitter';
 
 /**
- * NodeLayoutEngine - Similarity-based node positioning
- * 
- * Extends existing LayoutEngine with similarity-based positioning capabilities:
- * - Configurable similarity functions following functor contract
- * - Progressive refinement (COARSE → MEDIUM → FINE phases)
- * - 2D/3D coordinate support with z=0 constraint for 2D
- * - Integration with existing pipeline and D3.js forces
+ * NodeLayoutEngine orchestrates similarity-based positioning algorithms
  */
-export class NodeLayoutEngine extends LayoutEngine implements ILayoutEngine {
-  private similarityProcessor: SimilarityProcessor;
-  private currentDimensionMode: '2D' | '3D' = '2D';
-  private convergenceMetrics: ConvergenceMetrics | null = null;
-  private registeredSimilarityFunctions = new Map<string, SimilarityFunctor>();
+export class NodeLayoutEngine {
+  public readonly id: string;
+  public readonly config: LayoutConfig;
+  public state: EngineState;
+  public readonly registeredFunctions: Map<string, WeightedSimilarityFunction>;
+  public readonly eventEmitter: LayoutEventEmitter;
 
-  constructor() {
-    super();
+  private readonly similarityProcessor: SimilarityProcessor;
+  private readonly spatialOptimizer: SpatialOptimizer;
+  private readonly layoutNodes = new Map<string, EnhancedLayoutNode>();
+  private startTime: number = 0;
+
+  constructor(config?: Partial<LayoutConfig>) {
+    this.id = `layout-engine-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    this.config = this.createDefaultConfig(config);
+    this.state = EngineState.IDLE;
+    
+    // Initialize processors
     this.similarityProcessor = new SimilarityProcessor();
-    this.registerDefaultSimilarityFunctions();
+    this.spatialOptimizer = new SpatialOptimizer();
+    this.eventEmitter = new EventEmitter();
+    
+    // Share registered functions reference
+    this.registeredFunctions = this.similarityProcessor['registeredFunctions'];
   }
 
   /**
-   * Calculate layout using similarity-based positioning
-   * Implements the core functionality tested in node-layout-engine.test.ts
+   * Calculate layout with progressive refinement
    */
-  async calculateAsync(
+  public async calculateLayoutAsync(
     nodes: Node[],
-    config: LayoutConfiguration,
-    progressCallback?: ProgressCallback
-  ): Promise<Map<string, LayoutNode>> {
-    // Validate configuration
-    const validation = this.validateConfiguration(config);
-    if (!validation.isValid) {
-      throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
+    similarityFunctor: SimilarityFunctor,
+    config?: Partial<LayoutConfig>
+  ): Promise<LayoutResult> {
+    if (nodes.length === 0) {
+      throw new Error('Cannot calculate layout: node array is empty');
+    }
+
+    this.state = EngineState.INITIALIZING;
+    this.startTime = performance.now();
+    
+    // Merge configuration
+    const mergedConfig = config ? { ...this.config, ...config } : this.config;
+    
+    try {
+      // Emit layout start event
+      this.eventEmitter.emit('layoutProgress', {
+        type: 'nodeLoading',
+        progress: 0,
+        phase: 'initialization',
+        nodesProcessed: 0,
+        totalNodes: nodes.length,
+        timeElapsed: 0
+      } as LayoutProgressEvent);
+
+      this.state = EngineState.PROCESSING;
+
+      // Create clustering context
+      const context = this.createClusteringContext(mergedConfig);
+
+      // Validate similarity functor
+      this.similarityProcessor.validateFunctorContract(similarityFunctor);
+
+      // Calculate similarity matrix
+      this.eventEmitter.emit('layoutProgress', {
+        type: 'nodeLayout',
+        progress: 25,
+        phase: 'similarity-calculation',
+        nodesProcessed: 0,
+        totalNodes: nodes.length,
+        timeElapsed: performance.now() - this.startTime
+      } as LayoutProgressEvent);
+
+      const similarities = this.similarityProcessor.calculateSimilarityMatrix(
+        nodes, 
+        similarityFunctor, 
+        context
+      );
+
+      // Optimize spatial positions
+      this.eventEmitter.emit('layoutProgress', {
+        type: 'nodeLayout',
+        progress: 50,
+        phase: 'spatial-optimization',
+        nodesProcessed: nodes.length,
+        totalNodes: nodes.length,
+        timeElapsed: performance.now() - this.startTime
+      } as LayoutProgressEvent);
+
+      const positions = this.spatialOptimizer.optimizePositions(similarities, {
+        dimensions: mergedConfig.dimensions,
+        boundingBox: { minX: 0, maxX: 800, minY: 0, maxY: 600, minZ: 0, maxZ: mergedConfig.dimensions === 3 ? 400 : 0 }
+      });
+
+      // Create enhanced layout nodes
+      const layoutNodes = this.createLayoutNodes(nodes, positions);
+
+      // Monitor convergence
+      this.eventEmitter.emit('layoutProgress', {
+        type: 'nodeLayout',
+        progress: 75,
+        phase: 'convergence',
+        nodesProcessed: nodes.length,
+        totalNodes: nodes.length,
+        timeElapsed: performance.now() - this.startTime
+      } as LayoutProgressEvent);
+
+      const convergenceState = this.spatialOptimizer.getConvergenceState();
+
+      this.state = EngineState.CONVERGED;
+      const totalTime = performance.now() - this.startTime;
+
+      // Emit completion event
+      this.eventEmitter.emit('layoutComplete', {
+        totalDuration: totalTime,
+        finalStability: convergenceState.stability,
+        totalNodes: nodes.length,
+        totalIterations: convergenceState.iterationCount
+      } as LayoutCompleteEvent);
+
+      return {
+        nodes: layoutNodes,
+        convergenceState,
+        performanceMetrics: this.similarityProcessor.getPerformanceMetrics(),
+        processingTime: totalTime,
+        memoryUsage: this.estimateMemoryUsage(layoutNodes.length),
+        status: {
+          success: true,
+          warnings: [],
+          errors: []
+        }
+      };
+
+    } catch (error) {
+      this.state = EngineState.ERROR;
+      return {
+        nodes: [],
+        convergenceState: this.spatialOptimizer.getConvergenceState(),
+        performanceMetrics: this.similarityProcessor.getPerformanceMetrics(),
+        processingTime: performance.now() - this.startTime,
+        memoryUsage: this.estimateMemoryUsage(0),
+        status: {
+          success: false,
+          warnings: [],
+          errors: [error instanceof Error ? error.message : 'Unknown layout error']
+        }
+      };
+    }
+  }
+
+  /**
+   * Update positions maintaining stability
+   */
+  public async updatePositionsAsync(
+    nodeUpdates: NodeUpdate[],
+    preserveStability: boolean = true
+  ): Promise<void> {
+    if (this.state !== EngineState.CONVERGED && this.state !== EngineState.PROCESSING) {
+      throw new Error(`Cannot update positions: engine state is ${this.state}`);
+    }
+
+    // Extract current positions and node IDs for update
+    const currentPositions: Position3D[] = [];
+    const nodeIds: string[] = [];
+    
+    for (const layoutNode of this.layoutNodes.values()) {
+      currentPositions.push(layoutNode.position);
+      nodeIds.push(layoutNode.originalNode.id);
+    }
+
+    // Apply updates using spatial optimizer
+    const updatedPositions = this.spatialOptimizer.updateNodePositions(
+      nodeUpdates, 
+      currentPositions, 
+      nodeIds
+    );
+
+    // Update layout nodes with new positions
+    for (let i = 0; i < nodeIds.length; i++) {
+      const layoutNode = this.layoutNodes.get(nodeIds[i]);
+      if (layoutNode && i < updatedPositions.length) {
+        const updatedNode: EnhancedLayoutNode = {
+          ...layoutNode,
+          position: updatedPositions[i],
+          metadata: {
+            ...layoutNode.metadata,
+            lastUpdated: Date.now(),
+            isStable: preserveStability ? layoutNode.metadata.isStable : false
+          }
+        };
+        this.layoutNodes.set(nodeIds[i], updatedNode);
+      }
+    }
+  }
+
+  /**
+   * Switch coordinate dimensions
+   */
+  public async switchDimensionsAsync(targetDimensions: 2 | 3): Promise<TransitionResult> {
+    const fromDimensions = this.config.dimensions;
+    
+    if (fromDimensions === targetDimensions) {
+      return {
+        success: true,
+        fromDimensions,
+        toDimensions: targetDimensions,
+        positionDeviations: [],
+        transitionTime: 0
+      };
     }
 
     const startTime = performance.now();
-    this.emit('layoutStarted', { nodeCount: nodes.length });
+    const positionDeviations: any[] = [];
 
-    try {
-      // Create clustering context
-      const context = this.createClusteringContext(config, 0, 1.0);
-
-      // Get or resolve similarity function
-      const similarityFunctor = this.resolveSimilarityFunction(config.similarityFunction);
-
-      // Progressive refinement if enabled
-      if (config.progressiveRefinement?.enabled && config.progressiveRefinement.phases.length > 0) {
-        return await this.calculateProgressiveAsync(nodes, config, similarityFunctor, context, progressCallback);
-      } else {
-        // Standard calculation
-        return await this.calculateStandardAsync(nodes, config, similarityFunctor, context, progressCallback);
-      }
-    } finally {
-      const endTime = performance.now();
-      this.emit('layoutComplete', { 
-        nodeCount: nodes.length,
-        duration: endTime - startTime,
-        metrics: this.convergenceMetrics
-      });
-    }
-  }
-
-  /**
-   * Register a custom similarity function following functor contract
-   */
-  registerSimilarityFunction(name: string, functor: SimilarityFunctor, weight: number = 1.0): void {
-    // Validate functor signature and return values
-    this.validateSimilarityFunctor(functor);
-    this.registeredSimilarityFunctions.set(name, functor);
-    this.similarityProcessor.registerSimilarityFunctor(name, functor);
-  }
-
-  /**
-   * Switch between 2D and 3D dimensional modes
-   */
-  async switchDimensionalModeAsync(targetMode: '2D' | '3D'): Promise<void> {
-    if (this.currentDimensionMode === targetMode) {
-      return; // No change needed
-    }
-
-    this.currentDimensionMode = targetMode;
-    this.emit('dimensionModeChanged', { mode: targetMode });
-  }
-
-  /**
-   * Get current convergence metrics
-   */
-  async getConvergenceMetricsAsync(): Promise<ConvergenceMetrics> {
-    if (!this.convergenceMetrics) {
-      throw new Error('No convergence metrics available - layout not calculated yet');
-    }
-    return this.convergenceMetrics;
-  }
-
-  /**
-   * Standard layout calculation without progressive refinement
-   */
-  private async calculateStandardAsync(
-    nodes: Node[],
-    config: LayoutConfiguration,
-    similarityFunctor: SimilarityFunctor,
-    context: ClusteringContext,
-    progressCallback?: ProgressCallback
-  ): Promise<Map<string, LayoutNode>> {
-    const layoutNodes = new Map<string, LayoutNode>();
-
-    // Initialize enhanced layout nodes
-    const enhancedNodes = nodes.map(node => this.createEnhancedLayoutNode(node));
-
-    // Calculate similarity-based positions
-    for (let i = 0; i < enhancedNodes.length; i++) {
-      const nodeA = enhancedNodes[i];
+    // Transform positions between dimensions
+    for (const layoutNode of this.layoutNodes.values()) {
+      const currentPos = layoutNode.position;
       
-      // Calculate initial position based on similarities
-      const position = await this.calculateSimilarityBasedPosition(
-        nodeA, enhancedNodes, similarityFunctor, context
-      );
+      const newPosition: Position3D = targetDimensions === 2 
+        ? { x: currentPos.x, y: currentPos.y, z: 0 } // Flatten to 2D
+        : { x: currentPos.x, y: currentPos.y, z: Math.random() * 200 - 100 }; // Expand to 3D
+      
+      // Track deviation
+      const deviation = this.spatialOptimizer.calculatePositionDelta(newPosition, currentPos);
+      positionDeviations.push(deviation);
 
-      // Create final LayoutNode
-      const layoutNode: LayoutNode = {
-        id: nodeA.id,
-        x: position.x,
-        y: position.y,
-        clusterId: nodeA.cluster?.clusterId,
-        similarityScores: nodeA.similarityScores,
-        originalData: nodeA.originalNode,
-        layoutMetadata: {
+      // Update layout node
+      const updatedNode: EnhancedLayoutNode = {
+        ...layoutNode,
+        position: newPosition,
+        metadata: {
+          ...layoutNode.metadata,
+          lastUpdated: Date.now()
+        }
+      };
+      this.layoutNodes.set(layoutNode.originalNode.id, updatedNode);
+    }
+
+    const transitionTime = performance.now() - startTime;
+
+    return {
+      success: true,
+      fromDimensions,
+      toDimensions: targetDimensions,
+      positionDeviations,
+      transitionTime
+    };
+  }
+
+  /**
+   * Register custom similarity function
+   */
+  public registerSimilarityFunction(
+    name: string, 
+    functor: SimilarityFunctor, 
+    weight?: number
+  ): void {
+    this.similarityProcessor.registerSimilarityFunction(name, functor, weight);
+  }
+
+  /**
+   * Get current layout status
+   */
+  public getStatus(): { state: EngineState; convergence: ConvergenceMetrics } {
+    return {
+      state: this.state,
+      convergence: this.spatialOptimizer.getConvergenceState()
+    };
+  }
+
+  // Private helper methods
+
+  private createDefaultConfig(partial?: Partial<LayoutConfig>): LayoutConfig {
+    const defaultConfig: LayoutConfig = {
+      dimensions: 2,
+      similarityThreshold: 0.3,
+      convergenceThreshold: 0.01,
+      maxIterations: 1000,
+      forceIntegration: {
+        enablePhysics: true,
+        similarityStrength: 0.5,
+        repulsionStrength: -100,
+        centeringStrength: 1.0
+      },
+      progressiveRefinement: {
+        enablePhases: true,
+        phase1Duration: 500,
+        phase2Duration: 2000,
+        importanceWeights: {
+          degree: 0.4,
+          betweenness: 0.3,
+          eigenvector: 0.3
+        }
+      },
+      memoryManagement: {
+        useTypedArrays: true,
+        cacheSize: 10000,
+        historySize: 10,
+        gcThreshold: 0.8
+      }
+    };
+
+    return partial ? { ...defaultConfig, ...partial } : defaultConfig;
+  }
+
+  private createClusteringContext(config: LayoutConfig): ClusteringContext {
+    return {
+      currentIteration: 0,
+      alpha: 1.0,
+      spatialIndex: null, // TODO: Initialize QuadTree spatial index
+      cacheManager: null, // TODO: Initialize similarity cache manager
+      performanceMetrics: this.similarityProcessor.getPerformanceMetrics(),
+      layoutConfig: config
+    };
+  }
+
+  private createLayoutNodes(nodes: Node[], positions: Position3D[]): EnhancedLayoutNode[] {
+    const layoutNodes: EnhancedLayoutNode[] = [];
+
+    for (let i = 0; i < nodes.length && i < positions.length; i++) {
+      const node = nodes[i];
+      const position = positions[i];
+
+      // Calculate node importance (simplified for now)
+      const importance: NodeImportance = {
+        degree: (node as any).connections || 1,
+        betweenness: Math.random(), // TODO: Implement actual betweenness centrality
+        eigenvector: Math.random(), // TODO: Implement actual eigenvector centrality  
+        composite: Math.random()    // TODO: Calculate weighted combination
+      };
+
+      const layoutNode: EnhancedLayoutNode = {
+        id: `layout-${node.id}`,
+        originalNode: node,
+        position,
+        cluster: undefined, // TODO: Implement clustering assignment
+        similarityScores: new Map(),
+        convergenceState: {
+          isStable: false,
+          positionDelta: 1.0,
+          stabilityHistory: [1.0]
+        },
+        importance,
+        metadata: {
           createdAt: Date.now(),
           lastUpdated: Date.now(),
           isStable: false,
-          phase: 'standard',
+          phase: LayoutPhase.COARSE,
           forceContributions: []
         }
       };
 
-      layoutNodes.set(nodeA.id, layoutNode);
-
-      // Report progress
-      if (progressCallback) {
-        progressCallback({
-          completed: i + 1,
-          total: nodes.length,
-          phase: 'positioning',
-          message: `Positioned ${i + 1}/${nodes.length} nodes`
-        });
-      }
-    }
-
-    // Update convergence metrics
-    this.convergenceMetrics = {
-      isConverged: true,
-      stability: 1.0,
-      iterations: 1,
-      positionDelta: 0,
-      averageMovement: 0,
-      maxMovement: 0,
-      stabilityRatio: 1.0,
-      iterationCount: 1,
-      timeElapsed: performance.now() - context.performanceMetrics.memoryPeakUsage
-    };
-
-    return layoutNodes;
-  }
-
-  /**
-   * Progressive refinement calculation with phases
-   */
-  private async calculateProgressiveAsync(
-    nodes: Node[],
-    config: LayoutConfiguration,
-    similarityFunctor: SimilarityFunctor,
-    context: ClusteringContext,
-    progressCallback?: ProgressCallback
-  ): Promise<Map<string, LayoutNode>> {
-    const layoutNodes = new Map<string, LayoutNode>();
-    const enhancedNodes = nodes.map(node => this.createEnhancedLayoutNode(node));
-
-    // Sort nodes by importance for progressive processing
-    const sortedNodes = enhancedNodes.sort((a, b) => b.importance.composite - a.importance.composite);
-
-    const phases = config.progressiveRefinement!.phases;
-    let processedNodes = 0;
-
-    for (let phaseIndex = 0; phaseIndex < phases.length; phaseIndex++) {
-      const phase = phases[phaseIndex];
-      const phaseStartTime = performance.now();
-
-      // Determine nodes for this phase
-      const phaseNodeCount = this.calculatePhaseNodeCount(phase, nodes.length);
-      const phaseNodes = sortedNodes.slice(processedNodes, processedNodes + phaseNodeCount);
-
-      // Process phase nodes
-      for (const node of phaseNodes) {
-        const position = await this.calculateSimilarityBasedPosition(
-          node, enhancedNodes, similarityFunctor, context
-        );
-
-        const layoutNode: LayoutNode = {
-          id: node.id,
-          x: position.x,
-          y: position.y,
-          clusterId: node.cluster?.clusterId,
-          similarityScores: node.similarityScores,
-          originalData: node.originalNode,
-          layoutMetadata: {
-            createdAt: Date.now(),
-            lastUpdated: Date.now(),
-            isStable: false,
-            phase: phase.phase as LayoutPhase,
-            forceContributions: []
-          }
-        };
-
-        layoutNodes.set(node.id, layoutNode);
-      }
-
-      processedNodes += phaseNodeCount;
-
-      // Report phase completion
-      if (progressCallback) {
-        progressCallback({
-          completed: processedNodes,
-          total: nodes.length,
-          phase: phase.phase,
-          message: `Completed ${phase.phase} phase: ${processedNodes}/${nodes.length} nodes`
-        });
-      }
-
-      this.emit('phaseComplete', {
-        phase: phase.phase,
-        duration: performance.now() - phaseStartTime,
-        nodesPositioned: phaseNodeCount
-      });
-
-      // Check if we've processed all nodes
-      if (processedNodes >= nodes.length) break;
+      layoutNodes.push(layoutNode);
+      this.layoutNodes.set(node.id, layoutNode);
     }
 
     return layoutNodes;
   }
 
-  /**
-   * Create enhanced layout node with importance metrics
-   */
-  private createEnhancedLayoutNode(node: Node): EnhancedLayoutNode {
-    const importance = this.calculateNodeImportance(node);
-    
-    return {
-      id: node.id,
-      originalNode: node,
-      position: node.position || { x: Math.random() * 800, y: Math.random() * 600, z: this.currentDimensionMode === '2D' ? 0 : Math.random() * 400 },
-      similarityScores: new Map(),
-      importance,
-      convergenceState: {
-        isStable: false,
-        positionDelta: 0,
-        stabilityHistory: []
-      },
-      metadata: {
-        createdAt: Date.now(),
-        lastUpdated: Date.now(),
-        isStable: false,
-        phase: LayoutPhase.COARSE,
-        forceContributions: []
-      }
-    };
-  }
-
-  /**
-   * Calculate similarity-based position for a node
-   */
-  private async calculateSimilarityBasedPosition(
-    targetNode: EnhancedLayoutNode,
-    allNodes: EnhancedLayoutNode[],
-    similarityFunctor: SimilarityFunctor,
-    context: ClusteringContext
-  ): Promise<Position3D> {
-    let totalWeightedX = 0;
-    let totalWeightedY = 0;
-    let totalWeightedZ = 0;
-    let totalWeight = 0;
-
-    // Calculate weighted position based on similarity to other nodes
-    for (const otherNode of allNodes) {
-      if (otherNode.id === targetNode.id) continue;
-
-      // Get cached or calculate similarity
-      const similarity = await this.similarityProcessor.calculateSimilarityAsync(
-        targetNode.originalNode,
-        otherNode.originalNode,
-        context,
-        'default'
-      );
-
-      if (similarity > 0.1) { // Minimum threshold for influence
-        const distance = 100 * (1 - similarity); // Higher similarity = closer distance
-        const weight = similarity * similarity; // Quadratic weighting
-
-        totalWeightedX += otherNode.position.x * weight;
-        totalWeightedY += otherNode.position.y * weight;
-        totalWeightedZ += otherNode.position.z * weight;
-        totalWeight += weight;
-      }
-    }
-
-    // Calculate final position
-    if (totalWeight > 0) {
-      return {
-        x: totalWeightedX / totalWeight,
-        y: totalWeightedY / totalWeight,
-        z: this.currentDimensionMode === '2D' ? 0 : totalWeightedZ / totalWeight
-      };
-    } else {
-      // Random position if no similarities found
-      return {
-        x: Math.random() * 800,
-        y: Math.random() * 600,
-        z: this.currentDimensionMode === '2D' ? 0 : Math.random() * 400
-      };
-    }
-  }
-
-  /**
-   * Calculate node importance metrics
-   */
-  private calculateNodeImportance(node: Node): NodeImportance {
-    // Simple heuristic based on available data
-    let degree = 1; // Base importance
-    let betweenness = 0.5; // Default centrality
-    let eigenvector = 0.5; // Default influence
-
-    // Boost importance if node has rich data
-    if (node.vector && node.vector.length > 0) {
-      degree += 1;
-      eigenvector += 0.2;
-    }
-
-    if (node.metadata && node.metadata.tags && node.metadata.tags.length > 0) {
-      degree += 0.5;
-      betweenness += 0.2;
-    }
-
-    // Composite score (normalized to 0-1)
-    const composite = Math.min(1.0, (0.4 * degree + 0.3 * betweenness + 0.3 * eigenvector) / 3);
-
-    return { degree, betweenness, eigenvector, composite };
-  }
-
-  /**
-   * Determine node count for progressive phase
-   */
-  private calculatePhaseNodeCount(phase: ProgressiveRefinementPhase, totalNodes: number): number {
-    if (phase.maxNodes) {
-      return Math.min(phase.maxNodes, totalNodes);
-    }
-    
-    if (phase.nodePercentage) {
-      return Math.ceil((phase.nodePercentage / 100) * totalNodes);
-    }
-
-    // Default phase percentages
-    switch (phase.phase) {
-      case 'COARSE': return Math.ceil(0.2 * totalNodes);  // 20%
-      case 'MEDIUM': return Math.ceil(0.4 * totalNodes);  // Additional 40%
-      case 'FINE': return totalNodes; // Remaining
-      default: return Math.ceil(0.33 * totalNodes); // Default 33%
-    }
-  }
-
-  /**
-   * Resolve similarity function from config
-   */
-  private resolveSimilarityFunction(funcOrName: SimilarityFunctor | string): SimilarityFunctor {
-    if (typeof funcOrName === 'function') {
-      return funcOrName;
-    }
-
-    // Look up registered function
-    const func = this.registeredSimilarityFunctions.get(funcOrName);
-    if (func) {
-      return func;
-    }
-
-    // Use default if available
-    if (funcOrName === 'cosine') {
-      return DefaultSimilarityFunctions.cosine;
-    }
-    if (funcOrName === 'jaccard') {
-      return DefaultSimilarityFunctions.jaccard;
-    }
-    if (funcOrName === 'spatial') {
-      return DefaultSimilarityFunctions.spatialProximity;
-    }
-
-    throw new Error(`Unknown similarity function: ${funcOrName}`);
-  }
-
-  /**
-   * Validate similarity functor contract
-   */
-  private validateSimilarityFunctor(functor: SimilarityFunctor): void {
-    if (typeof functor !== 'function') {
-      throw new Error('Similarity function must be a function');
-    }
-
-    // Test with mock data
-    const mockNodeA = { id: 'testA', label: 'Test A' };
-    const mockNodeB = { id: 'testB', label: 'Test B' };
-    const mockContext = this.createMockContext();
-
-    try {
-      const result = functor(mockNodeA, mockNodeB, mockContext);
-      
-      if (typeof result !== 'number' || !Number.isFinite(result)) {
-        throw new Error('Similarity function must return a finite number');
-      }
-      
-      if (result < 0 || result > 1) {
-        throw new Error('Similarity function must return values in range [0,1]');
-      }
-    } catch (error) {
-      throw new Error(`Similarity function validation failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Create clustering context for similarity calculations
-   */
-  private createClusteringContext(
-    config: LayoutConfiguration, 
-    iteration: number, 
-    alpha: number
-  ): ClusteringContext {
-    return {
-      currentIteration: iteration,
-      alpha,
-      spatialIndex: null, // Will be implemented with QuadTree
-      cacheManager: null, // Will be managed by SimilarityProcessor
-      performanceMetrics: {
-        similarityCalculations: 0,
-        cacheHitRate: 0,
-        iterationsPerSecond: 0,
-        memoryPeakUsage: performance.now()
-      },
-      layoutConfig: {
-        dimensions: config.dimensionalMode === '3D' ? 3 : 2,
-        similarityThreshold: 0.3,
-        convergenceThreshold: config.convergenceThreshold,
-        maxIterations: config.maxIterations || 1000,
-        forceIntegration: {
-          enablePhysics: true,
-          similarityStrength: 0.5,
-          repulsionStrength: -100,
-          centeringStrength: 1.0
-        },
-        progressiveRefinement: {
-          enablePhases: config.progressiveRefinement?.enabled || false,
-          phase1Duration: 500,
-          phase2Duration: 2000,
-          importanceWeights: {
-            degree: 0.4,
-            betweenness: 0.3,
-            eigenvector: 0.3
-          }
-        },
-        memoryManagement: {
-          useTypedArrays: true,
-          cacheSize: 10000,
-          historySize: 10,
-          gcThreshold: 0.8
-        }
-      }
-    };
-  }
-
-  /**
-   * Create mock context for testing
-   */
-  private createMockContext(): ClusteringContext {
-    return this.createClusteringContext(
-      {
-        similarityFunction: 'test',
-        dimensionalMode: '2D',
-        convergenceThreshold: 0.01
-      },
-      0,
-      1.0
-    );
-  }
-
-  /**
-   * Register default similarity functions
-   */
-  private registerDefaultSimilarityFunctions(): void {
-    // Register built-in functions
-    this.registeredSimilarityFunctions.set('cosine', DefaultSimilarityFunctions.cosine);
-    this.registeredSimilarityFunctions.set('jaccard', DefaultSimilarityFunctions.jaccard);
-    this.registeredSimilarityFunctions.set('spatial', DefaultSimilarityFunctions.spatialProximity);
-    this.registeredSimilarityFunctions.set('default', DefaultSimilarityFunctions.createAutoSelector());
-  }
-
-  /**
-   * Validate layout configuration
-   */
-  validateConfiguration(config: LayoutConfiguration): ValidationResult {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    // Validate similarity function
-    if (!config.similarityFunction) {
-      errors.push('Similarity function is required');
-    }
-
-    // Validate dimensional mode
-    if (config.dimensionalMode !== '2D' && config.dimensionalMode !== '3D') {
-      errors.push('Dimensional mode must be "2D" or "3D"');
-    }
-
-    // Validate convergence threshold
-    if (!config.convergenceThreshold || config.convergenceThreshold <= 0 || config.convergenceThreshold >= 1) {
-      errors.push('Convergence threshold must be between 0 and 1');
-    }
-
-    // Validate max iterations
-    if (config.maxIterations && config.maxIterations <= 0) {
-      errors.push('Max iterations must be positive');
-    }
+  private estimateMemoryUsage(nodeCount: number): MemoryUsage {
+    const coordinateStorage = nodeCount * 24; // 3 floats * 8 bytes for position
+    const cacheSize = this.similarityProcessor.getCacheStatistics().memoryUsage;
+    const spatialIndexSize = nodeCount * 16; // Rough estimate for spatial indexing
+    const totalEstimated = coordinateStorage + cacheSize + spatialIndexSize;
 
     return {
-      isValid: errors.length === 0,
-      errors,
-      warnings
+      coordinateStorage,
+      cacheSize,
+      spatialIndexSize,
+      totalEstimated,
+      heapUsagePercent: (totalEstimated / (1024 * 1024)) * 100 // Convert to MB percentage (rough)
     };
-  }
-
-  /**
-   * Get engine capabilities
-   */
-  getCapabilities(): LayoutEngineCapabilities {
-    return {
-      supportsDynamic: true,
-      supportsIncremental: true,
-      maxNodes: 1000,
-      supportsForces: true,
-      supportsConstraints: true,
-      supportsClustering: true,
-      supports3D: true
-    };
-  }
-
-  /**
-   * Clean up resources
-   */
-  cleanup(): void {
-    super.cleanup();
-    this.similarityProcessor.cleanup?.();
-    this.registeredSimilarityFunctions.clear();
-    this.convergenceMetrics = null;
   }
 }
