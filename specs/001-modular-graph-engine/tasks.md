@@ -1,81 +1,94 @@
-# Implementation Tasks: Modular Knowledge Graph Engine
+# Implementation Tasks: Modular Knowledge Graph Engine - E2E EVIDENCE DRIVEN
 
-**Branch**: `001-modular-graph-engine` | **Date**: 2025-11-16  
-**Generated**: speckit.tasks command output | **Current State**: API fixed, builds work, demo/E2E validation needed
+**Branch**: `001-modular-graph-engine` | **Date**: 2025-11-17  
+**Generated**: speckit.tasks command output | **E2E Evidence**: 250/250 tests fail due to runtime export resolution
 
-## CURRENT STATE - EVIDENCE BASED
+## CURRENT STATE - E2E EVIDENCE BASED  
 
-**WORKING**: 
-- ✅ Core library builds successfully (298KB output)
-- ✅ Unit tests pass (59/59 tests) 
-- ✅ API export fixed (KnowledgeGraph exported from src-archive)
-- ✅ Component tests pass (6/6 tests)
-- ✅ Demo builds (knowledge-network bundle 106.72KB)
+**FOUNDATION WORKING**:
+- ✅ Core library builds successfully (88.74 KB)
+- ✅ Unit tests pass (59/59 tests)
+- ✅ Component tests pass (6/6 tests - but mocked environment)
 - ✅ Reactive-js event streaming preserved (ReactiveEmitter.ts)
+- ✅ Constitutional compliance (Archive Code Protection v1.4.0)
 
-**BROKEN/UNVERIFIED**:
-- ❌ Demo server runtime not verified (localhost:3000 access unknown)
-- ❌ E2E tests failing (Playwright configuration issues)
-- ❌ User story validation missing (no end-to-end proof)
-- ❌ Playwright temp files cleanup incomplete
+**CRITICAL RUNTIME FAILURE**:
+- ❌ Demo server cannot start - KnowledgeGraph export resolution failure  
+- ❌ ALL 250 E2E tests fail - "Could not connect to server" at localhost:3001
+- ❌ User verification confirms: "does not provide export named 'KnowledgeGraph'"
+- ❌ Complete system failure despite component test success
 
-## Task Summary
+## Task Summary - E2E DRIVEN
 
-**Total Tasks Remaining**: 12 critical tasks for MVP delivery
-**FOCUS**: Demo verification, E2E fixes, user story validation
-**PRIORITY**: Manual verification over automated claims
+**Total Critical Tasks**: 8 focused tasks to bridge component success to runtime functionality
+**PRIORITY**: Fix Vite export resolution crisis before any user story validation
+**DELIVERY GATE**: E2E tests must pass as source of truth
 
-## Phase 1: Critical Demo Verification ❗ **URGENT**
+## Phase 1: Critical Runtime Resolution ❗ **BLOCKING ALL USER STORIES**
 
-**Independent Test Criteria**: Demo server starts, loads at localhost:3000, displays knowledge graph
+**Independent Test Criteria**: Demo server starts successfully, KnowledgeGraph import resolves, E2E tests can execute
 
-- [ ] T001 Manually verify demo server startup with `cd packages/demo-suite && pnpm dev`
-- [ ] T002 Confirm demo loads successfully at http://localhost:3000
-- [ ] T003 Verify knowledge graph renders visually in browser
-- [ ] T004 Test basic interaction (node selection, zoom) works in demo
-- [ ] T005 [P] Document demo startup process and URL in README
+- [ ] T001 Research Vite workspace dependency resolution patterns for TypeScript monorepos
+- [ ] T002 Investigate why built KnowledgeGraph export cannot be resolved by Vite runtime 
+- [ ] T003 Analyze difference between component test mocked success vs Vite runtime failure
+- [ ] T004 [P] Document findings on export resolution gap in `packages/demo-suite/README.md`
 
-## Phase 2: E2E Test Resolution ❗ **URGENT** 
+## Phase 2: Runtime Export Bridge ❗ **CRITICAL**
 
-**Independent Test Criteria**: Playwright E2E tests execute and pass, validating actual user workflows
+**Independent Test Criteria**: Demo server starts, KnowledgeGraph imports successfully, basic E2E tests begin passing
 
-- [ ] T006 Diagnose and fix Playwright configuration issues `packages/knowledge-network/playwright.config.ts`
-- [ ] T007 Resolve E2E test failures in `packages/knowledge-network/tests/e2e/`
-- [ ] T008 [P] Verify E2E tests run without demo server startup conflicts
-- [ ] T009 [P] Clean up remaining Playwright temporary files and validate .gitignore
+- [ ] T005 Fix KnowledgeGraph export resolution in Vite environment `packages/knowledge-network/src/index.ts`
+- [ ] T006 Validate demo server startup with working KnowledgeGraph imports `packages/demo-suite/`
+- [ ] T007 Test basic E2E functionality - at least 1 test passes to prove server works
+- [ ] T008 [P] Update Playwright config to re-enable webServer once imports fixed `packages/knowledge-network/playwright.config.ts`
 
-## Phase 3: User Story Validation (US1 - Layout Engine) 
+## Phase 3: User Story 1 Validation (US1 - P1) 
 
-**Independent Test Criteria**: Layout calculations complete and positioning data available for export without rendering
+**Independent Test Criteria**: Layout calculations complete, positioning data available for export without rendering (validated by working E2E tests)
 
-- [ ] T010 [US1] Verify layout engine can operate independently without rendering
-- [ ] T011 [US1] Test layout position data export functionality
-- [ ] T012 [US1] Validate layout continues when rendering engine unavailable
+- [ ] T009 [US1] Validate layout engine operates independently without rendering in actual runtime
+- [ ] T010 [US1] Test layout position data export functionality works with real demo server
+- [ ] T011 [US1] Verify layout continues when rendering engine unavailable (E2E validated)
 
-## Phase 4: User Story Validation (US2 - Rendering Strategies)
+## Phase 4: User Story 2 Validation (US2 - P1)
 
-**Independent Test Criteria**: Switch between rendering strategies while maintaining consistent positions and interactions
+**Independent Test Criteria**: Switch between rendering strategies maintaining consistent positions (validated by working E2E tests)
 
-- [ ] T013 [US2] Verify demo shows simple edge rendering vs edge bundling modes
-- [ ] T014 [US2] Test rendering strategy switching maintains node positions  
-- [ ] T015 [US2] Validate navigation consistency across rendering modes
+- [ ] T012 [US2] Verify demo shows simple edge rendering vs edge bundling modes in working runtime
+- [ ] T013 [US2] Test rendering strategy switching maintains node positions with E2E validation
+- [ ] T014 [US2] Validate navigation consistency across rendering modes (E2E proof required)
 
-## Implementation Strategy
+## Phase 5: E2E Test Recovery & Validation 
 
-**MVP Definition**: Working demo at localhost:3000 with verified user stories US1 and US2
-**Evidence Required**: Manual verification, not just automated test claims
-**Success Criteria**: All tasks completed with actual runtime proof
+**Independent Test Criteria**: ALL 250 E2E tests execute and validate system functionality comprehensively
+
+- [ ] T015 Restore webServer configuration and validate all E2E tests can execute `packages/knowledge-network/playwright.config.ts`
+- [ ] T016 [P] Run full E2E test suite to validate Canvas/SVG/WebGL strategies work 
+- [ ] T017 [P] Verify comprehensive E2E coverage validates user stories US1 and US2
+- [ ] T018 Document E2E test results as definitive system functionality proof
+
+## Implementation Strategy - E2E TRUTH
+
+**MVP Definition**: Demo server starts + US1&US2 working + E2E tests validate functionality  
+**Evidence Required**: E2E test passage as source of truth, not component test isolation
+**Success Criteria**: User can manually verify demo works at localhost:3000/3001  
+**Delivery Gate**: NO completion claims without E2E test validation
 
 ## Dependencies
 
-- Phase 1 (Demo) must complete before Phase 3-4 user story validation
-- Phase 2 (E2E) can run parallel to demo verification  
-- Component tests already working (evidence-based)
-- Core library already functional (evidence-based)
+- Phase 1-2 (Runtime Resolution) MUST complete before any user story validation
+- Phase 3-4 (User Stories) can only be validated with working runtime  
+- Phase 5 (E2E Recovery) validates entire system works end-to-end
+- NO task completion claims without runtime evidence
 
-## Critical Focus
+## Critical Learning Applied
 
-**STOP**: Making claims without runtime evidence
-**START**: Manual verification and honest status tracking
-**PRESERVE**: Reactive-js event streaming architecture
-**DELIVER**: Actually working demo at localhost:3000
+**"Component tests can lie"** - they pass in mocked isolation while system fails in runtime.  
+**E2E tests are source of truth** - 250 comprehensive tests must pass for delivery.  
+**Manual user verification required** - respect user time with actual working functionality.
+
+## FOCUS
+
+**STOP**: Making claims based on isolated component testing  
+**START**: Runtime-first validation with E2E evidence  
+**DELIVER**: Actually working demo server with user-verified functionality
