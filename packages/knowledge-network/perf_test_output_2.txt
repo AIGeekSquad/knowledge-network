@@ -1,0 +1,17 @@
+
+> @aigeeksquad/knowledge-network@0.1.0 test C:\Repos\public\knowledge-network\packages\knowledge-network
+> vitest run "tests/similarity-performance.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Repos/public/knowledge-network/packages/knowledge-network[39m
+
+[90mstdout[2m | tests/similarity-performance.test.ts
+[22m[39mDOM environment initialized
+
+ [32mÔ£ô[39m tests/similarity-performance.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 24[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 12:58:56
+[2m   Duration [22m 3.64s[2m (transform 101ms, setup 75ms, collect 51ms, tests 24ms, environment 2.13s, prepare 515ms)[22m
+

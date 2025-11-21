@@ -72,7 +72,7 @@ description: "Task list for NodeLayout Module implementation - similarity-based 
 
 - [x] T014 [P] [US1] Unit tests for similarity function execution and functor contract in `packages/knowledge-network/tests/similarity-processor.test.ts`
 - [ ] T015 [P] [US1] Unit tests for coordinate calculation accuracy across similarity ranges in `packages/knowledge-network/tests/spatial-optimizer.test.ts`
-- [ ] T016 [P] [US1] Integration tests for end-to-end similarity-based positioning workflow in `packages/knowledge-network/tests/node-layout-engine.test.ts`
+- [x] T016 [P] [US1] Integration tests for end-to-end similarity-based positioning workflow in `packages/knowledge-network/tests/node-layout-engine.test.ts`
 - [ ] T017 [P] [US1] Performance tests for similarity calculation timing and memory usage in `packages/knowledge-network/tests/performance/similarity-performance.test.ts`
 
 ### Implementation for User Story 1

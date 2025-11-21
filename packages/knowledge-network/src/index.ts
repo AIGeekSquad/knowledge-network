@@ -24,7 +24,13 @@ export type {
 export {
   LayoutEngine,
   LayoutCalculator,
-  LayoutSerializer
+  LayoutSerializer,
+  // NodeLayout Engine (US1)
+  NodeLayoutEngine,
+  SimilarityProcessor,
+  SpatialOptimizer,
+  SimilarityCache,
+  SimilarityMappingAlgorithms
 } from './layout';
 
 export type {

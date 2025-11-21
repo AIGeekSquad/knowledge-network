@@ -20,29 +20,29 @@ export { LayoutSerializer } from './LayoutSerializer';
 export type {
   // Main interface
   ILayoutEngine,
-  
+
   // Core data structures
   LayoutNode,
   LayoutConfiguration,
   LayoutContext,
   LayoutMetadata,
   LayoutProgress,
-  
+
   // Configuration interfaces
   ForceConfig,
   ClusteringConfig,
   PerformanceConfig,
-  
+
   // Validation interfaces
   ValidationResult,
   ValidationError,
   ValidationWarning,
-  
+
   // Capability interfaces
   LayoutEngineCapabilities,
   PerformanceProfile,
   PerformanceMetrics,
-  
+
   // Function types
   SimilarityFunction,
   ProgressCallback
@@ -54,8 +54,6 @@ export type {
   SerializableLayoutNode,
   LayoutStateMetadata
 } from './LayoutSerializer';
-
-// Re-export commonly used types from main types file
 
 // ============================================
 // NodeLayout Module Exports (002-node-layout)
@@ -71,14 +69,11 @@ export { SimilarityProcessor } from './SimilarityProcessor';
 export { SpatialOptimizer, SimilarityMappingAlgorithms } from './SpatialOptimizer';
 export type { SimilarityToDistanceMapper } from './SpatialOptimizer';
 
-// Immutable LayoutNode factory system
-export { LayoutCalculator } from './LayoutCalculator';
-
 // High-performance similarity caching
 export { SimilarityCache } from './SimilarityCache';
 
 // NodeLayout types for external usage
-export type { 
+export type {
   SimilarityFunctor,
   ClusteringContext,
   EnhancedLayoutNode,
@@ -94,4 +89,3 @@ export type {
   TransitionResult,
   EngineState
 } from '../types';
-export type { Node, Edge, GraphDataset } from '../types';

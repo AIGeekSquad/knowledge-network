@@ -1,0 +1,17 @@
+
+> knowledge-network-workspace@0.1.0 test C:\Repos\public\knowledge-network
+> pnpm --recursive run test "packages/knowledge-network/tests/node-layout-engine.test.ts"
+
+Scope: 2 of 3 workspace projects
+packages/knowledge-network test$ vitest run "packages/knowledge-network/tests/node-layout-engine.test.ts"
+packages/knowledge-network test: [1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Repos/public/knowledge-network/packages/knowledge-network[39m
+packages/knowledge-network test: [2mfilter:  [22m[33mpackages/knowledge-network/tests/node-layout-engine.test.ts[39m
+packages/knowledge-network test: [2minclude: [22m[33mtests/**/*.test.ts[2m, [22msrc/**/__tests__/**/*.test.ts[39m
+packages/knowledge-network test: [2mexclude:  [22m[33mtests/e2e/**/*.e2e.ts[2m, [22msrc/rendering/__tests__/WebGLRenderer.test.ts[2m, [22msrc/interaction/__tests__/**[39m
+packages/knowledge-network test: [31m
+packages/knowledge-network test: No test files found, exiting with code 1[39m
+packages/knowledge-network test: Failed
+C:\Repos\public\knowledge-network\packages\knowledge-network:
+ÔÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILÔÇë @aigeeksquad/knowledge-network@0.1.0 test: `vitest run "packages/knowledge-network/tests/node-layout-engine.test.ts"`
+Exit status 1
+ÔÇëELIFECYCLEÔÇë Test failed. See above for more details.

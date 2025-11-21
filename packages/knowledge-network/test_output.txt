@@ -1,0 +1,248 @@
+
+> @aigeeksquad/knowledge-network@0.1.0 test C:\Repos\public\knowledge-network\packages\knowledge-network
+> vitest run
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Repos/public/knowledge-network/packages/knowledge-network[39m
+
+[90mstdout[2m | tests/layout-engine-isolation.test.ts
+[22m[39mDOM environment initialized
+
+[90mstdout[2m | tests/layout-computation.test.ts
+[22m[39mDOM environment initialized
+
+ [32mÔ£ô[39m tests/layout-engine-isolation.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 25[2mms[22m[39m
+ [32mÔ£ô[39m tests/layout-computation.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 27[2mms[22m[39m
+[90mstdout[2m | tests/default-similarity-functions.test.ts
+[22m[39mDOM environment initialized
+
+ [31mÔØ»[39m tests/default-similarity-functions.test.ts [2m([22m[2m26 tests[22m[2m | [22m[31m26 failed[39m[2m)[22m[90m 55[2mms[22m[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mCosine Similarity (Vector-based)[2m > [22mshould calculate cosine similarity for nodes with vector data[90m 22[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mCosine Similarity (Vector-based)[2m > [22mshould return 1.0 for identical vectors[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mCosine Similarity (Vector-based)[2m > [22mshould calculate correct similarity for parallel vectors[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mCosine Similarity (Vector-based)[2m > [22mshould handle zero vectors gracefully[90m 2[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mCosine Similarity (Vector-based)[2m > [22mshould return 0 for nodes without vector data[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mCosine Similarity (Vector-based)[2m > [22mshould handle mixed vector/no-vector nodes[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mCosine Similarity (Vector-based)[2m > [22mshould handle different vector lengths[90m 0[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mJaccard Similarity (Metadata-based)[2m > [22mshould calculate Jaccard similarity for nodes with metadata tags[90m 2[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mJaccard Similarity (Metadata-based)[2m > [22mshould return 1.0 for identical metadata[90m 2[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mJaccard Similarity (Metadata-based)[2m > [22mshould return 0 for completely different metadata[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mJaccard Similarity (Metadata-based)[2m > [22mshould handle nodes without metadata[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mJaccard Similarity (Metadata-based)[2m > [22mshould handle mixed metadata/no-metadata nodes[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mJaccard Similarity (Metadata-based)[2m > [22mshould handle different metadata structures[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mJaccard Similarity (Metadata-based)[2m > [22mshould handle empty metadata gracefully[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mSpatial Proximity Similarity (Position-based)[2m > [22mshould calculate similarity based on distance between nodes[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mSpatial Proximity Similarity (Position-based)[2m > [22mshould return high similarity for coincident nodes[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mSpatial Proximity Similarity (Position-based)[2m > [22mshould return lower similarity for distant nodes[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mSpatial Proximity Similarity (Position-based)[2m > [22mshould handle 3D coordinates[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mSpatial Proximity Similarity (Position-based)[2m > [22mshould handle nodes without position data[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mSpatial Proximity Similarity (Position-based)[2m > [22mshould use configurable distance falloff function[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mDefault Function Selection and Fallback[2m > [22mshould provide automatic function selection based on available data[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mDefault Function Selection and Fallback[2m > [22mshould support weighted composition of multiple functions[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mDefault Function Selection and Fallback[2m > [22mshould normalize weights automatically[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mPerformance and Edge Cases[2m > [22mshould handle large vectors efficiently[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mPerformance and Edge Cases[2m > [22mshould handle very small numbers without precision issues[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[31m   [31m├ù[31m Default Similarity Functions[2m > [22mPerformance and Edge Cases[2m > [22mshould handle special values in vectors[90m 1[2mms[22m[31m[39m
+[31m     ÔåÆ expected [Function] to throw an error[39m
+[90mstdout[2m | tests/types.test.ts
+[22m[39mDOM environment initialized
+
+ [32mÔ£ô[39m tests/types.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+[90mstdout[2m | tests/spatial-optimizer.test.ts
+[22m[39mDOM environment initialized
+
+ [32mÔ£ô[39m tests/spatial-optimizer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+[90mstdout[2m | tests/layout-serialization.test.ts
+[22m[39mDOM environment initialized
+
+ [32mÔ£ô[39m tests/layout-serialization.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 41[2mms[22m[39m
+[90mstdout[2m | tests/node-layout-engine.test.ts
+[22m[39mDOM environment initialized
+
+ [32mÔ£ô[39m tests/node-layout-engine.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 47[2mms[22m[39m
+[90mstdout[2m | tests/similarity-performance.test.ts
+[22m[39mDOM environment initialized
+
+ [31mÔØ»[39m tests/similarity-performance.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[90m 290[2mms[22m[39m
+[31m   [31m├ù[31m Similarity Performance[2m > [22mshould respect memory limits via eviction[90m 14[2mms[22m[31m[39m
+[31m     ÔåÆ Cannot read properties of undefined (reading 'config')[39m
+[90mstdout[2m | tests/similarity-processor.test.ts
+[22m[39mDOM environment initialized
+
+ [32mÔ£ô[39m tests/similarity-processor.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 353[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m SimilarityProcessor[2m > [22mPerformance and Error Handling[2m > [22mshould meet performance targets for similarity calculations [33m311[2mms[22m[39m
+[90mstdout[2m | tests/rendering-strategy-base.test.ts
+[22m[39mDOM environment initialized
+
+ [32mÔ£ô[39m tests/rendering-strategy-base.test.ts [2m([22m[2m27 tests[22m[2m)[22m[90m 44[2mms[22m[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 27 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Cosine Similarity (Vector-based) > should calculate cosine similarity for nodes with vector data
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Cosine Similarity (Vector-based) > should return 1.0 for identical vectors
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Cosine Similarity (Vector-based) > should calculate correct similarity for parallel vectors
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Cosine Similarity (Vector-based) > should handle zero vectors gracefully
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Cosine Similarity (Vector-based) > should return 0 for nodes without vector data
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Cosine Similarity (Vector-based) > should handle mixed vector/no-vector nodes
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Cosine Similarity (Vector-based) > should handle different vector lengths
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:46:10
+     44|       expect(() => {
+     45|         // cosineSimilarity = DefaultSimilarityFunctions.cosine;
+     46|       }).toThrow(); // Will fail until class exists
+       |          ^
+     47|     });
+     48| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/27]ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Jaccard Similarity (Metadata-based) > should calculate Jaccard similarity for nodes with metadata tags
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Jaccard Similarity (Metadata-based) > should return 1.0 for identical metadata
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Jaccard Similarity (Metadata-based) > should return 0 for completely different metadata
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Jaccard Similarity (Metadata-based) > should handle nodes without metadata
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Jaccard Similarity (Metadata-based) > should handle mixed metadata/no-metadata nodes
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Jaccard Similarity (Metadata-based) > should handle different metadata structures
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Jaccard Similarity (Metadata-based) > should handle empty metadata gracefully
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:175:10
+    173|       expect(() => {
+    174|         // jaccardSimilarity = DefaultSimilarityFunctions.jaccard;
+    175|       }).toThrow(); // Will fail until implemented
+       |          ^
+    176|     });
+    177| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[2/27]ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Spatial Proximity Similarity (Position-based) > should calculate similarity based on distance between nodes
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Spatial Proximity Similarity (Position-based) > should return high similarity for coincident nodes
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Spatial Proximity Similarity (Position-based) > should return lower similarity for distant nodes
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Spatial Proximity Similarity (Position-based) > should handle 3D coordinates
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Spatial Proximity Similarity (Position-based) > should handle nodes without position data
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Spatial Proximity Similarity (Position-based) > should use configurable distance falloff function
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:315:10
+    313|       expect(() => {
+    314|         // spatialSimilarity = DefaultSimilarityFunctions.spatialProxiÔÇª
+    315|       }).toThrow(); // Will fail until implemented
+       |          ^
+    316|     });
+    317| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[3/27]ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Default Function Selection and Fallback > should provide automatic function selection based on available data
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:467:10
+    465|         // const emptySim = defaultFunc(emptyNode, emptyNode, mockContÔÇª
+    466|         // expect(emptySim).toBe(0);
+    467|       }).toThrow(); // Will fail until implemented
+       |          ^
+    468|     });
+    469| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[4/27]ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Default Function Selection and Fallback > should support weighted composition of multiple functions
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:491:10
+    489|         // Should be weighted average: (0.6 * 1.0) + (0.3 * 1.0) + (0.ÔÇª
+    490|         // expect(similarity).toBeCloseTo(1.0, 5);
+    491|       }).toThrow(); // Will fail until implemented
+       |          ^
+    492|     });
+    493| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[5/27]ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Default Function Selection and Fallback > should normalize weights automatically
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:504:10
+    502|         // const compositeFunc = DefaultSimilarityFunctions.createCompÔÇª
+    503|         // Should work with normalized weights
+    504|       }).toThrow(); // Will fail until implemented
+       |          ^
+    505|     });
+    506|   });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[6/27]ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Performance and Edge Cases > should handle large vectors efficiently
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:529:10
+    527|         // expect(end - start).toBeLessThan(10); // Should complete inÔÇª
+    528|         // expect(similarity).toBeCloseTo(0.9, 2); // Approximate simiÔÇª
+    529|       }).toThrow(); // Will fail until implemented
+       |          ^
+    530|     });
+    531| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[7/27]ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Performance and Edge Cases > should handle very small numbers without precision issues
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:548:10
+    546|         // const similarity = DefaultSimilarityFunctions.cosine(nodeA,ÔÇª
+    547|         // expect(similarity).toBeCloseTo(1.0, 5); // Should still detÔÇª
+    548|       }).toThrow(); // Will fail until implemented
+       |          ^
+    549|     });
+    550| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[8/27]ÔÄ»
+
+ FAIL  tests/default-similarity-functions.test.ts > Default Similarity Functions > Performance and Edge Cases > should handle special values in vectors
+AssertionError: expected [Function] to throw an error
+ ÔØ» tests/default-similarity-functions.test.ts:569:10
+    567|         // expect(similarity).toBeLessThanOrEqual(1);
+    568|         // expect(Number.isFinite(similarity)).toBe(true);
+    569|       }).toThrow(); // Will fail until implemented
+       |          ^
+    570|     });
+    571|   });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[9/27]ÔÄ»
+
+ FAIL  tests/similarity-performance.test.ts > Similarity Performance > should respect memory limits via eviction
+TypeError: Cannot read properties of undefined (reading 'config')
+ ÔØ» tests/similarity-performance.test.ts:96:44
+     94|         const smallCacheProcessor = new SimilarityProcessor();
+     95|         // Access private cache to modify config for testing
+     96|         (smallCacheProcessor as any).cache.config.maxSize = 10;
+       |                                            ^
+     97| 
+     98|         const cosine = (smallCacheProcessor as any).registeredFunctionÔÇª
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[10/27]ÔÄ»
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[31m27 failed[39m[22m[2m | [22m[1m[32m98 passed[39m[22m[90m (125)[39m
+[2m   Start at [22m 15:05:42
+[2m   Duration [22m 9.51s[2m (transform 976ms, setup 853ms, collect 2.95s, tests 905ms, environment 56.42s, prepare 10.06s)[22m
+
+ÔÇëELIFECYCLEÔÇë Test failed. See above for more details.
