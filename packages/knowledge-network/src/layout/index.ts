@@ -72,6 +72,9 @@ export type { SimilarityToDistanceMapper } from './SpatialOptimizer';
 // High-performance similarity caching
 export { SimilarityCache } from './SimilarityCache';
 
+// Configuration Factory
+export { LayoutConfigFactory } from './LayoutConfigFactory';
+
 // NodeLayout types for external usage
 export type {
   SimilarityFunctor,
@@ -83,9 +86,16 @@ export type {
   Position3D,
   ConvergenceMetrics,
   WeightedSimilarityFunction,
-  LayoutEventEmitter,
-  LayoutProgressEvent,
   NodeUpdate,
   TransitionResult,
   EngineState
 } from '../types';
+
+// Layout Events
+export type {
+  LayoutEventEmitter,
+  LayoutProgressEvent,
+  PhaseCompleteEvent,
+  LayoutCompleteEvent,
+  ConvergenceUpdateEvent
+} from './LayoutEvents';

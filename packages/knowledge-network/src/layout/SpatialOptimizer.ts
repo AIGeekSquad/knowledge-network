@@ -5,10 +5,10 @@
  * and convergence detection for similarity-based node positioning.
  */
 
-import { 
+import {
   Position3D,
   Node,
-  EnhancedLayoutNode, 
+  EnhancedLayoutNode,
   ConvergenceMetrics,
   ClusteringContext,
   LayoutConfig,
@@ -90,7 +90,7 @@ export class SpatialOptimizer {
   ) {
     this.similarityMapper = mapper;
     this.mappingConfig = mappingConfig || { maxDistance: 100, exponent: 2 };
-    
+
     this.convergenceMetrics = {
       isConverged: false,
       stability: 0,
@@ -116,14 +116,14 @@ export class SpatialOptimizer {
     const positions: Position3D[] = [];
 
     // Initialize random positions within bounds
-    const bounds = constraints.boundingBox || { 
-      minX: 0, maxX: 800, minY: 0, maxY: 600, minZ: 0, maxZ: constraints.dimensions === 3 ? 400 : 0 
+    const bounds = constraints.boundingBox || {
+      minX: 0, maxX: 800, minY: 0, maxY: 600, minZ: 0, maxZ: constraints.dimensions === 3 ? 400 : 0
     };
 
     for (let i = 0; i < nodeIds.length; i++) {
       const x = bounds.minX + Math.random() * (bounds.maxX - bounds.minX);
       const y = bounds.minY + Math.random() * (bounds.maxY - bounds.minY);
-      const z = constraints.dimensions === 3 
+      const z = constraints.dimensions === 3
         ? bounds.minZ + Math.random() * (bounds.maxZ - bounds.minZ)
         : 0;
 
@@ -138,7 +138,7 @@ export class SpatialOptimizer {
    * Monitor convergence state for position updates
    */
   public monitorConvergence(
-    positions: Position3D[], 
+    positions: Position3D[],
     previousPositions: Position3D[]
   ): ConvergenceMetrics {
     if (positions.length !== previousPositions.length) {
@@ -192,7 +192,7 @@ export class SpatialOptimizer {
   ): Position3D[] {
     // This is a placeholder for hybrid force + similarity positioning
     // In a full implementation, this would integrate with D3.js force simulation
-    
+
     const nodeIds = this.extractNodeIds(similarities);
     const positions: Position3D[] = [];
 
@@ -200,10 +200,10 @@ export class SpatialOptimizer {
     for (let i = 0; i < nodeIds.length; i++) {
       // Start with similarity-based positioning
       const similarityPosition = this.calculateSimilarityBasedPosition(nodeIds[i], similarities, nodeIds);
-      
+
       // Apply force modifications if available
       const forceModification = forces.length > i ? forces[i] : { x: 0, y: 0, z: 0 };
-      
+
       positions.push({
         x: similarityPosition.x + (forceModification.x || 0) * 0.1, // 10% force influence
         y: similarityPosition.y + (forceModification.y || 0) * 0.1,
@@ -257,7 +257,7 @@ export class SpatialOptimizer {
       // Temporarily switch to test algorithm
       const originalMapper = this.similarityMapper;
       const originalConfig = this.mappingConfig;
-      
+
       this.setSimilarityMapper(algorithm.mapper, algorithm.config);
 
       // Run optimization and measure quality
@@ -268,7 +268,7 @@ export class SpatialOptimizer {
       // Calculate stress (how well distances match target similarities)
       const stress = this.calculateStress(similarities, positions, this.extractNodeIds(similarities));
       const convergenceTime = endTime - startTime;
-      
+
       // Quality metric combining stress and convergence speed
       const qualityMetric = 1 / (1 + stress + convergenceTime / 1000);
 
@@ -301,11 +301,11 @@ export class SpatialOptimizer {
       for (let j = i + 1; j < nodeIds.length; j++) {
         const key = `${nodeIds[i]}|${nodeIds[j]}`;
         const similarity = similarities.get(key);
-        
+
         if (similarity !== undefined && i < positions.length && j < positions.length) {
           const targetDistance = this.similarityMapper(similarity, this.mappingConfig);
           const actualDistance = this.calculateDistance(positions[i], positions[j]);
-          
+
           // Stress is squared difference between target and actual distances
           const stress = Math.pow(targetDistance - actualDistance, 2);
           totalStress += stress;
@@ -354,42 +354,6 @@ export class SpatialOptimizer {
     this.previousPositions.clear();
   }
 
-  /**
-   * Update positions for specific nodes while maintaining stability
-   */
-  public updateNodePositions(
-    nodeUpdates: Array<{ nodeId: string; newPosition: Position3D }>,
-    allPositions: Position3D[],
-    nodeIds: string[]
-  ): Position3D[] {
-    const updatedPositions = [...allPositions];
-
-    for (const update of nodeUpdates) {
-      const index = nodeIds.indexOf(update.nodeId);
-      if (index >= 0 && index < updatedPositions.length) {
-        // Store previous position for convergence tracking
-        this.previousPositions.set(update.nodeId, updatedPositions[index]);
-        updatedPositions[index] = update.newPosition;
-      }
-    }
-
-    return updatedPositions;
-  }
-
-  // Private helper methods
-
-  private extractNodeIds(similarities: Map<string, number>): string[] {
-    const nodeIdSet = new Set<string>();
-    
-    for (const key of similarities.keys()) {
-      const [nodeA, nodeB] = key.split('|');
-      nodeIdSet.add(nodeA);
-      nodeIdSet.add(nodeB);
-    }
-    
-    return Array.from(nodeIdSet).sort(); // Consistent ordering
-  }
-
   private applySimilarityOptimization(
     initialPositions: Position3D[],
     similarities: Map<string, number>,
@@ -409,20 +373,20 @@ export class SpatialOptimizer {
         for (let j = i + 1; j < nodeIds.length; j++) {
           const key = `${nodeIds[i]}|${nodeIds[j]}`;
           const similarity = similarities.get(key) || 0;
-          
+
           // Convert similarity to target distance using configurable mapping
           const targetDistance = this.similarityMapper(similarity, this.mappingConfig);
-          
+
           // Calculate current distance
           const currentDistance = this.calculateDistance(positions[i], positions[j]);
-          
+
           // Apply spring force based on distance deviation
           const force = (currentDistance - targetDistance) * learningRate / Math.max(currentDistance, 1);
-          
+
           const dx = positions[j].x - positions[i].x;
           const dy = positions[j].y - positions[i].y;
           const dz = positions[j].z - positions[i].z;
-          
+
           forces[i].x -= force * dx;
           forces[i].y -= force * dy;
           forces[i].z -= force * dz;
@@ -448,6 +412,16 @@ export class SpatialOptimizer {
     return positions;
   }
 
+  private extractNodeIds(similarities: Map<string, number>): string[] {
+    const nodeIds = new Set<string>();
+    for (const key of similarities.keys()) {
+      const [source, target] = key.split('|');
+      nodeIds.add(source);
+      nodeIds.add(target);
+    }
+    return Array.from(nodeIds);
+  }
+
   private calculateSimilarityBasedPosition(
     nodeId: string,
     similarities: Map<string, number>,
@@ -464,7 +438,7 @@ export class SpatialOptimizer {
 
       const key = [nodeId, otherId].sort().join('|');
       const similarity = similarities.get(key) || 0;
-      
+
       if (similarity > 0.1) { // Only consider meaningful similarities
         // Use similarity as weight for position influence
         totalX += similarity * Math.random() * 400; // Random position for now
@@ -474,7 +448,7 @@ export class SpatialOptimizer {
       }
     }
 
-    return weightSum > 0 
+    return weightSum > 0
       ? { x: totalX / weightSum, y: totalY / weightSum, z: totalZ / weightSum }
       : { x: Math.random() * 400, y: Math.random() * 300, z: 0 };
   }

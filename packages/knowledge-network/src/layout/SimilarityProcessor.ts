@@ -5,9 +5,9 @@
  * weighted composition, caching, and performance optimization.
  */
 
-import { 
-  Node, 
-  SimilarityFunctor, 
+import {
+  Node,
+  SimilarityFunctor,
   ClusteringContext,
   WeightedSimilarityFunction,
   SimilarityFunctionMetadata,
@@ -16,15 +16,21 @@ import {
   CacheEntry,
   CacheConfig
 } from '../types';
+import {
+  cosineSimilarity,
+  jaccardSimilarity,
+  spatialProximity
+} from './DefaultSimilarityFunctions';
+import { SimilarityCache } from './SimilarityCache';
+import { LayoutConfigFactory } from './LayoutConfigFactory';
 
 /**
  * SimilarityProcessor handles similarity function execution with functor contract compliance
  */
 export class SimilarityProcessor {
   private readonly registeredFunctions = new Map<string, WeightedSimilarityFunction>();
-  private readonly similarityCache = new Map<string, CacheEntry>();
+  private readonly cache: SimilarityCache;
   private performanceMetrics: PerformanceMetrics;
-  private cacheConfig: CacheConfig;
 
   constructor() {
     this.performanceMetrics = {
@@ -34,12 +40,12 @@ export class SimilarityProcessor {
       memoryPeakUsage: 0
     };
 
-    this.cacheConfig = {
+    this.cache = new SimilarityCache({
       ttl: 30000, // 30 seconds default
       maxSize: 10000,
       evictionPolicy: 'lru',
       invalidationEvents: ['node-updated', 'function-changed']
-    };
+    });
 
     // Register default similarity functions
     this.registerDefaultFunctions();
@@ -63,9 +69,9 @@ export class SimilarityProcessor {
       const testNodeA: Node = { id: 'test-a', label: 'Test A' };
       const testNodeB: Node = { id: 'test-b', label: 'Test B' };
       const testContext: ClusteringContext = this.createMinimalTestContext();
-      
+
       const result = functor(testNodeA, testNodeB, testContext);
-      
+
       if (typeof result !== 'number' || isNaN(result) || !isFinite(result)) {
         throw new Error('Invalid functor signature: functor must return a finite number');
       }
@@ -78,9 +84,9 @@ export class SimilarityProcessor {
    * Calculate similarity between two nodes using specified functor
    */
   public calculateSimilarity(
-    nodeA: Node, 
-    nodeB: Node, 
-    functor: SimilarityFunctor, 
+    nodeA: Node,
+    nodeB: Node,
+    functor: SimilarityFunctor,
     context: ClusteringContext
   ): number {
     // Input validation
@@ -94,9 +100,8 @@ export class SimilarityProcessor {
 
     // Check cache first
     const cacheKey = this.generatePairKey(nodeA.id, nodeB.id);
-    const cached = this.getCachedSimilarity(cacheKey);
+    const cached = this.cache.get(cacheKey);
     if (cached !== null) {
-      this.updateCacheHit();
       return cached;
     }
 
@@ -116,8 +121,8 @@ export class SimilarityProcessor {
       }
 
       // Cache result
-      this.cacheSimilarity(cacheKey, similarity);
-      
+      this.cache.set(cacheKey, similarity);
+
       // Update performance metrics
       this.performanceMetrics.similarityCalculations++;
       this.updatePerformanceMetrics(endTime - startTime);
@@ -132,8 +137,8 @@ export class SimilarityProcessor {
    * Register similarity function with weight
    */
   public registerSimilarityFunction(
-    name: string, 
-    functor: SimilarityFunctor, 
+    name: string,
+    functor: SimilarityFunctor,
     weight: number = 1.0
   ): void {
     if (this.registeredFunctions.has(name)) {
@@ -219,7 +224,7 @@ export class SimilarityProcessor {
         const similarity = this.calculateSimilarity(nodes[i], nodes[j], functor, context);
         const key = this.generatePairKey(nodes[i].id, nodes[j].id);
         matrix.set(key, similarity);
-        
+
         // Set symmetric entry
         const symmetricKey = this.generatePairKey(nodes[j].id, nodes[i].id);
         matrix.set(symmetricKey, similarity);
@@ -242,17 +247,7 @@ export class SimilarityProcessor {
    * Get cache statistics
    */
   public getCacheStatistics(): CacheStatistics {
-    const hitCount = this.getHitCount();
-    const missCount = this.getMissCount();
-    const total = hitCount + missCount;
-
-    return {
-      hitCount,
-      missCount,
-      hitRate: total > 0 ? hitCount / total : 0,
-      evictionCount: 0, // TODO: Implement eviction counting
-      memoryUsage: this.estimateCacheMemoryUsage()
-    };
+    return this.cache.getStatistics();
   }
 
   /**
@@ -296,7 +291,7 @@ export class SimilarityProcessor {
       // TODO: Implement spatial optimization using QuadTree
       // For now, return limited subset for performance
       const nearby = allNodes.slice(0, Math.min(50, allNodes.length));
-      
+
       return nearby
         .filter(node => node.id !== targetNode.id)
         .map(node => ({
@@ -342,51 +337,7 @@ export class SimilarityProcessor {
   // Private helper methods
 
   private registerDefaultFunctions(): void {
-    // Cosine similarity for vector data
-    const cosineSimilarity: SimilarityFunctor = (nodeA, nodeB, context) => {
-      if (!nodeA.vector || !nodeB.vector) return 0;
-      if (nodeA.vector.length !== nodeB.vector.length) return 0;
-      
-      let dotProduct = 0;
-      let magA = 0;
-      let magB = 0;
-      
-      for (let i = 0; i < nodeA.vector.length; i++) {
-        dotProduct += nodeA.vector[i] * nodeB.vector[i];
-        magA += nodeA.vector[i] * nodeA.vector[i];
-        magB += nodeB.vector[i] * nodeB.vector[i];
-      }
-      
-      const magnitude = Math.sqrt(magA) * Math.sqrt(magB);
-      return magnitude > 0 ? Math.max(0, Math.min(1, dotProduct / magnitude)) : 0;
-    };
-
-    // Jaccard similarity for metadata overlap
-    const jaccardSimilarity: SimilarityFunctor = (nodeA, nodeB, context) => {
-      if (!nodeA.metadata?.tags || !nodeB.metadata?.tags) return 0;
-      
-      const tagsA = new Set(nodeA.metadata.tags);
-      const tagsB = new Set(nodeB.metadata.tags);
-      
-      const intersection = new Set([...tagsA].filter(x => tagsB.has(x)));
-      const union = new Set([...tagsA, ...tagsB]);
-      
-      return union.size > 0 ? intersection.size / union.size : 0;
-    };
-
-    // Spatial proximity similarity (fallback)
-    const spatialSimilarity: SimilarityFunctor = (nodeA, nodeB, context) => {
-      // Use inverse distance as similarity proxy
-      const distance = Math.sqrt(
-        Math.pow((nodeA as any).x - (nodeB as any).x || 0, 2) + 
-        Math.pow((nodeA as any).y - (nodeB as any).y || 0, 2)
-      );
-      
-      // Normalize to [0, 1] range with exponential decay
-      return Math.exp(-distance / 100);
-    };
-
-    // Register default functions
+    // Register default functions from DefaultSimilarityFunctions module
     this.registeredFunctions.set('cosine', {
       name: 'cosine',
       functor: cosineSimilarity,
@@ -415,7 +366,7 @@ export class SimilarityProcessor {
 
     this.registeredFunctions.set('spatial', {
       name: 'spatial',
-      functor: spatialSimilarity,
+      functor: spatialProximity,
       weight: 1.0,
       isDefault: true,
       metadata: {
@@ -427,93 +378,19 @@ export class SimilarityProcessor {
     });
   }
 
-  private getCachedSimilarity(key: string): number | null {
-    const entry = this.similarityCache.get(key);
-    if (!entry) return null;
-
-    // Check TTL
-    if (Date.now() - entry.timestamp > this.cacheConfig.ttl) {
-      this.similarityCache.delete(key);
-      return null;
-    }
-
-    // Update access count
-    const updatedEntry: CacheEntry = {
-      ...entry,
-      accessCount: entry.accessCount + 1
-    };
-    this.similarityCache.set(key, updatedEntry);
-
-    return entry.value;
-  }
-
-  private cacheSimilarity(key: string, similarity: number): void {
-    // Check cache size limit
-    if (this.similarityCache.size >= this.cacheConfig.maxSize) {
-      this.evictLeastRecentlyUsed();
-    }
-
-    const entry: CacheEntry = {
-      value: similarity,
-      timestamp: Date.now(),
-      accessCount: 1,
-      nodeHashes: key.split('|') as [string, string]
-    };
-
-    this.similarityCache.set(key, entry);
-  }
-
-  private evictLeastRecentlyUsed(): void {
-    let oldestKey = '';
-    let oldestTimestamp = Date.now();
-
-    for (const [key, entry] of this.similarityCache) {
-      if (entry.timestamp < oldestTimestamp) {
-        oldestTimestamp = entry.timestamp;
-        oldestKey = key;
-      }
-    }
-
-    if (oldestKey) {
-      this.similarityCache.delete(oldestKey);
-    }
-  }
-
-  private updateCacheHit(): void {
-    // Cache hit rate is calculated in getCacheStatistics()
-  }
-
-  private getHitCount(): number {
-    // Approximate hit count based on access counts
-    let hitCount = 0;
-    for (const [key, entry] of this.similarityCache) {
-      hitCount += entry.accessCount - 1; // First access is always a miss
-    }
-    return hitCount;
-  }
-
-  private getMissCount(): number {
-    return this.performanceMetrics.similarityCalculations;
-  }
-
-  private estimateCacheMemoryUsage(): number {
-    // Rough estimate: 64 bytes per cache entry (key + value + metadata)
-    return this.similarityCache.size * 64;
-  }
-
   private updatePerformanceMetrics(calculationTime: number): void {
     if (calculationTime > 0) {
       this.performanceMetrics.iterationsPerSecond = 1000 / calculationTime;
     }
 
     // Update cache hit rate
-    const stats = this.getCacheStatistics();
+    const stats = this.cache.getStatistics();
     this.performanceMetrics.cacheHitRate = stats.hitRate;
 
     // Estimate memory usage
     this.performanceMetrics.memoryPeakUsage = Math.max(
       this.performanceMetrics.memoryPeakUsage,
-      this.estimateCacheMemoryUsage()
+      stats.memoryUsage
     );
   }
 
@@ -522,36 +399,9 @@ export class SimilarityProcessor {
       currentIteration: 0,
       alpha: 1.0,
       spatialIndex: null,
-      cacheManager: null,
+      cacheManager: this.cache,
       performanceMetrics: this.performanceMetrics,
-      layoutConfig: {
-        dimensions: 2,
-        similarityThreshold: 0.3,
-        convergenceThreshold: 0.01,
-        maxIterations: 1000,
-        forceIntegration: {
-          enablePhysics: true,
-          similarityStrength: 0.5,
-          repulsionStrength: -100,
-          centeringStrength: 1.0
-        },
-        progressiveRefinement: {
-          enablePhases: true,
-          phase1Duration: 500,
-          phase2Duration: 2000,
-          importanceWeights: {
-            degree: 0.4,
-            betweenness: 0.3,
-            eigenvector: 0.3
-          }
-        },
-        memoryManagement: {
-          useTypedArrays: true,
-          cacheSize: 10000,
-          historySize: 10,
-          gcThreshold: 0.8
-        }
-      }
+      layoutConfig: LayoutConfigFactory.createDefault()
     };
   }
 }
